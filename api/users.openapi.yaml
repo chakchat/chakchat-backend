@@ -13,6 +13,8 @@ tags:
     description: User info about requesting user
   - name: signup
     description: Sign Up user
+  - name: deleteAccount
+    description: Delete user account
 #TODO: Maybe response should be standardized.
 # For example:
 # {
@@ -40,6 +42,7 @@ tags:
 #     "total": 10
 #   }
 # }
+# TODO: Idempotency keys for non-idempotent requests.
 paths:
   /user/{userId}:
     get:
@@ -117,7 +120,7 @@ paths:
           description: Unauthorized
         '400':
           description: Bad Request. Most likely no criteria is specified.
-  /user/me:
+  /me:
     get:
       summary: Get user info about requesting user
       description: Gets user profile info
@@ -157,7 +160,42 @@ paths:
           description: Unauthorized
         '400':
           description: Bad Request. Most likely validation error.
-  /user/me/restrictions:
+    delete:
+      summary: Verify phone number verification code.
+      description: Verify phone number verification code
+      tags:
+        - deleteAccount
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/VerifyPhoneCode"
+      responses:
+        '204':
+          description: No Content. Successfully verified phone number.
+        '400':
+          description: Bad Request. Maybe phone number is already used or code is invalid. 
+  /me/deletion/request-code:
+    post:
+      summary: Request for phone number verification code.
+      description: Request phone number verification code
+      tags:
+        - deleteAccount
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/RequestPhoneCode"
+      responses:
+        '204':
+          description: No Content. Successfully sent verification code.
+        '400':
+          description: Bad Request. Maybe phone number is already used.
+  /me/restrictions:
     get:
       summary: Get own user's restrictions
       description: Gets own user's restrictions
@@ -193,7 +231,7 @@ paths:
           description: Unauthorized
         '400':
           description: Bad Request.
-  /request-phone-code:
+  /signup/request-code:
     post:
       summary: Request for phone number verification code.
       description: Signup user
@@ -209,7 +247,7 @@ paths:
           description: No Content. Successfully sent verification code.
         '400':
           description: Bad Request. Maybe phone number is already used.
-  /verify-phone-code:
+  /signup/verify-code:
     post:
       summary: Verify phone number verification code.
       description: Verify phone number verification code
@@ -244,7 +282,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/UserProfile'
         '400':
-          description: Bad Request. 
+          description: Bad Request.
 components:
   securitySchemes:
     bearerAuth:
