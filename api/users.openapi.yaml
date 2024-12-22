@@ -185,6 +185,13 @@ paths:
         - deleteAccount
       security:
         - bearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         content:
           application/json:
@@ -237,6 +244,13 @@ paths:
       description: Signup user
       tags:
         - signup
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         content:
           application/json:
@@ -253,6 +267,13 @@ paths:
       description: Verify phone number verification code
       tags:
         - signup
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         content:
           application/json:
@@ -263,6 +284,7 @@ paths:
           description: No Content. Successfully verified phone number.
         '400':
           description: Bad Request. Maybe phone number is already used or code is invalid.
+  # I guess it is idempotent because phone number should be unique.
   /signup:
     post:
       summary: Sign Up user
