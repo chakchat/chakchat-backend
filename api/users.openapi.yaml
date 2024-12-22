@@ -2,15 +2,44 @@ openapi: 3.0.3
 info:
   title: Users Service REST API
   description: Users Service REST API
-  version: 1.0.0
+  version: "1.0"
 servers:
-  - url: http://localhost:80/api/users/v1/
+  - url: http://localhost:80/api/users/v1.0/
     description: nginx reverse-proxied localhost
 tags:
   - name: others
     description: Other users info
   - name: me 
     description: User info about requesting user
+  - name: signup
+    description: Sign Up user
+#TODO: Maybe response should be standardized.
+# For example:
+# {
+#   "error_type": "invalid_phone",
+#   "error_message": "Phone number is invalid",
+#   "data": null
+# }
+# or 
+# {
+#   "error_type": null,
+#   "error_message": null,
+#   "data": [
+#     {
+#       "id": "35bdbf25-7715-41d2-b77b-6f69b49ce0a9",
+#       "name": "John Doe",
+#       "username": "johndoe",
+#       "phone": "+1234567890",
+#       "photo": "https://example.com/johndoe.jpg",
+#       "dateOfBirth": "1990-01-01"
+#     }
+#   ],
+#   "pagination": {
+#     "page": 1,
+#     "size": 1,
+#     "total": 10
+#   }
+# }
 paths:
   /user/{userId}:
     get:
@@ -128,6 +157,94 @@ paths:
           description: Unauthorized
         '400':
           description: Bad Request. Most likely validation error.
+  /user/me/restrictions:
+    get:
+      summary: Get own user's restrictions
+      description: Gets own user's restrictions
+      tags:
+        - me
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRestrictions'
+        '401':
+          description: Unauthorized
+    put:
+      summary: Update own user's restrictions
+      description: Updates own user's restrictions
+      tags:
+        - me
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/UserRestrictions"
+      responses:
+        '204':
+          description: No Content. Successfully updated restrictions.
+        '401':
+          description: Unauthorized
+        '400':
+          description: Bad Request.
+  /request-phone-code:
+    post:
+      summary: Request for phone number verification code.
+      description: Signup user
+      tags:
+        - signup
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/RequestPhoneCode"
+      responses:
+        '204':
+          description: No Content. Successfully sent verification code.
+        '400':
+          description: Bad Request. Maybe phone number is already used.
+  /verify-phone-code:
+    post:
+      summary: Verify phone number verification code.
+      description: Verify phone number verification code
+      tags:
+        - signup
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/VerifyPhoneCode"
+      responses:
+        '204':
+          description: No Content. Successfully verified phone number.
+        '400':
+          description: Bad Request. Maybe phone number is already used or code is invalid.
+  /signup:
+    post:
+      summary: Sign Up user
+      description: Sign Up user
+      tags:
+        - signup
+      requestBody:
+        content:
+          application/json:
+            schema: 
+              "$ref": "#/components/schemas/SignUp"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '400':
+          description: Bad Request. 
 components:
   securitySchemes:
     bearerAuth:
@@ -135,6 +252,73 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    UserRestrictions:
+      description: User restrictions info. It is used only for view by users themselves.
+      type: object
+      properties:
+        phone:
+          "$ref": "#/components/schemas/FieldRestriction"
+        dateOfBirth:
+          "$ref": "#/components/schemas/FieldRestriction"
+      required:
+        - phone
+        - dateOfBirth
+    FieldRestriction:
+      type: object
+      properties:
+        open_to: 
+          enum: [everyone, only_me, specified]
+          type: string
+          nullable: false
+        specified_users:
+          type: array
+          items:
+            type: string
+            format: uuid
+            nullable: false
+            description: User ids
+      required:
+        - open_to
+    SignUp:
+      properties:
+        phone:
+          type: string
+          format: phone
+          nullable: false
+        name:
+          type: string
+          nullable: false
+        username:
+          type: string
+          nullable: false
+        password:
+          type: string
+          nullable: false
+      required:
+        - phone
+        - name
+        - username
+        - password
+    RequestPhoneCode:
+      properties:
+        phone:
+          type: string
+          format: phone
+          nullable: false
+      required:
+        - phone
+    VerifyPhoneCode:
+      properties:
+        phone:
+          type: string
+          format: phone
+          nullable: false
+        code:
+          type: string
+          nullable: false
+      required:
+        - phone
+        - code
     UserProfile:
       description: User profile info. It is used only for view.
       type: object
@@ -164,6 +348,10 @@ components:
           format: date
           nullable: true
           description: User date of birth. May be null if user that made a request is stricted to see this date of birth.
+      required:
+        - id
+        - name
+        - username
       example:
         id: 35bdbf25-7715-41d2-b77b-6f69b49ce0a9
         name: John Doe
