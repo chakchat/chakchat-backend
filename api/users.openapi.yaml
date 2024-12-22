@@ -1,0 +1,191 @@
+openapi: 3.0.3
+info:
+  title: Users Service REST API
+  description: Users Service REST API
+  version: 1.0.0
+servers:
+  - url: http://localhost:80/api/users/v1/
+    description: nginx reverse-proxied localhost
+tags:
+  - name: others
+    description: Other users info
+  - name: me 
+    description: User info about requesting user
+paths:
+  /user/{userId}:
+    get:
+      summary: Get user info
+      description: Gets user profile info with restrictions.
+      tags:
+        - others
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+  /users:
+    get:
+      summary: Find users by search criteria
+      description: Finds users by search criteria. Pagination is supported. At least one search criteria must be specified.
+      tags:
+        - others
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+            nullable: true
+        - name: username
+          in: query
+          required: false
+          schema:
+            type: string
+            nullable: true
+        - name: page
+          description: Page number (starting with 1). Default is 1.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            nullable: true
+        - name: limit
+          description: Limits the number of records to be returned. Default is 10.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            nullable: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Unauthorized
+        '400':
+          description: Bad Request. Most likely no criteria is specified.
+  /user/me:
+    get:
+      summary: Get user info about requesting user
+      description: Gets user profile info
+      tags:
+        - me
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Unauthorized
+    put:
+      summary: Update user info about requesting user
+      description: Updates user profile info
+      tags:
+        - me
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserProfile'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Unauthorized
+        '400':
+          description: Bad Request. Most likely validation error.
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    UserProfile:
+      description: User profile info. It is used only for view.
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          nullable: false
+        name:
+          type: string
+          nullable: false
+        username:
+          type: string
+          nullable: false
+        phone:
+          type: string
+          format: phone
+          nullable: true
+          description: User phone number. May be null if user that made a request is stricted to see this phone number.
+        photo:
+          type: string
+          format: url
+          nullable: true
+          description: User photo url. May be null if it is not set.
+        dateOfBirth:
+          type: string
+          format: date
+          nullable: true
+          description: User date of birth. May be null if user that made a request is stricted to see this date of birth.
+      example:
+        id: 35bdbf25-7715-41d2-b77b-6f69b49ce0a9
+        name: John Doe
+        username: johndoe
+        phone: +1234567890
+        photo: https://example.com/johndoe.jpg
+        dateOfBirth: 1990-01-01
+    UpdateUserProfile:
+      description: User profile info. It is used only for update. Contains only updateble fields.
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: false
+        username:
+          type: string
+          nullable: false
+        photo:
+          type: string
+          format: url
+          nullable: true
+        dateOfBirth:
+          type: string
+          format: date
+          nullable: true
