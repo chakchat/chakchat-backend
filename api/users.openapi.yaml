@@ -305,6 +305,16 @@ paths:
                 $ref: '#/components/schemas/UserProfile'
         '400':
           description: Bad Request.
+  # Just to make life a little bit funnier.
+  # It may be removed in case of you are a real teapot yourself and are jealous of this teapot.
+  # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/418
+  /are-you-a-real-teapot:
+    get:
+      summary: Are you a teapot? (No real meaning) 
+      description: Are you a teapot?
+      responses:
+        '418':
+          description: I'm a teapot
 components:
   securitySchemes:
     bearerAuth:
