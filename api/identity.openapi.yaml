@@ -1,0 +1,244 @@
+openapi: 3.0.3
+info:
+  title: Identity Service
+  description: Identity Service REST API 
+  version: "1.0"
+servers:
+  - url: http://localhost:80/api/identity/v1.0/
+    description: nginx reverse-proxied localhost
+paths:
+  /signin/send-phone-code:
+    post:
+      summary: Sign In user
+      description: Sign In user
+      tags:
+        - signin
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/SendCodeRequest"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptySuccessResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponseWithDetails'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
+  /signin:
+    post:
+      summary: Sign In user
+      description: Sign In user
+      tags:
+        - signin
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/SignInRequest"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SignInResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema: 
+                "$ref": '#/components/schemas/ErrorResponseWithDetails'
+  /refresh-token:
+    post:
+      summary: Refresh user token
+      description: Refresh user token
+      tags:
+        - signin
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/RefreshTokenRequest"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RefreshTokenResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema: 
+                "$ref": '#/components/schemas/ErrorResponseWithDetails'
+components:
+  schemas:
+    RefreshTokenRequest:
+      type: object
+      properties:
+        refresh_token:
+          type: string
+          format: jwt
+          nullable: false
+      required:
+        - refresh_token
+      example:
+        refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODlhczAiLCJuYW1lIjoiSm9obiBEZHNvZSIsImlhdCI6MTUxNjIzOTAyMn0.gMtW_LPAMSJXOwU4GhTlnC7tgLI_ILtrr6CQw26U784
+    RefreshTokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          format: jwt
+          nullable: false
+        refresh_token:
+          type: string
+          format: jwt
+          nullable: false
+      required:
+        - access_token  
+        - refresh_token
+      example:
+        access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+        refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODlhczAiLCJuYW1lIjoiSm9obiBEZHNvZSIsImlhdCI6MTUxNjIzOTAyMn0.gMtW_LPAMSJXOwU4GhTlnC7tgLI_ILtrr6CQw26U784
+    SignInRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+          format: phone
+          nullable: false
+        signin_key:
+          description: The device should use the key generated for phone code request. 
+          type: string
+          format: uuid
+          nullable: false
+      required:
+        - phone
+    SignInResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          format: jwt
+          nullable: false
+        refresh_token:
+          type: string
+          format: jwt
+          nullable: false
+      required:
+        - access_token
+        - refresh_token
+      example:
+        access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+        refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODlhczAiLCJuYW1lIjoiSm9obiBEZHNvZSIsImlhdCI6MTUxNjIzOTAyMn0.gMtW_LPAMSJXOwU4GhTlnC7tgLI_ILtrr6CQw26U784
+    SendCodeRequest:
+      type: object
+      properties:
+        signin_key:
+          description: The device should generate the key and use it to sign in 
+          type: string
+          format: uuid
+          nullable: false
+        code:
+          type: string
+          nullable: false
+      required:
+        - phone
+        - code
+    EmptySuccessResponse:
+      type: object
+      example: {}
+    ErrorResponseWithDetails:
+      type: object
+      description: Error response specified by standard.md
+      properties:
+        error_type:
+          type: string
+          nullable: false
+        error_message:
+          type: string
+          nullable: false
+        error_details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                nullable: false
+              message:
+                type: string
+                nullable: false
+      example:
+        error_type: invalid_input
+        error_message: Input is invalid
+        error_details:
+          - field: some_field
+            message: Some field is invalid  
+    ErrorResponse:
+      type: object
+      description: Error response specified by standard.md
+      properties:
+        error_type:
+          type: string
+          nullable: false
+        error_message:
+          type: string
+          nullable: false
+        error_details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                nullable: false
+              message:
+                type: string
+                nullable: false
+      example:
+        error_type: invalid_input
+        error_message: Input is invalid
+        error_details: []
