@@ -487,14 +487,10 @@ components:
         username:
           type: string
           nullable: false
-        password:
-          type: string
-          nullable: false
       required:
         - phone
         - name
         - username
-        - password
     RequestPhoneCode:
       properties:
         phone:
