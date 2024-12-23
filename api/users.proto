@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package users;
+
+message SignInRequest {
+    // Either username or phoneNumber is required.
+    optional string username = 1;
+    optional string phoneNumber = 2;
+    string password = 3;
+}
+
+enum SignInStatus {
+    SIGN_IN_STATUS_SUCCESS = 0;
+    SIGN_IN_STATUS_FAILED = 1;
+    SIGN_IN_STATUS_USER_NOT_FOUND = 2;
+    SIGN_IN_STATUS_PASSWORD_MISMATCH = 3;
+}
+
+message SignInResponse {
+    SignInStatus status = 1;
+    // If password verified then 
+    optional string userName = 2;
+}
+
+service UsersService {
+    rpc SignIn(SignInRequest) returns (SignInResponse);
+}

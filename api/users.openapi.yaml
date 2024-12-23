@@ -1,0 +1,575 @@
+openapi: 3.0.3
+info:
+  title: Users Service REST API
+  description: Users Service REST API
+  version: "1.0"
+servers:
+  - url: http://localhost:80/api/users/v1.0/
+    description: nginx reverse-proxied localhost
+tags:
+  - name: others
+    description: Other users info
+  - name: me 
+    description: User info about requesting user
+  - name: signup
+    description: Sign Up user
+  - name: deleteAccount
+    description: Delete user account
+# Response body follows the standard described in standard.md
+paths:
+  /user/{userId}:
+    get:
+      summary: Get user info
+      description: Gets user profile info with restrictions.
+      tags:
+        - others
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
+  /users:
+    get:
+      summary: Find users by search criteria
+      description: Finds users by search criteria. Pagination is supported. At least one search criteria must be specified.
+      tags:
+        - others
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+            nullable: true
+        - name: username
+          in: query
+          required: false
+          schema:
+            type: string
+            nullable: true
+        - name: page
+          description: Page number (starting with 1). Default is 1.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            nullable: true
+        - name: limit
+          description: Limits the number of records to be returned. Default is 10.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            nullable: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad Request. Most likely no criteria is specified.
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponseWithDetails'
+  /me:
+    get:
+      summary: Get user info about requesting user
+      description: Gets user profile info
+      tags:
+        - me
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update user info about requesting user
+      description: Updates user profile info
+      tags:
+        - me
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserProfile'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad Request. Most likely validation error.
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Delete user account with phone number verification code.
+      description: Delete user account with phone number verification code
+      tags:
+        - deleteAccount
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/VerifyPhoneCode"
+      responses:
+        '200':
+          description: Successfully verified phone number.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/EmptySuccessResponse"
+        '400':
+          description: Bad Request. Maybe phone number is already used or code is invalid. 
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponseWithDetails'
+  /me/deletion/request-code:
+    post:
+      summary: Request for phone number verification code.
+      description: Request phone number verification code
+      tags:
+        - deleteAccount
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/RequestPhoneCode"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/EmptySuccessResponse'
+        '400':
+          description: Bad Request. Maybe phone number is already used.
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
+  /me/restrictions:
+    get:
+      summary: Get own user's restrictions
+      description: Gets own user's restrictions
+      tags:
+        - me
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/UserRestrictions'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update own user's restrictions
+      description: Updates own user's restrictions
+      tags:
+        - me
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/UserRestrictions"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/EmptySuccessResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponseWithDetails'
+  /signup/request-code:
+    post:
+      summary: Request for phone number verification code.
+      description: Signup user
+      tags:
+        - signup
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/RequestPhoneCode"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/EmptySuccessResponse'
+        '400':
+          description: Bad Request. Maybe phone number is already used.
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
+  /signup/verify-code:
+    post:
+      summary: Verify phone number verification code.
+      description: Verify phone number verification code
+      tags:
+        - signup
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/VerifyPhoneCode"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/EmptySuccessResponse'
+        '400':
+          description: Bad Request. Maybe phone number is already used or code is invalid.
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponseWithDetails'
+  # I guess it is idempotent because phone number should be unique.
+  /signup:
+    post:
+      summary: Sign Up user
+      description: Sign Up user
+      tags:
+        - signup
+      requestBody:
+        content:
+          application/json:
+            schema: 
+              "$ref": "#/components/schemas/SignUp"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/UserProfile'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponseWithDetails'
+  # Just to make life a little bit funnier.
+  # It may be removed in case of you are a real teapot yourself and are jealous of this teapot.
+  # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/418
+  /are-you-a-real-teapot:
+    get:
+      summary: Are you a teapot? (No real meaning) 
+      description: Are you a teapot?
+      responses:
+        '418':
+          description: I'm a teapot
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    EmptySuccessResponse:
+      type: object
+      example: {}
+    ErrorResponseWithDetails:
+      type: object
+      description: Error response specified by standard.md
+      properties:
+        error_type:
+          type: string
+          nullable: false
+        error_message:
+          type: string
+          nullable: false
+        error_details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                nullable: false
+              message:
+                type: string
+                nullable: false
+      example:
+        error_type: invalid_input
+        error_message: Input is invalid
+        error_details:
+          - field: some_field
+            message: Some field is invalid    
+    ErrorResponse:
+      type: object
+      description: Error response specified by standard.md
+      properties:
+        error_type:
+          type: string
+          nullable: false
+        error_message:
+          type: string
+          nullable: false
+        error_details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                nullable: false
+              message:
+                type: string
+                nullable: false
+      example:
+        error_type: invalid_input
+        error_message: Input is invalid
+        error_details: []
+    UserRestrictions:
+      description: User restrictions info. It is used only for view by users themselves.
+      type: object
+      properties:
+        phone:
+          "$ref": "#/components/schemas/FieldRestriction"
+        dateOfBirth:
+          "$ref": "#/components/schemas/FieldRestriction"
+      required:
+        - phone
+        - dateOfBirth
+    FieldRestriction:
+      type: object
+      properties:
+        open_to: 
+          enum: [everyone, only_me, specified]
+          type: string
+          nullable: false
+        specified_users:
+          type: array
+          items:
+            type: string
+            format: uuid
+            nullable: false
+            description: User ids
+      required:
+        - open_to
+    SignUp:
+      properties:
+        phone:
+          type: string
+          format: phone
+          nullable: false
+        name:
+          type: string
+          nullable: false
+        username:
+          type: string
+          nullable: false
+        password:
+          type: string
+          nullable: false
+      required:
+        - phone
+        - name
+        - username
+        - password
+    RequestPhoneCode:
+      properties:
+        phone:
+          type: string
+          format: phone
+          nullable: false
+      required:
+        - phone
+    VerifyPhoneCode:
+      properties:
+        phone:
+          type: string
+          format: phone
+          nullable: false
+        code:
+          type: string
+          nullable: false
+      required:
+        - phone
+        - code
+    UserProfile:
+      description: User profile info. It is used only for view.
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          nullable: false
+        name:
+          type: string
+          nullable: false
+        username:
+          type: string
+          nullable: false
+        phone:
+          type: string
+          format: phone
+          nullable: true
+          description: User phone number. May be null if user that made a request is stricted to see this phone number.
+        photo:
+          type: string
+          format: url
+          nullable: true
+          description: User photo url. May be null if it is not set.
+        dateOfBirth:
+          type: string
+          format: date
+          nullable: true
+          description: User date of birth. May be null if user that made a request is stricted to see this date of birth.
+      required:
+        - id
+        - name
+        - username
+      example:
+        id: 35bdbf25-7715-41d2-b77b-6f69b49ce0a9
+        name: John Doe
+        username: johndoe
+        phone: +1234567890
+        photo: https://example.com/johndoe.jpg
+        dateOfBirth: 1990-01-01
+    UpdateUserProfile:
+      description: User profile info. It is used only for update. Contains only updateble fields.
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: false
+        username:
+          type: string
+          nullable: false
+        photo:
+          type: string
+          format: url
+          nullable: true
+        dateOfBirth:
+          type: string
+          format: date
+          nullable: true
