@@ -15,34 +15,7 @@ tags:
     description: Sign Up user
   - name: deleteAccount
     description: Delete user account
-#TODO: Maybe response should be standardized.
-# For example:
-# {
-#   "error_type": "invalid_phone",
-#   "error_message": "Phone number is invalid",
-#   "data": null
-# }
-# or 
-# {
-#   "error_type": null,
-#   "error_message": null,
-#   "data": [
-#     {
-#       "id": "35bdbf25-7715-41d2-b77b-6f69b49ce0a9",
-#       "name": "John Doe",
-#       "username": "johndoe",
-#       "phone": "+1234567890",
-#       "photo": "https://example.com/johndoe.jpg",
-#       "dateOfBirth": "1990-01-01"
-#     }
-#   ],
-#   "pagination": {
-#     "page": 1,
-#     "size": 1,
-#     "total": 10
-#   }
-# }
-# TODO: Idempotency keys for non-idempotent requests.
+# Response body follows the standard described in standard.md
 paths:
   /user/{userId}:
     get:
@@ -65,11 +38,22 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserProfile'
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/UserProfile'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
   /users:
     get:
       summary: Find users by search criteria
@@ -113,13 +97,24 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/UserProfile'
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserProfile'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
         '400':
           description: Bad Request. Most likely no criteria is specified.
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponseWithDetails'
   /me:
     get:
       summary: Get user info about requesting user
@@ -134,9 +129,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserProfile'
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/UserProfile'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
     put:
       summary: Update user info about requesting user
       description: Updates user profile info
@@ -155,14 +157,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserProfile'
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/UserProfile'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
         '400':
           description: Bad Request. Most likely validation error.
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
     delete:
-      summary: Verify phone number verification code.
-      description: Verify phone number verification code
+      summary: Delete user account with phone number verification code.
+      description: Delete user account with phone number verification code
       tags:
         - deleteAccount
       security:
@@ -173,10 +186,18 @@ paths:
             schema:
               "$ref": "#/components/schemas/VerifyPhoneCode"
       responses:
-        '204':
-          description: No Content. Successfully verified phone number.
+        '200':
+          description: Successfully verified phone number.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/EmptySuccessResponse"
         '400':
           description: Bad Request. Maybe phone number is already used or code is invalid. 
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponseWithDetails'
   /me/deletion/request-code:
     post:
       summary: Request for phone number verification code.
@@ -198,10 +219,18 @@ paths:
             schema:
               "$ref": "#/components/schemas/RequestPhoneCode"
       responses:
-        '204':
-          description: No Content. Successfully sent verification code.
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/EmptySuccessResponse'
         '400':
           description: Bad Request. Maybe phone number is already used.
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
   /me/restrictions:
     get:
       summary: Get own user's restrictions
@@ -216,9 +245,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserRestrictions'
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/UserRestrictions'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
     put:
       summary: Update own user's restrictions
       description: Updates own user's restrictions
@@ -232,12 +268,24 @@ paths:
             schema:
               "$ref": "#/components/schemas/UserRestrictions"
       responses:
-        '204':
-          description: No Content. Successfully updated restrictions.
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/EmptySuccessResponse'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
         '400':
           description: Bad Request.
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponseWithDetails'
   /signup/request-code:
     post:
       summary: Request for phone number verification code.
@@ -257,10 +305,18 @@ paths:
             schema:
               "$ref": "#/components/schemas/RequestPhoneCode"
       responses:
-        '204':
-          description: No Content. Successfully sent verification code.
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/EmptySuccessResponse'
         '400':
           description: Bad Request. Maybe phone number is already used.
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
   /signup/verify-code:
     post:
       summary: Verify phone number verification code.
@@ -280,10 +336,18 @@ paths:
             schema:
               "$ref": "#/components/schemas/VerifyPhoneCode"
       responses:
-        '204':
-          description: No Content. Successfully verified phone number.
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/EmptySuccessResponse'
         '400':
           description: Bad Request. Maybe phone number is already used or code is invalid.
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponseWithDetails'
   # I guess it is idempotent because phone number should be unique.
   /signup:
     post:
@@ -302,9 +366,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserProfile'
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/UserProfile'
         '400':
           description: Bad Request.
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponseWithDetails'
   # Just to make life a little bit funnier.
   # It may be removed in case of you are a real teapot yourself and are jealous of this teapot.
   # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/418
@@ -322,6 +393,61 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    EmptySuccessResponse:
+      type: object
+      example: {}
+    ErrorResponseWithDetails:
+      type: object
+      description: Error response specified by standard.md
+      properties:
+        error_type:
+          type: string
+          nullable: false
+        error_message:
+          type: string
+          nullable: false
+        error_details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                nullable: false
+              message:
+                type: string
+                nullable: false
+      example:
+        error_type: invalid_input
+        error_message: Input is invalid
+        error_details:
+          - field: some_field
+            message: Some field is invalid    
+    ErrorResponse:
+      type: object
+      description: Error response specified by standard.md
+      properties:
+        error_type:
+          type: string
+          nullable: false
+        error_message:
+          type: string
+          nullable: false
+        error_details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                nullable: false
+              message:
+                type: string
+                nullable: false
+      example:
+        error_type: invalid_input
+        error_message: Input is invalid
+        error_details: []
     UserRestrictions:
       description: User restrictions info. It is used only for view by users themselves.
       type: object
