@@ -1,5 +1,7 @@
 package main
 
+// Specified by contract.md in /api folder
+
 const (
 	ErrorTypeInternal = "internal"
 )

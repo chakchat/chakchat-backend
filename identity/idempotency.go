@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,6 +28,15 @@ func captureCondition(resp *CapturedResponse) bool {
 func CheckIdempotencyKey(storage IdempotencyStorage) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		key := c.GetHeader(HeaderIdempotencyKey)
+		if key == "" {
+			errResp := ErrorResponse{
+				ErrorType:    "idempotency_key_missing",
+				ErrorMessage: "No \"" + HeaderIdempotencyKey + "\" header provided",
+			}
+			c.JSON(http.StatusBadRequest, errResp)
+			c.Abort()
+			return
+		}
 		cached, ok := storage.Get(key)
 		if ok {
 			writeCached(c, cached)
@@ -55,14 +65,21 @@ func CheckIdempotencyKey(storage IdempotencyStorage) gin.HandlerFunc {
 
 func copyHeaders(src http.Header, dst http.Header) {
 	for h, val := range src {
-		dst[h] = val
+		dst.Set(h, strings.Join(val, "; "))
 	}
 }
 
 func writeCached(c *gin.Context, cached *CapturedResponse) {
+	copyHeaders(cached.Headers, c.Writer.Header())
+	c.Status(cached.StatusCode)
 	_, err := c.Writer.Write(cached.Body)
 	if err != nil {
-		// I don't know what case this error mean
+		// I don't know what case this error mean|
+
+		// I remove headers added from response not to mix them
+		for h := range cached.Headers {
+			c.Writer.Header().Del(h)
+		}
 		errResp := ErrorResponse{
 			ErrorType:    ErrorTypeInternal,
 			ErrorMessage: "Internal Server Error",
@@ -70,8 +87,6 @@ func writeCached(c *gin.Context, cached *CapturedResponse) {
 		c.JSON(http.StatusInternalServerError, errResp)
 		return
 	}
-	copyHeaders(cached.Headers, c.Writer.Header())
-	c.Status(cached.StatusCode)
 }
 
 func newResponseCapturer(writer gin.ResponseWriter) responseCapturer {

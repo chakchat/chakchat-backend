@@ -1,7 +1,7 @@
 **Here is a standard for API in this project.**
-## REST API
+# REST API
 `Idemotency-Key` header should be unique for every action but should be repeated when action is retried to ensure idempotency.
-### Response body
+## Response body
 Every Response can be deserialize as this object:
 ```json
 {
@@ -13,7 +13,7 @@ Every Response can be deserialize as this object:
 ```
 The `error_xxx` fields are `null` when response is successful.
 Unused fields are omitted as shown in the examples below.
-##### Success response with object data
+### Success response with object data
 ```json
 {
   "data": {
@@ -22,7 +22,7 @@ Unused fields are omitted as shown in the examples below.
   }
 }
 ```
-##### Success response with array data
+### Success response with array data
 `data` field should be JSON object because array cabbot be extended by additional fields in the future.
 ```json
 {
@@ -68,7 +68,7 @@ For example, if you want to return paginated list of users, you should return so
   }
 }
 ```
-##### Error response
+### Error response
 ```json
 {
   "error_type": "invalid_input",
@@ -82,3 +82,9 @@ For example, if you want to return paginated list of users, you should return so
 }
 ```
 `error_type` should be machine-readable error type.
+### Used `error_type` values
+TODO: It should be clear what error_type every endpoint may return.
+| error_type | description |
+| --- | --- |
+| `internal` | Internal server error |
+| `idempotency_key_missing` | Idempotency key is missing |
