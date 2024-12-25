@@ -3,7 +3,7 @@ name: Identity Service Unit Test
 on:
   push:
     branches:
-      - .*
+      - '**'
     paths:
         - backend/identity/**.go
         - backend/identity/**/go.mod
