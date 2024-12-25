@@ -27,4 +27,4 @@ jobs:
         - name: Test
           run: |
             cd backend/identity
-            go test -v -race ./..
+            go test -v -race ./...
