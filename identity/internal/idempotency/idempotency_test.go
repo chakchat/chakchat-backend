@@ -1,4 +1,4 @@
-package main
+package idempotency
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/chakchat/chakchat/backend/identity/internal/restapi"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,7 +18,7 @@ func TestStoresResponse(t *testing.T) {
 	// Arrange
 	r, storage := setUp()
 	r.POST("/200-with-body", func(c *gin.Context) {
-		c.JSON(http.StatusOK, SuccessResponse{
+		c.JSON(http.StatusOK, restapi.SuccessResponse{
 			Data: gin.H{
 				"word": "Success Data",
 			},
@@ -105,7 +106,7 @@ func execute(r *gin.Engine, path, idempotencyKey string) *httptest.ResponseRecor
 func setUp() (*gin.Engine, *mockIdempotencyStorage) {
 	r := gin.New()
 	mockStorage := &mockIdempotencyStorage{map[string]*CapturedResponse{}}
-	r.Use(NewIdempotencyMiddleware(mockStorage).Handle)
+	r.Use(New(mockStorage))
 	return r, mockStorage
 }
 

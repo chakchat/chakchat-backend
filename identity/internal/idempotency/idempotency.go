@@ -1,4 +1,4 @@
-package main
+package idempotency
 
 import (
 	"bytes"
@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/chakchat/chakchat/backend/identity/internal/restapi"
 	"github.com/gin-gonic/gin"
 )
 
@@ -27,17 +28,18 @@ type IdempotencyMiddleware struct {
 	lock    *Locker
 }
 
-func NewIdempotencyMiddleware(storage IdempotencyStorage) *IdempotencyMiddleware {
-	return &IdempotencyMiddleware{
+func New(storage IdempotencyStorage) gin.HandlerFunc {
+	m := &IdempotencyMiddleware{
 		storage: storage,
 		lock:    NewLocker(),
 	}
+	return m.Handle
 }
 
 func (m *IdempotencyMiddleware) Handle(c *gin.Context) {
 	key := c.GetHeader(HeaderIdempotencyKey)
 	if key == "" {
-		errResp := ErrorResponse{
+		errResp := restapi.ErrorResponse{
 			ErrorType:    "idempotency_key_missing",
 			ErrorMessage: "No \"" + HeaderIdempotencyKey + "\" header provided",
 		}
@@ -105,8 +107,8 @@ func writeCached(c *gin.Context, cached *CapturedResponse) {
 }
 
 func writeInternalError(c *gin.Context) {
-	errResp := ErrorResponse{
-		ErrorType:    ErrorTypeInternal,
+	errResp := restapi.ErrorResponse{
+		ErrorType:    restapi.ErrorTypeInternal,
 		ErrorMessage: "Internal Server Error",
 	}
 	c.JSON(http.StatusInternalServerError, errResp)

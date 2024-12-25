@@ -1,4 +1,4 @@
-package main
+package restapi
 
 // Specified by contract.md in /api folder
 
