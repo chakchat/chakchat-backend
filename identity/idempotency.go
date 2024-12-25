@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"net/http"
 	"strings"
 
@@ -17,50 +18,68 @@ type CapturedResponse struct {
 }
 
 type IdempotencyStorage interface {
-	Get(key string) (*CapturedResponse, bool)
-	Store(key string, resp *CapturedResponse) error
+	Get(ctx context.Context, key string) (*CapturedResponse, bool)
+	Store(ctx context.Context, key string, resp *CapturedResponse) error
+}
+
+type IdempotencyMiddleware struct {
+	storage IdempotencyStorage
+	lock    *Locker
+}
+
+func NewIdempotencyMiddleware(storage IdempotencyStorage) *IdempotencyMiddleware {
+	return &IdempotencyMiddleware{
+		storage: storage,
+		lock:    NewLocker(),
+	}
+}
+
+func (m *IdempotencyMiddleware) Handle(c *gin.Context) {
+	key := c.GetHeader(HeaderIdempotencyKey)
+	if key == "" {
+		errResp := ErrorResponse{
+			ErrorType:    "idempotency_key_missing",
+			ErrorMessage: "No \"" + HeaderIdempotencyKey + "\" header provided",
+		}
+		c.JSON(http.StatusBadRequest, errResp)
+		c.Abort()
+		return
+	}
+
+	m.lock.Lock(key)
+	defer m.lock.Unlock(key)
+
+	cached, ok := m.storage.Get(c, key)
+	if ok {
+		writeCached(c, cached)
+		c.Abort()
+		return
+	}
+	// Check if storage (and this func too) was cancelled
+	if err := c.Err(); err != nil {
+		return
+	}
+
+	capturer := newResponseCapturer(c.Writer)
+	c.Writer = capturer
+
+	c.Next()
+
+	if resp := capturer.ExtractResponse(); captureCondition(resp) {
+		err := m.storage.Store(context.Background(), key, resp) // This operation shouldn't be stopped such easily
+		if err != nil {
+			// TODO: what to do then
+			// I think I must guarantee that idempotent endpoint will NOT be re-executed
+			// But in this scenario this concept goes wrong
+			// Maybe `storage.Store()` retry?
+			// I guess no, especially if Store() is deteministic
+			// But what do I do?
+		}
+	}
 }
 
 func captureCondition(resp *CapturedResponse) bool {
 	return resp.StatusCode < 500
-}
-
-func CheckIdempotencyKey(storage IdempotencyStorage) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		key := c.GetHeader(HeaderIdempotencyKey)
-		if key == "" {
-			errResp := ErrorResponse{
-				ErrorType:    "idempotency_key_missing",
-				ErrorMessage: "No \"" + HeaderIdempotencyKey + "\" header provided",
-			}
-			c.JSON(http.StatusBadRequest, errResp)
-			c.Abort()
-			return
-		}
-		cached, ok := storage.Get(key)
-		if ok {
-			writeCached(c, cached)
-			c.Abort()
-			return
-		}
-
-		capturer := newResponseCapturer(c.Writer)
-		c.Writer = capturer
-
-		c.Next()
-
-		if resp := capturer.ExtractResponse(); captureCondition(resp) {
-			err := storage.Store(key, resp)
-			if err != nil {
-				// TODO: what to do then
-				// I think I must guarantee that idempotent endpoint will NOT be re-executed
-				// But in this scenario this concept goes wrong
-				// Maybe `storage.Store()` retry?
-				// I guess no, especially if Store() is deteministic
-				// But what do I do?
-			}
-		}
-	}
 }
 
 func copyHeaders(src http.Header, dst http.Header) {
@@ -80,13 +99,17 @@ func writeCached(c *gin.Context, cached *CapturedResponse) {
 		for h := range cached.Headers {
 			c.Writer.Header().Del(h)
 		}
-		errResp := ErrorResponse{
-			ErrorType:    ErrorTypeInternal,
-			ErrorMessage: "Internal Server Error",
-		}
-		c.JSON(http.StatusInternalServerError, errResp)
+		writeInternalError(c)
 		return
 	}
+}
+
+func writeInternalError(c *gin.Context) {
+	errResp := ErrorResponse{
+		ErrorType:    ErrorTypeInternal,
+		ErrorMessage: "Internal Server Error",
+	}
+	c.JSON(http.StatusInternalServerError, errResp)
 }
 
 func newResponseCapturer(writer gin.ResponseWriter) responseCapturer {

@@ -1,16 +1,20 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestStoresResponse(t *testing.T) {
+	// Arrange
 	r, storage := setUp()
 	r.POST("/200-with-body", func(c *gin.Context) {
 		c.JSON(http.StatusOK, SuccessResponse{
@@ -21,49 +25,87 @@ func TestStoresResponse(t *testing.T) {
 	})
 
 	const idempotencyKey = "d6f67723-cf79-46a2-9864-ab0d541cd434"
-	respRecorder := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPost, "/200-with-body", strings.NewReader(""))
-	req.Header[HeaderIdempotencyKey] = []string{idempotencyKey}
 
-	r.ServeHTTP(respRecorder, req)
+	// Act
+	resp := execute(r, "/200-with-body", idempotencyKey)
+	captured, ok := storage.Get(context.Background(), idempotencyKey)
 
-	captured, ok := storage.Get(idempotencyKey)
+	// Assert
 	assert.True(t, ok)
 	assert.Equal(t, http.StatusOK, captured.StatusCode)
-	assert.JSONEq(t, respRecorder.Body.String(), string(captured.Body))
+	assert.JSONEq(t, resp.Body.String(), string(captured.Body))
 }
 
 func TestReturnsStored(t *testing.T) {
+	// Arrange
 	r, storage := setUp()
-	r.Use(gin.Logger())
-	r.POST("/200", func(ctx *gin.Context) {
+	r.POST("/200", func(_ *gin.Context) {
 		assert.FailNow(t, "This code is not to re-execute")
 	})
 	const idempotencyKey = "2e89f9fc-5596-4a9c-8177-3b4ce3853b17"
-	resp := &CapturedResponse{
+	cachedResp := &CapturedResponse{
 		StatusCode: 200,
 		Headers: map[string][]string{
 			"Custom-Header": {"idk"},
 		},
 		Body: []byte{69},
 	}
-	storage.Store(idempotencyKey, resp)
+	storage.Store(context.Background(), idempotencyKey, cachedResp)
 
+	// Act
+	resp := execute(r, "/200", idempotencyKey)
+
+	// Assert
+	assert.Equal(t, cachedResp.StatusCode, resp.Code)
+	assert.Equal(t, cachedResp.Headers, resp.Header())
+	assert.Equal(t, cachedResp.Body, resp.Body.Bytes())
+}
+
+func TestSlowExecutionFastRetry(t *testing.T) {
+	// Arrange
+	r, _ := setUp()
+	r.POST("/200-slow", func(c *gin.Context) {
+		time.Sleep(1 * time.Second)
+		c.String(200, "%s", time.Now())
+	})
+	const idempotencyKey = "2e89f9fc-5596-4a9c-8177-3b4ce3853b17"
+
+	// Act
+	wg := sync.WaitGroup{}
+	var resp1, resp2, resp3 *httptest.ResponseRecorder
+	wg.Add(3)
+	go func() {
+		resp1 = execute(r, "/200-slow", idempotencyKey)
+		wg.Done()
+	}()
+	go func() {
+		resp2 = execute(r, "/200-slow", idempotencyKey)
+		wg.Done()
+	}()
+	go func() {
+		resp3 = execute(r, "/200-slow", idempotencyKey)
+		wg.Done()
+	}()
+	wg.Wait()
+
+	// Assert
+	assert.Equal(t, resp1, resp2)
+	assert.Equal(t, resp1, resp3)
+}
+
+func execute(r *gin.Engine, path, idempotencyKey string) *httptest.ResponseRecorder {
 	respRecorder := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPost, "/200", strings.NewReader(""))
+	req := httptest.NewRequest(http.MethodPost, path, strings.NewReader(""))
 	req.Header[HeaderIdempotencyKey] = []string{idempotencyKey}
 
 	r.ServeHTTP(respRecorder, req)
-
-	assert.Equal(t, resp.StatusCode, respRecorder.Code)
-	assert.Equal(t, resp.Headers, respRecorder.Header())
-	assert.Equal(t, resp.Body, respRecorder.Body.Bytes())
+	return respRecorder
 }
 
 func setUp() (*gin.Engine, *mockIdempotencyStorage) {
 	r := gin.New()
 	mockStorage := &mockIdempotencyStorage{map[string]*CapturedResponse{}}
-	r.Use(CheckIdempotencyKey(mockStorage))
+	r.Use(NewIdempotencyMiddleware(mockStorage).Handle)
 	return r, mockStorage
 }
 
@@ -71,12 +113,12 @@ type mockIdempotencyStorage struct {
 	m map[string]*CapturedResponse
 }
 
-func (s *mockIdempotencyStorage) Get(key string) (*CapturedResponse, bool) {
+func (s *mockIdempotencyStorage) Get(_ context.Context, key string) (*CapturedResponse, bool) {
 	resp, ok := s.m[key]
 	return resp, ok
 }
 
-func (s *mockIdempotencyStorage) Store(key string, resp *CapturedResponse) error {
+func (s *mockIdempotencyStorage) Store(_ context.Context, key string, resp *CapturedResponse) error {
 	s.m[key] = resp
 	return nil
 }

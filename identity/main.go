@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -12,9 +13,10 @@ func main() {
 	storage := &MockIdempotencyStorage{
 		m: map[string]*CapturedResponse{},
 	}
-	r.Use(CheckIdempotencyKey(storage))
+	r.Use(NewIdempotencyMiddleware(storage).Handle)
 
 	r.GET("/hello", func(c *gin.Context) {
+		time.Sleep(3 * time.Second)
 		c.Header("idk", "idk")
 		c.JSON(200, SuccessResponse{
 			Data: struct {
@@ -32,12 +34,13 @@ type MockIdempotencyStorage struct {
 	m map[string]*CapturedResponse
 }
 
-func (s *MockIdempotencyStorage) Get(key string) (*CapturedResponse, bool) {
+func (s *MockIdempotencyStorage) Get(_ context.Context, key string) (*CapturedResponse, bool) {
 	resp, ok := s.m[key]
+	delete(s.m, key)
 	return resp, ok
 }
 
-func (s *MockIdempotencyStorage) Store(key string, resp *CapturedResponse) error {
+func (s *MockIdempotencyStorage) Store(_ context.Context, key string, resp *CapturedResponse) error {
 	s.m[key] = resp
 	return nil
 }
