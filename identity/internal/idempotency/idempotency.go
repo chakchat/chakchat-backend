@@ -23,20 +23,20 @@ type IdempotencyStorage interface {
 	Store(ctx context.Context, key string, resp *CapturedResponse) error
 }
 
-type IdempotencyMiddleware struct {
-	storage IdempotencyStorage
-	lock    *Locker
-}
-
 func New(storage IdempotencyStorage) gin.HandlerFunc {
-	m := &IdempotencyMiddleware{
+	m := &idempotencyMiddleware{
 		storage: storage,
 		lock:    NewLocker(),
 	}
 	return m.Handle
 }
 
-func (m *IdempotencyMiddleware) Handle(c *gin.Context) {
+type idempotencyMiddleware struct {
+	storage IdempotencyStorage
+	lock    *Locker
+}
+
+func (m *idempotencyMiddleware) Handle(c *gin.Context) {
 	key := c.GetHeader(HeaderIdempotencyKey)
 	if key == "" {
 		errResp := restapi.ErrorResponse{
@@ -106,16 +106,16 @@ func writeCached(c *gin.Context, cached *CapturedResponse) {
 	}
 }
 
+type responseCapturer struct {
+	gin.ResponseWriter
+	Body *bytes.Buffer
+}
+
 func newResponseCapturer(writer gin.ResponseWriter) responseCapturer {
 	return responseCapturer{
 		ResponseWriter: writer,
 		Body:           &bytes.Buffer{},
 	}
-}
-
-type responseCapturer struct {
-	gin.ResponseWriter
-	Body *bytes.Buffer
 }
 
 func (c responseCapturer) Write(data []byte) (int, error) {
