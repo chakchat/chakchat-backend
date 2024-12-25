@@ -88,3 +88,5 @@ TODO: It should be clear what error_type every endpoint may return.
 | --- | --- |
 | `internal` | Internal server error |
 | `idempotency_key_missing` | Idempotency key is missing |
+| `validation_failed` | Validation failed |
+| `invalid_json` | JSON is unprocessable |

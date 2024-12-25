@@ -40,7 +40,7 @@ func (m *IdempotencyMiddleware) Handle(c *gin.Context) {
 	key := c.GetHeader(HeaderIdempotencyKey)
 	if key == "" {
 		errResp := restapi.ErrorResponse{
-			ErrorType:    "idempotency_key_missing",
+			ErrorType:    restapi.ErrorTypeIdempotencyKeyMissing,
 			ErrorMessage: "No \"" + HeaderIdempotencyKey + "\" header provided",
 		}
 		c.JSON(http.StatusBadRequest, errResp)
@@ -101,17 +101,9 @@ func writeCached(c *gin.Context, cached *CapturedResponse) {
 		for h := range cached.Headers {
 			c.Writer.Header().Del(h)
 		}
-		writeInternalError(c)
+		restapi.SendInternalError(c)
 		return
 	}
-}
-
-func writeInternalError(c *gin.Context) {
-	errResp := restapi.ErrorResponse{
-		ErrorType:    restapi.ErrorTypeInternal,
-		ErrorMessage: "Internal Server Error",
-	}
-	c.JSON(http.StatusInternalServerError, errResp)
 }
 
 func newResponseCapturer(writer gin.ResponseWriter) responseCapturer {
