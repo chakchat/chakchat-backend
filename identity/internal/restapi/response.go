@@ -3,12 +3,16 @@ package restapi
 // Specified by contract.md in /api folder
 
 const (
-	ErrorTypeInternal         = "internal"
-	ErrorTypeInvalidJson      = "invalid_json"
-	ErrorTypeValidationFailed = "validation_failed"
-	ErrorTypeUserNotFound     = "user_not_found"
+	ErrTypeInternal         = "internal"
+	ErrTypeInvalidJson      = "invalid_json"
+	ErrTypeValidationFailed = "validation_failed"
+	ErrTypeUserNotFound     = "user_not_found"
 
-	ErrorTypeIdempotencyKeyMissing = "idempotency_key_missing"
+	ErrTypeIdempotencyKeyMissing = "idempotency_key_missing"
+
+	ErrTypeSendCodeFreqExceeded = "send_code_freq_exceeded"
+	ErrTypeSignInKeyNotFound    = "signin_key_not_found"
+	ErrTypeWrongCode            = "wrong_code"
 )
 
 type ErrorDetail struct {

@@ -14,14 +14,13 @@ import (
 var phoneRegex = regexp.MustCompile(`^[78]9\d{9}$`)
 
 type SendCodeService interface {
-	SendCode(phone string, signInKey uuid.UUID) error
+	SendCode(phone string) (signInKey uuid.UUID, err error)
 }
 
 func SendCode(service SendCodeService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req sendCodeRequest
-		err := c.ShouldBindBodyWithJSON(&req)
-		if err != nil {
+		if err := c.ShouldBindBodyWithJSON(&req); err != nil {
 			restapi.SendUnprocessableJSON(c)
 			return
 		}
@@ -31,30 +30,38 @@ func SendCode(service SendCodeService) gin.HandlerFunc {
 			return
 		}
 
-		err = service.SendCode(req.Phone, req.SignInKey)
-		if err == services.ErrUserNotFound {
-			resp := restapi.ErrorResponse{
-				ErrorType:    restapi.ErrorTypeUserNotFound,
-				ErrorMessage: "Such user doesn't exist",
+		signInKey, err := service.SendCode(req.Phone)
+
+		if err != nil {
+			switch err {
+			case services.ErrUserNotFound:
+				c.JSON(http.StatusNotFound, restapi.ErrorResponse{
+					ErrorType:    restapi.ErrTypeUserNotFound,
+					ErrorMessage: "Such user doesn't exist",
+				})
+			case services.ErrSendCodeFreqExceeded:
+				c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
+					ErrorType:    restapi.ErrTypeSendCodeFreqExceeded,
+					ErrorMessage: "Send code operation frequency exceeded",
+				})
+			default:
+				restapi.SendInternalError(c)
 			}
-			c.JSON(http.StatusNotFound, resp)
 			return
-		} else if err != nil {
-			restapi.SendInternalError(c)
 		}
 
-		c.JSON(http.StatusOK, restapi.SuccessResponse{
-			Data: sendCodeResponse{},
+		restapi.SendSuccess(c, sendCodeResponse{
+			SignInKey: signInKey,
 		})
 	}
 }
 
 type sendCodeRequest struct {
-	Phone     string    `json:"phone"`
-	SignInKey uuid.UUID `json:"signin_key"`
+	Phone string `json:"phone" binding:"required"`
 }
 
 type sendCodeResponse struct {
+	SignInKey uuid.UUID `json:"signin_key"`
 }
 
 func validateSendCode(req *sendCodeRequest) []restapi.ErrorDetail {
@@ -63,12 +70,6 @@ func validateSendCode(req *sendCodeRequest) []restapi.ErrorDetail {
 		errors = append(errors, restapi.ErrorDetail{
 			Field:   "phone",
 			Message: "phone number must match a regex " + phoneRegex.String(),
-		})
-	}
-	if req.SignInKey == uuid.Nil {
-		errors = append(errors, restapi.ErrorDetail{
-			Field:   "signin_key",
-			Message: "it shouldn't be nil",
 		})
 	}
 	return errors

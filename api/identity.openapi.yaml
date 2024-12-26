@@ -31,7 +31,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EmptySuccessResponse'
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SendCodeResponse'
         '400':
           description: Bad Request.
           content:
@@ -142,20 +145,25 @@ components:
       example:
         access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
         refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODlhczAiLCJuYW1lIjoiSm9obiBEZHNvZSIsImlhdCI6MTUxNjIzOTAyMn0.gMtW_LPAMSJXOwU4GhTlnC7tgLI_ILtrr6CQw26U784
-    SignInRequest:
+    SendCodeRequest:
       type: object
       properties:
         phone:
           type: string
           format: phone
           nullable: false
+      required:
+        - phone
+    SendCodeResponse:
+      type: object
+      properties:
         signin_key:
-          description: The device should use the key generated for phone code request. 
+          description: The device should use the key generated for phone code request. It connects requests.
           type: string
           format: uuid
           nullable: false
       required:
-        - phone
+        - signin_key
     SignInResponse:
       type: object
       properties:
@@ -173,7 +181,7 @@ components:
       example:
         access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
         refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODlhczAiLCJuYW1lIjoiSm9obiBEZHNvZSIsImlhdCI6MTUxNjIzOTAyMn0.gMtW_LPAMSJXOwU4GhTlnC7tgLI_ILtrr6CQw26U784
-    SendCodeRequest:
+    SignInRequest:
       type: object
       properties:
         signin_key:

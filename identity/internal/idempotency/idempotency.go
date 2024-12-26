@@ -40,7 +40,7 @@ func (m *idempotencyMiddleware) Handle(c *gin.Context) {
 	key := c.GetHeader(HeaderIdempotencyKey)
 	if key == "" {
 		errResp := restapi.ErrorResponse{
-			ErrorType:    restapi.ErrorTypeIdempotencyKeyMissing,
+			ErrorType:    restapi.ErrTypeIdempotencyKeyMissing,
 			ErrorMessage: "No \"" + HeaderIdempotencyKey + "\" header provided",
 		}
 		c.JSON(http.StatusBadRequest, errResp)

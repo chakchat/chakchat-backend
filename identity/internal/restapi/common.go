@@ -6,16 +6,22 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func SendSuccess(c *gin.Context, data any) {
+	c.JSON(http.StatusOK, SuccessResponse{
+		Data: data,
+	})
+}
+
 func SendUnprocessableJSON(c *gin.Context) {
 	c.JSON(http.StatusUnprocessableEntity, ErrorResponse{
-		ErrorType:    ErrorTypeInvalidJson,
+		ErrorType:    ErrTypeInvalidJson,
 		ErrorMessage: "Body has invalid JSON",
 	})
 }
 
 func SendValidationError(c *gin.Context, errors []ErrorDetail) {
 	c.JSON(http.StatusBadRequest, ErrorResponse{
-		ErrorType:    ErrorTypeValidationFailed,
+		ErrorType:    ErrTypeValidationFailed,
 		ErrorMessage: "Validation has failed",
 		ErrorDetails: errors,
 	})
@@ -23,7 +29,7 @@ func SendValidationError(c *gin.Context, errors []ErrorDetail) {
 
 func SendInternalError(c *gin.Context) {
 	errResp := ErrorResponse{
-		ErrorType:    ErrorTypeInternal,
+		ErrorType:    ErrTypeInternal,
 		ErrorMessage: "Internal Server Error",
 	}
 	c.JSON(http.StatusInternalServerError, errResp)
