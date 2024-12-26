@@ -13,6 +13,10 @@ const (
 	ErrTypeSendCodeFreqExceeded = "send_code_freq_exceeded"
 	ErrTypeSignInKeyNotFound    = "signin_key_not_found"
 	ErrTypeWrongCode            = "wrong_code"
+
+	ErrTypeRefreshTokenExpired     = "refresh_token_expired"
+	ErrTypeRefreshTokenInvalidated = "refresh_token_invalidated"
+	ErrTypeInvalidJWT              = "jwt_invalid"
 )
 
 type ErrorDetail struct {
