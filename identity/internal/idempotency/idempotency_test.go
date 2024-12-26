@@ -14,6 +14,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TODO: Write comprehensive tests
+
 func TestStoresResponse(t *testing.T) {
 	// Arrange
 	r, storage := setUp()
