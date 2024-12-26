@@ -1,5 +1,18 @@
-### Repository contributing rules
-1. Direct commits in `main` branch are prohibited.
-2. For every feature you should create `feature/<brief-name>` from the `main` branch. The `<brief-name>` should describe what feature it is laconically. Then feature branch is merged to the `main` via pull-request.
-3. Every pull-request should be reviewed by at least one member of the team.
-4. For fixes branch should have a name `fix/*`. For docs update: `docs/*`
+## Repository contributing rules
+Direct commits in `main` branch are prohibited. \
+Every pull-request should be reviewed by at least one member of the team.
+
+## Branch naming
+for **Features** create `feature/<brief-name>` brranches \
+for **Fixes** create `fix/<brief-name>` brranches \
+for **Docs** create `docs/<brief-name>` brranches 
+
+## Pull-request naming
+**Features** should have `🚀 feature:` prefix \
+**Fixes** should have `🩹 fix:` prefix \
+**Docs** should have `📚 docs:` prefix \
+**Others** should have `🤷‍♂️ chore:` prefix
+
+## Commits
+Please make sure your commit message is clear and concise. \
+Please separate different logical changes to separate commits.
