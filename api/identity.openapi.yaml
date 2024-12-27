@@ -128,6 +128,11 @@ paths:
           schema:
             type: string
             format: jwt
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/SignOutRequest"
       responses:
         '200':
           description: OK. Also returned if the user's refresh token already expired
@@ -221,6 +226,15 @@ components:
       required:
         - phone
         - code
+    SignOutRequest:
+      type: object
+      properties:
+        refresh_token:
+          type: string
+          format: jwt
+          nullable: false
+      required:
+        - refresh_token
     EmptySuccessResponse:
       type: object
       example: {}
