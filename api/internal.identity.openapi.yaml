@@ -1,0 +1,66 @@
+openapi: 3.0.3
+info:
+  title: Internal Identity Service 
+  description: Identity Service Internal REST API 
+  version: "1.0"
+servers:
+  # internal prefix is used to prevent the client from access this endpoint.
+  # Other endpoints will have version prefix. 
+  - url: http://localhost:5000/internal/v1.0/identity/
+    description: nginx reverse-proxied localhost
+paths:
+  /identity:
+    get:
+      summary: Get user's identity
+      description: Get user's identity
+      tags:
+        - internal-identity
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: jwt
+      responses:
+        '204':
+          description: Successfylly created internal JWT
+          headers:
+            X-Internal-Token:
+              schema:
+                type: string
+                format: jwt
+              description: Internal JWT
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      description: Error response specified by standard.md
+      properties:
+        error_type:
+          type: string
+          nullable: false
+        error_message:
+          type: string
+          nullable: false
+        error_details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                nullable: false
+              message:
+                type: string
+                nullable: false
+      example:
+        error_type: invalid_input
+        error_message: Input is invalid
+        error_details: []

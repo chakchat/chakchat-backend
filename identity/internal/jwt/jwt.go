@@ -1,5 +1,7 @@
 package jwt
 
+type InternalJWT string
+
 type JWT string
 
 type Pair struct {
