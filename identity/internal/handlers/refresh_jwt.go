@@ -10,7 +10,7 @@ import (
 )
 
 type RefreshJWTService interface {
-	Refresh(refresh jwt.JWT) (jwt.Pair, error)
+	Refresh(refresh jwt.Token) (jwt.Pair, error)
 }
 
 func RefreshJWT(service RefreshJWTService) gin.HandlerFunc {
@@ -21,7 +21,7 @@ func RefreshJWT(service RefreshJWTService) gin.HandlerFunc {
 			return
 		}
 
-		tokens, err := service.Refresh(jwt.JWT(req.RefreshToken))
+		tokens, err := service.Refresh(jwt.Token(req.RefreshToken))
 
 		if err != nil {
 			switch err {
