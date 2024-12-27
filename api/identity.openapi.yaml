@@ -12,7 +12,7 @@ paths:
       summary: Sign In user
       description: Sign In user
       tags:
-        - signin
+        - sign in/out
       parameters:
         - name: Idempotency-Key
           in: header
@@ -52,7 +52,7 @@ paths:
       summary: Sign In user
       description: Sign In user
       tags:
-        - signin
+        - sign in/out
       parameters:
         - name: Idempotency-Key
           in: header
@@ -86,7 +86,7 @@ paths:
       summary: Refresh user token
       description: Refresh user token
       tags:
-        - signin
+        - sign in/out
       parameters:
         - name: Idempotency-Key
           in: header
@@ -115,6 +115,32 @@ paths:
             application/json:
               schema: 
                 "$ref": '#/components/schemas/ErrorResponseWithDetails'
+  /sign-out:
+    put:
+      summary: Sign Out user
+      description: Sign Out user
+      tags:
+        - sign in/out
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: jwt
+      responses:
+        '200':
+          description: OK. Also returned if the user's refresh token already expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptySuccessResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
 components:
   schemas:
     RefreshTokenRequest:
