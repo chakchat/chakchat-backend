@@ -18,37 +18,54 @@ var (
 )
 
 type SmsSender interface {
-	SendSms(phone string, message string) error
+	SendSms(ctx context.Context, phone string, message string) error
 }
 
 type SignInMeta struct {
 	SignInID    uuid.UUID
 	LastRequest time.Time
+	Phone       string
 	Code        string
 
 	UserId   uuid.UUID
 	Username string
 }
 
-type SignInMetaStorer interface {
-	Store(SignInMeta) error
+type SignInMetaStorage interface {
+	FindMeta(ctx context.Context, phone string) (*SignInMeta, error, bool)
+	Store(context.Context, *SignInMeta) error
+}
+
+type CodeConfig struct {
+	SendFrequency time.Duration
 }
 
 type CodeSender struct {
 	sms    SmsSender
 	users  userservice.UsersServiceClient
-	storer SignInMetaStorer
+	storer SignInMetaStorage
+	config *CodeConfig
 }
 
-func NewCodeSender(sms SmsSender, storer SignInMetaStorer, users userservice.UsersServiceClient) *CodeSender {
+// TODO: idk maybe refactoring is needed
+func NewCodeSender(config *CodeConfig, sms SmsSender, storer SignInMetaStorage, users userservice.UsersServiceClient) *CodeSender {
 	return &CodeSender{
 		sms:    sms,
 		users:  users,
 		storer: storer,
+		config: config,
 	}
 }
 
 func (s *CodeSender) SendCode(ctx context.Context, phone string) (signInKey uuid.UUID, err error) {
+	prevMeta, err, ok := s.storer.FindMeta(ctx, phone)
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("finding SignInMeta error: %s", err)
+	}
+	if ok && prevMeta.LastRequest.Add(s.config.SendFrequency).Compare(time.Now().UTC()) > 0 {
+		return uuid.Nil, ErrSendCodeFreqExceeded
+	}
+
 	meta := SignInMeta{
 		SignInID:    uuid.New(),
 		LastRequest: time.Now().UTC(),
@@ -75,11 +92,11 @@ func (s *CodeSender) SendCode(ctx context.Context, phone string) (signInKey uuid
 	meta.Username = *user.UserName
 	meta.Code = genCode()
 
-	if err := s.sms.SendSms(phone, meta.Code); err != nil {
+	if err := s.sms.SendSms(ctx, phone, meta.Code); err != nil {
 		return uuid.Nil, fmt.Errorf("send SMS error: %s", err)
 	}
 
-	if err := s.storer.Store(meta); err != nil {
+	if err := s.storer.Store(ctx, &meta); err != nil {
 		return uuid.Nil, fmt.Errorf("storage error: %s", err)
 	}
 
