@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/chakchat/chakchat/backend/identity/internal/jwt"
@@ -10,7 +11,7 @@ import (
 )
 
 type SignOutService interface {
-	SignOut(refresh jwt.Token) error
+	SignOut(ctx context.Context, refresh jwt.Token) error
 }
 
 func SignOut(service SignOutService) gin.HandlerFunc {
@@ -21,7 +22,7 @@ func SignOut(service SignOutService) gin.HandlerFunc {
 			return
 		}
 
-		err := service.SignOut(jwt.Token(req.RefreshJWT))
+		err := service.SignOut(c, jwt.Token(req.RefreshJWT))
 
 		// I think that signing out expired token counts as a successful operation
 		if err != nil && err != services.ErrRefreshTokenExpired {

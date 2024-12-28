@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/chakchat/chakchat/backend/identity/internal/jwt"
@@ -10,7 +11,7 @@ import (
 )
 
 type RefreshJWTService interface {
-	Refresh(refresh jwt.Token) (jwt.Pair, error)
+	Refresh(ctx context.Context, refresh jwt.Token) (jwt.Pair, error)
 }
 
 func RefreshJWT(service RefreshJWTService) gin.HandlerFunc {
@@ -21,7 +22,7 @@ func RefreshJWT(service RefreshJWTService) gin.HandlerFunc {
 			return
 		}
 
-		tokens, err := service.Refresh(jwt.Token(req.RefreshToken))
+		tokens, err := service.Refresh(c, jwt.Token(req.RefreshToken))
 
 		if err != nil {
 			switch err {
