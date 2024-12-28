@@ -17,7 +17,7 @@ enum UserResponseStatus {
 }
 
 message UserResponse {
-    UserResponseStatus success = 1;
+    UserResponseStatus status = 1;
     // If password verified then 
     optional string userName = 2;
     optional UUID userId = 3;
