@@ -4,7 +4,7 @@
 // 	protoc        v5.29.0--rc2
 // source: users.proto
 
-package usersservice
+package userservice
 
 import (
 	reflect "reflect"
@@ -169,7 +169,7 @@ type UserResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Success UserResponseStatus `protobuf:"varint,1,opt,name=success,proto3,enum=users.UserResponseStatus" json:"success,omitempty"`
+	Status UserResponseStatus `protobuf:"varint,1,opt,name=status,proto3,enum=users.UserResponseStatus" json:"status,omitempty"`
 	// If password verified then
 	UserName *string `protobuf:"bytes,2,opt,name=userName,proto3,oneof" json:"userName,omitempty"`
 	UserId   *UUID   `protobuf:"bytes,3,opt,name=userId,proto3,oneof" json:"userId,omitempty"`
@@ -209,7 +209,7 @@ func (*UserResponse) Descriptor() ([]byte, []int) {
 
 func (x *UserResponse) GetSuccess() UserResponseStatus {
 	if x != nil {
-		return x.Success
+		return x.Status
 	}
 	return UserResponseStatus_SUCCESS
 }
@@ -281,7 +281,7 @@ var file_users_proto_goTypes = []interface{}{
 	(*UserResponse)(nil),    // 3: users.UserResponse
 }
 var file_users_proto_depIdxs = []int32{
-	0, // 0: users.UserResponse.success:type_name -> users.UserResponseStatus
+	0, // 0: users.UserResponse.status:type_name -> users.UserResponseStatus
 	2, // 1: users.UserResponse.userId:type_name -> users.UUID
 	1, // 2: users.UsersService.GetUser:input_type -> users.UserRequest
 	3, // 3: users.UsersService.GetUser:output_type -> users.UserResponse

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/chakchat/chakchat/backend/identity/internal/jwt"
@@ -11,7 +12,7 @@ import (
 )
 
 type SignInService interface {
-	SignIn(signInKey uuid.UUID, code string) (jwt.Pair, error)
+	SignIn(ctx context.Context, signInKey uuid.UUID, code string) (jwt.Pair, error)
 }
 
 func SignIn(service SignInService) gin.HandlerFunc {
@@ -27,7 +28,7 @@ func SignIn(service SignInService) gin.HandlerFunc {
 			return
 		}
 
-		tokens, err := service.SignIn(req.SignInKey, req.Code)
+		tokens, err := service.SignIn(c, req.SignInKey, req.Code)
 
 		if err != nil {
 			switch err {

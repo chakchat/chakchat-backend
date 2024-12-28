@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
@@ -16,7 +17,7 @@ const (
 )
 
 type IdentityService interface {
-	Idenitfy(access jwt.Token) (jwt.InternalToken, error)
+	Idenitfy(ctx context.Context, access jwt.Token) (jwt.InternalToken, error)
 }
 
 func GetIdentity(service IdentityService) gin.HandlerFunc {
@@ -38,7 +39,7 @@ func GetIdentity(service IdentityService) gin.HandlerFunc {
 			})
 		}
 
-		internalToken, err := service.Idenitfy(publicToken)
+		internalToken, err := service.Idenitfy(c, publicToken)
 		if err != nil {
 			switch err {
 			case services.ErrInvalidJWT:

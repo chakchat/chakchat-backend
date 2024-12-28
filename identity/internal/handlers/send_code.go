@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 	"regexp"
 
@@ -14,7 +15,7 @@ import (
 var phoneRegex = regexp.MustCompile(`^[78]9\d{9}$`)
 
 type SendCodeService interface {
-	SendCode(phone string) (signInKey uuid.UUID, err error)
+	SendCode(ctx context.Context, phone string) (signInKey uuid.UUID, err error)
 }
 
 func SendCode(service SendCodeService) gin.HandlerFunc {
@@ -30,7 +31,7 @@ func SendCode(service SendCodeService) gin.HandlerFunc {
 			return
 		}
 
-		signInKey, err := service.SendCode(req.Phone)
+		signInKey, err := service.SendCode(c, req.Phone)
 
 		if err != nil {
 			switch err {
