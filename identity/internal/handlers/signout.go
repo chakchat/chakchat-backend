@@ -10,7 +10,7 @@ import (
 )
 
 type SignOutService interface {
-	SignOut(refresh jwt.JWT) error
+	SignOut(refresh jwt.Token) error
 }
 
 func SignOut(service SignOutService) gin.HandlerFunc {
@@ -21,7 +21,7 @@ func SignOut(service SignOutService) gin.HandlerFunc {
 			return
 		}
 
-		err := service.SignOut(jwt.JWT(req.RefreshJWT))
+		err := service.SignOut(jwt.Token(req.RefreshJWT))
 
 		// I think that signing out expired token counts as a successful operation
 		if err != nil && err != services.ErrRefreshTokenExpired {

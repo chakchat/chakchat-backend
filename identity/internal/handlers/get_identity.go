@@ -16,7 +16,7 @@ const (
 )
 
 type IdentityService interface {
-	Idenitfy(access jwt.JWT) (jwt.InternalJWT, error)
+	Idenitfy(access jwt.Token) (jwt.InternalToken, error)
 }
 
 func GetIdentity(service IdentityService) gin.HandlerFunc {
@@ -62,10 +62,10 @@ func GetIdentity(service IdentityService) gin.HandlerFunc {
 	}
 }
 
-func extractJWT(authHeader string) (jwt.JWT, bool) {
+func extractJWT(authHeader string) (jwt.Token, bool) {
 	found, ok := strings.CutPrefix(authHeader, "Bearer ")
 	if !ok {
 		return "", false
 	}
-	return jwt.JWT(found), true
+	return jwt.Token(found), true
 }
