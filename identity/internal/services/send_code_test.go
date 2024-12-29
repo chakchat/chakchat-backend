@@ -31,11 +31,11 @@ func Test_Success(t *testing.T) {
 	sender := NewCodeSender(&config, smsSender, &metaStorage, userService)
 
 	// Act
-	signInID, err := sender.SendCode(context.Background(), "+79998887766")
+	signInKey, err := sender.SendCode(context.Background(), "+79998887766")
 
 	// Assert
 	assert.NoError(t, err)
-	assert.NotEqual(t, uuid.Nil, signInID)
+	assert.NotEqual(t, uuid.Nil, signInKey)
 }
 
 func Test_Error(t *testing.T) {
@@ -54,7 +54,7 @@ func Test_Error(t *testing.T) {
 	}
 	metaStorage := &metaStorageFake{}
 	metaStorage.Store(context.Background(), &SignInMeta{
-		SignInID:    [16]byte{},
+		SignInKey:   [16]byte{},
 		LastRequest: now.Add(-30 * time.Second),
 		Phone:       "+7999888776",
 		Code:        "123456",
@@ -111,7 +111,7 @@ type metaStorageFake struct {
 	s []*SignInMeta
 }
 
-func (s *metaStorageFake) FindMeta(_ context.Context, phone string) (*SignInMeta, error, bool) {
+func (s *metaStorageFake) FindMetaByPhone(_ context.Context, phone string) (*SignInMeta, error, bool) {
 	for _, meta := range s.s {
 		if meta.Phone == phone {
 			return meta, nil, true

@@ -26,7 +26,7 @@ type SmsSender interface {
 }
 
 type SignInMeta struct {
-	SignInID    uuid.UUID
+	SignInKey   uuid.UUID
 	LastRequest time.Time
 	Phone       string
 	Code        string
@@ -35,8 +35,8 @@ type SignInMeta struct {
 	Username string
 }
 
-type SignInMetaStorage interface {
-	FindMeta(ctx context.Context, phone string) (*SignInMeta, error, bool)
+type MetaFindStorer interface {
+	FindMetaByPhone(ctx context.Context, phone string) (*SignInMeta, error, bool)
 	Store(context.Context, *SignInMeta) error
 }
 
@@ -48,12 +48,12 @@ type CodeSender struct {
 	config *CodeConfig
 
 	sms     SmsSender
-	storage SignInMetaStorage
+	storage MetaFindStorer
 	users   userservice.UsersServiceClient
 }
 
 func NewCodeSender(config *CodeConfig, sms SmsSender,
-	storage SignInMetaStorage, users userservice.UsersServiceClient) *CodeSender {
+	storage MetaFindStorer, users userservice.UsersServiceClient) *CodeSender {
 	return &CodeSender{
 		config:  config,
 		sms:     sms,
@@ -68,7 +68,7 @@ func (s *CodeSender) SendCode(ctx context.Context, phone string) (signInKey uuid
 	}
 
 	meta := SignInMeta{
-		SignInID:    uuid.New(),
+		SignInKey:   uuid.New(),
 		LastRequest: nowUTC(),
 	}
 
@@ -90,11 +90,11 @@ func (s *CodeSender) SendCode(ctx context.Context, phone string) (signInKey uuid
 		return uuid.Nil, fmt.Errorf("storage error: %s", err)
 	}
 
-	return meta.SignInID, err
+	return meta.SignInKey, err
 }
 
 func (s *CodeSender) validateSendFreq(ctx context.Context, phone string) error {
-	prevMeta, err, ok := s.storage.FindMeta(ctx, phone)
+	prevMeta, err, ok := s.storage.FindMetaByPhone(ctx, phone)
 	if err != nil {
 		return fmt.Errorf("finding SignInMeta error: %s", err)
 	}
