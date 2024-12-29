@@ -2,9 +2,12 @@ package services
 
 import (
 	"context"
+	"errors"
 
 	"github.com/chakchat/chakchat/backend/identity/internal/jwt"
 )
+
+var ErrAccessTokenExpired = errors.New("access token expired")
 
 type IdentityIssuer struct {
 	userConf     *jwt.Config
@@ -21,6 +24,9 @@ func NewIdentityIssuer(userConf, internalConf *jwt.Config) *IdentityIssuer {
 func (i *IdentityIssuer) Idenitfy(ctx context.Context, token jwt.Token) (jwt.InternalToken, error) {
 	claims, err := jwt.Parse(i.userConf, token)
 	if err != nil {
+		if err == jwt.ErrTokenExpired {
+			return "", ErrAccessTokenExpired
+		}
 		return "", err
 	}
 
