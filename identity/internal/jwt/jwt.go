@@ -11,6 +11,12 @@ import (
 
 type InternalToken string
 
+const (
+	ClaimType = "typ"
+	ClaimName = "name"
+	ClaimSub  = "sub"
+)
+
 type Token string
 
 type Pair struct {
@@ -24,6 +30,8 @@ type Config struct {
 	Lifetime time.Duration
 	Issuer   string
 	Audience []string
+
+	Type string
 
 	publicKey  *rsa.PublicKey  // Used for asymmetric signing
 	privateKey *rsa.PrivateKey // Used for asymmetric signing
@@ -110,6 +118,9 @@ func fillBasicClaims(config *Config, claims Claims) {
 	}
 	if len(config.Audience) != 0 {
 		claims["aud"] = config.Audience
+	}
+	if config.Type != "" {
+		claims[ClaimType] = config.Type
 	}
 
 	now := nowFunc()

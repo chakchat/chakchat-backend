@@ -35,7 +35,7 @@ func (i *IdentityIssuer) Idenitfy(ctx context.Context, token jwt.Token) (jwt.Int
 
 func extractInternal(claims jwt.Claims) jwt.Claims {
 	return jwt.Claims{
-		"sub":  claims["sub"],
-		"name": claims["name"],
+		jwt.ClaimSub:  claims[jwt.ClaimSub],
+		jwt.ClaimName: claims[jwt.ClaimName],
 	}
 }

@@ -15,8 +15,8 @@ func Test_GeneratesExact(t *testing.T) {
 	nowFunc = func() time.Time { return issTime }
 
 	claims := Claims{
-		"sub":         "122f4915aa124492bd79539013819cd3",
-		"name":        "Joshua Kimmich",
+		ClaimSub:      "122f4915aa124492bd79539013819cd3",
+		ClaimName:     "Joshua Kimmich",
 		"best_player": false, // Sorry, Joshua...
 	}
 
@@ -65,8 +65,8 @@ func Test_Parses(t *testing.T) {
 	jwt.TimeFunc = func() time.Time { return now }
 
 	claims := Claims{
-		"sub":         "122f4915aa124492bd79539013819cd3",
-		"name":        "Joshua Kimmich",
+		ClaimSub:      "122f4915aa124492bd79539013819cd3",
+		ClaimName:     "Joshua Kimmich",
 		"best_player": false, // Sorry, Joshua...
 	}
 
