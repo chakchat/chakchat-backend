@@ -111,13 +111,13 @@ type metaStorageFake struct {
 	s []*SignInMeta
 }
 
-func (s *metaStorageFake) FindMetaByPhone(_ context.Context, phone string) (*SignInMeta, error, bool) {
+func (s *metaStorageFake) FindMetaByPhone(_ context.Context, phone string) (*SignInMeta, bool, error) {
 	for _, meta := range s.s {
 		if meta.Phone == phone {
-			return meta, nil, true
+			return meta, true, nil
 		}
 	}
-	return nil, nil, false
+	return nil, false, nil
 }
 
 func (s *metaStorageFake) Store(_ context.Context, meta *SignInMeta) error {

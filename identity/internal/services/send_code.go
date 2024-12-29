@@ -36,7 +36,7 @@ type SignInMeta struct {
 }
 
 type MetaFindStorer interface {
-	FindMetaByPhone(ctx context.Context, phone string) (*SignInMeta, error, bool)
+	FindMetaByPhone(ctx context.Context, phone string) (*SignInMeta, bool, error)
 	Store(context.Context, *SignInMeta) error
 }
 
@@ -94,7 +94,7 @@ func (s *CodeSender) SendCode(ctx context.Context, phone string) (signInKey uuid
 }
 
 func (s *CodeSender) validateSendFreq(ctx context.Context, phone string) error {
-	prevMeta, err, ok := s.storage.FindMetaByPhone(ctx, phone)
+	prevMeta, ok, err := s.storage.FindMetaByPhone(ctx, phone)
 	if err != nil {
 		return fmt.Errorf("finding SignInMeta error: %s", err)
 	}
