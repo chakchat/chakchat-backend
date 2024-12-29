@@ -19,7 +19,7 @@ type CapturedResponse struct {
 }
 
 type IdempotencyStorage interface {
-	Get(ctx context.Context, key string) (*CapturedResponse, bool)
+	Get(ctx context.Context, key string) (*CapturedResponse, bool, error)
 	Store(ctx context.Context, key string, resp *CapturedResponse) error
 }
 
@@ -51,7 +51,11 @@ func (m *idempotencyMiddleware) Handle(c *gin.Context) {
 	m.lock.Lock(key)
 	defer m.lock.Unlock(key)
 
-	cached, ok := m.storage.Get(c, key)
+	cached, ok, err := m.storage.Get(c, key)
+	if err != nil {
+		restapi.SendInternalError(c)
+		return
+	}
 	if ok {
 		writeCached(c, cached)
 		c.Abort()
