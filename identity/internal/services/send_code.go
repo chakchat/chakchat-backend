@@ -36,7 +36,7 @@ type SignInMeta struct {
 }
 
 type MetaFindStorer interface {
-	FindMetaByPhone(ctx context.Context, phone string) (*SignInMeta, error, bool)
+	FindMetaByPhone(ctx context.Context, phone string) (*SignInMeta, bool, error)
 	Store(context.Context, *SignInMeta) error
 }
 
@@ -44,7 +44,7 @@ type CodeConfig struct {
 	SendFrequency time.Duration
 }
 
-type CodeSender struct {
+type SendCodeService struct {
 	config *CodeConfig
 
 	sms     SmsSender
@@ -52,9 +52,9 @@ type CodeSender struct {
 	users   userservice.UsersServiceClient
 }
 
-func NewCodeSender(config *CodeConfig, sms SmsSender,
-	storage MetaFindStorer, users userservice.UsersServiceClient) *CodeSender {
-	return &CodeSender{
+func NewSendCodeService(config *CodeConfig, sms SmsSender,
+	storage MetaFindStorer, users userservice.UsersServiceClient) *SendCodeService {
+	return &SendCodeService{
 		config:  config,
 		sms:     sms,
 		storage: storage,
@@ -62,7 +62,7 @@ func NewCodeSender(config *CodeConfig, sms SmsSender,
 	}
 }
 
-func (s *CodeSender) SendCode(ctx context.Context, phone string) (signInKey uuid.UUID, err error) {
+func (s *SendCodeService) SendCode(ctx context.Context, phone string) (signInKey uuid.UUID, err error) {
 	if err := s.validateSendFreq(ctx, phone); err != nil {
 		return uuid.Nil, err
 	}
@@ -93,8 +93,8 @@ func (s *CodeSender) SendCode(ctx context.Context, phone string) (signInKey uuid
 	return meta.SignInKey, err
 }
 
-func (s *CodeSender) validateSendFreq(ctx context.Context, phone string) error {
-	prevMeta, err, ok := s.storage.FindMetaByPhone(ctx, phone)
+func (s *SendCodeService) validateSendFreq(ctx context.Context, phone string) error {
+	prevMeta, ok, err := s.storage.FindMetaByPhone(ctx, phone)
 	if err != nil {
 		return fmt.Errorf("finding SignInMeta error: %s", err)
 	}
@@ -104,7 +104,7 @@ func (s *CodeSender) validateSendFreq(ctx context.Context, phone string) error {
 	return nil
 }
 
-func (s *CodeSender) fetchUser(ctx context.Context, phone string) (*userservice.UserResponse, error) {
+func (s *SendCodeService) fetchUser(ctx context.Context, phone string) (*userservice.UserResponse, error) {
 	user, err := s.users.GetUser(ctx, &userservice.UserRequest{
 		PhoneNumber: phone,
 	})

@@ -9,19 +9,19 @@ import (
 
 var ErrAccessTokenExpired = errors.New("access token expired")
 
-type IdentityIssuer struct {
+type IdentityService struct {
 	userConf     *jwt.Config
 	internalConf *jwt.Config
 }
 
-func NewIdentityIssuer(userConf, internalConf *jwt.Config) *IdentityIssuer {
-	return &IdentityIssuer{
+func NewIdentityService(userConf, internalConf *jwt.Config) *IdentityService {
+	return &IdentityService{
 		userConf:     userConf,
 		internalConf: internalConf,
 	}
 }
 
-func (i *IdentityIssuer) Idenitfy(ctx context.Context, token jwt.Token) (jwt.InternalToken, error) {
+func (i *IdentityService) Idenitfy(ctx context.Context, token jwt.Token) (jwt.InternalToken, error) {
 	claims, err := jwt.Parse(i.userConf, token)
 	if err != nil {
 		if err == jwt.ErrTokenExpired {

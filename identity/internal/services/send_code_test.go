@@ -28,7 +28,7 @@ func Test_Success(t *testing.T) {
 		SendFrequency: 1 * time.Minute,
 	}
 
-	sender := NewCodeSender(&config, smsSender, &metaStorage, userService)
+	sender := NewSendCodeService(&config, smsSender, &metaStorage, userService)
 
 	// Act
 	signInKey, err := sender.SendCode(context.Background(), "+79998887766")
@@ -67,7 +67,7 @@ func Test_Error(t *testing.T) {
 		SendFrequency: 1 * time.Minute,
 	}
 
-	sender := NewCodeSender(config, smsSender, metaStorage, userService)
+	sender := NewSendCodeService(config, smsSender, metaStorage, userService)
 
 	t.Run("FrequencyExceeded", func(t *testing.T) {
 		// Act
@@ -111,13 +111,13 @@ type metaStorageFake struct {
 	s []*SignInMeta
 }
 
-func (s *metaStorageFake) FindMetaByPhone(_ context.Context, phone string) (*SignInMeta, error, bool) {
+func (s *metaStorageFake) FindMetaByPhone(_ context.Context, phone string) (*SignInMeta, bool, error) {
 	for _, meta := range s.s {
 		if meta.Phone == phone {
-			return meta, nil, true
+			return meta, true, nil
 		}
 	}
-	return nil, nil, false
+	return nil, false, nil
 }
 
 func (s *metaStorageFake) Store(_ context.Context, meta *SignInMeta) error {

@@ -31,9 +31,10 @@ func TestStoresResponse(t *testing.T) {
 
 	// Act
 	resp := execute(r, "/200-with-body", idempotencyKey)
-	captured, ok := storage.Get(context.Background(), idempotencyKey)
+	captured, ok, err := storage.Get(context.Background(), idempotencyKey)
 
 	// Assert
+	assert.NoError(t, err)
 	assert.True(t, ok)
 	assert.Equal(t, http.StatusOK, captured.StatusCode)
 	assert.JSONEq(t, resp.Body.String(), string(captured.Body))
@@ -116,9 +117,9 @@ type mockIdempotencyStorage struct {
 	m map[string]*CapturedResponse
 }
 
-func (s *mockIdempotencyStorage) Get(_ context.Context, key string) (*CapturedResponse, bool) {
+func (s *mockIdempotencyStorage) Get(_ context.Context, key string) (*CapturedResponse, bool, error) {
 	resp, ok := s.m[key]
-	return resp, ok
+	return resp, ok, nil
 }
 
 func (s *mockIdempotencyStorage) Store(_ context.Context, key string, resp *CapturedResponse) error {

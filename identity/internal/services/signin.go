@@ -15,7 +15,7 @@ var (
 )
 
 type MetaFindRemover interface {
-	FindMeta(ctx context.Context, signInKey uuid.UUID) (*SignInMeta, error, bool)
+	FindMeta(ctx context.Context, signInKey uuid.UUID) (*SignInMeta, bool, error)
 	Remove(ctx context.Context, signInKey uuid.UUID) error
 }
 
@@ -34,7 +34,7 @@ func NewSignInService(storage MetaFindRemover, accessConf, refreshConf *jwt.Conf
 }
 
 func (s *SignInService) SignIn(ctx context.Context, signInKey uuid.UUID, code string) (jwt.Pair, error) {
-	meta, err, ok := s.storage.FindMeta(ctx, signInKey)
+	meta, ok, err := s.storage.FindMeta(ctx, signInKey)
 	if err != nil {
 		return jwt.Pair{}, fmt.Errorf("sign in metadata finding failed: %s", err)
 	}
