@@ -18,7 +18,8 @@ const (
 	ErrTypeRefreshTokenInvalidated = "refresh_token_invalidated"
 	ErrTypeInvalidJWT              = "jwt_invalid"
 
-	ErrTypeUnautorized = "unauthorized"
+	ErrTypeUnautorized        = "unauthorized"
+	ErrTypeAccessTokenExpired = "access_token_expired"
 )
 
 type ErrorDetail struct {

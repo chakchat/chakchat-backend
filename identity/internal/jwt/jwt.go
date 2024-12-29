@@ -17,6 +17,8 @@ const (
 	ClaimSub  = "sub"
 )
 
+var ErrTokenExpired = errors.New("token expired")
+
 type Token string
 
 type Pair struct {
@@ -137,9 +139,13 @@ func parse(config *Config, token Token) (jwt.MapClaims, error) {
 		return config.publicKey, nil
 	})
 	if err != nil {
+		if jwtErr, ok := err.(jwt.ValidationError); ok && jwtErr.Errors&jwt.ValidationErrorExpired != 0 {
+			return nil, ErrTokenExpired
+		}
 		return nil, err
 	}
 	if !parsed.Valid {
+
 		return nil, errors.New("token invalid")
 	}
 
