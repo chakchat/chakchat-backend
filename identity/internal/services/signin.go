@@ -58,7 +58,7 @@ func (s *SignInService) SignIn(ctx context.Context, signInKey uuid.UUID, code st
 	}
 
 	if err := s.storage.Remove(ctx, signInKey); err != nil {
-		// TODO: log it
+		return jwt.Pair{}, fmt.Errorf("sign in key removal failed: %s", err)
 	}
 
 	return pair, nil
