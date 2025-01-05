@@ -23,5 +23,5 @@ go.work.sum
 # env file
 .env
 
-# Certificates
-cert/
+# Keys
+keys/
