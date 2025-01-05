@@ -1,5 +1,7 @@
-.PHONY: cert
-cert:
-	mkdir cert
-	openssl genrsa -out cert/id_rsa 2048
-	openssl rsa -in cert/id_rsa -pubout -out cert/id_rsa.pub
+keys-rsa:
+	mkdir keys
+	openssl genrsa -out keys/rsa 2048
+	openssl rsa -in keys/rsa -pubout -out keys/rsa.pub
+
+keys-sym:
+	openssl rand -hex 64 > keys/sym
