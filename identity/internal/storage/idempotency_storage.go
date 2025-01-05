@@ -28,7 +28,8 @@ type IdempotencyStorage struct {
 
 func NewIdempotencyStorage(client *redis.Client, conf *IdempotencyConfig) *IdempotencyStorage {
 	return &IdempotencyStorage{
-		conf: conf,
+		conf:   conf,
+		client: client,
 	}
 }
 

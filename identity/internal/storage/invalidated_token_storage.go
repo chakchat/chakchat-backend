@@ -15,7 +15,7 @@ const (
 )
 
 type InvalidatedTokenConfig struct {
-	invalidatedExp time.Duration
+	InvalidatedExp time.Duration
 }
 
 type InvalidatedTokenStorage struct {
@@ -23,16 +23,17 @@ type InvalidatedTokenStorage struct {
 	config *InvalidatedTokenConfig
 }
 
-func NewInvalidatedTokenStorage(config *InvalidatedTokenStorage, client *redis.Client) *InvalidatedTokenStorage {
+func NewInvalidatedTokenStorage(config *InvalidatedTokenConfig, client *redis.Client) *InvalidatedTokenStorage {
 	return &InvalidatedTokenStorage{
 		client: client,
+		config: config,
 	}
 }
 
 func (s *InvalidatedTokenStorage) Invalidate(ctx context.Context, token jwt.Token) error {
 	key := preffixInvalidatedToken + string(token)
 
-	res := s.client.Set(ctx, key, invalidatedVal, s.config.invalidatedExp)
+	res := s.client.Set(ctx, key, invalidatedVal, s.config.InvalidatedExp)
 	if err := res.Err(); err != nil {
 		return fmt.Errorf("redis set invalidated token failed: %s", err)
 	}
