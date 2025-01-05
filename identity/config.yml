@@ -1,0 +1,35 @@
+access_token:
+  signing_method: HS512
+  lifetime: 1m # Just for demo
+  issuer: identity_service
+  audience: 
+    - client
+  key_file_path: /app/keys/sym
+refresh_token:
+  signing_method: HS512
+  lifetime: 3m # Just for demo
+  issuer: identity_service
+  audience: 
+    - client
+  key_file_path: /app/keys/sym
+internal_token:
+  signing_method: RS256
+  lifetime: 1m # Just for demo
+  issuer: identity_service
+  audience: 
+    - identity_service
+  key_file_path: /app/keys/id_rsa
+invalidated_token_storage:
+  exp: 4m # A little bit longer than refresh_token.lifetime
+userservice:
+  grpc_addr: localhost:8080
+redis:
+  addr: redis:6379
+  password: secret
+  db: 0
+signin_meta:
+  lifetime: 2m
+idempotency:
+  data_exp: 10m
+phone_code:
+  send_frequency: 1m
