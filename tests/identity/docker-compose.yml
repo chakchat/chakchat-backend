@@ -11,7 +11,7 @@ services:
       dockerfile: Dockerfile
   identity-service:
     build:
-      context: ..
+      context: ../../identity
       dockerfile: Dockerfile
     volumes:
       - ./identity-service-config.yml:/app/config.yml
