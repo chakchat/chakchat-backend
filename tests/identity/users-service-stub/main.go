@@ -10,18 +10,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-var existingUser = &User{
-	Id:       uuid.MustParse("11111111-1111-1111-1111-111111111111"),
-	Phone:    "79111111111",
-	Username: "bob",
-}
-
-var erroringUser = &User{
-	Id:       uuid.MustParse("22222222-2222-2222-2222-222222222222"),
-	Phone:    "79222222222",
-	Username: "bib",
-}
-
 func main() {
 	lis, err := net.Listen("tcp", ":9090")
 	if err != nil {
@@ -46,22 +34,29 @@ func NewServerStub() *ServerStub {
 }
 
 func (s ServerStub) GetUser(ctx context.Context, req *userservice.UserRequest) (*userservice.UserResponse, error) {
-	if req.GetPhoneNumber() == existingUser.Phone {
+	phone := req.GetPhoneNumber()
+	// 79********1 phone numbers have existing owners
+	if phone[len(phone)-1] == '1' {
+		username := "user_with_phone_" + phone
+		id := uuid.Nil.String()
+		id = id[:len(id)-11] + phone
 		return &userservice.UserResponse{
 			Status:   userservice.UserResponseStatus_SUCCESS,
-			UserName: &existingUser.Username,
+			UserName: &username,
 			UserId: &userservice.UUID{
-				Value: existingUser.Id.String(),
+				Value: id,
 			},
 		}, nil
 	}
 
-	if req.GetPhoneNumber() == erroringUser.Phone {
+	// 79********2 phone numbers cause fail
+	if phone[len(phone)-1] == '2' {
 		return &userservice.UserResponse{
 			Status: userservice.UserResponseStatus_FAILED,
 		}, nil
 	}
 
+	// Other phone numbers don't have existing owners
 	return &userservice.UserResponse{
 		Status: userservice.UserResponseStatus_NOT_FOUND,
 	}, nil

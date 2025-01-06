@@ -42,11 +42,11 @@ func Test_SendCode(t *testing.T) {
 	}
 	cases := []TestCase{
 		{
-			Phone:      "79111111111",
+			Phone:      "79000000001",
 			StatusCode: http.StatusOK,
 		},
 		{
-			Phone:      "79696969696",
+			Phone:      "79000000000",
 			StatusCode: http.StatusNotFound,
 			ErrorType:  "user_not_found",
 		},
@@ -78,6 +78,10 @@ func Test_SendCode(t *testing.T) {
 		require.Equal(t, test.StatusCode, resp.StatusCode)
 		require.Equal(t, test.ErrorType, body.ErrorType)
 	}
+}
+
+func Test_SignIn(t *testing.T) {
+
 }
 
 func getBody(t *testing.T, body io.ReadCloser) *StdResp {
