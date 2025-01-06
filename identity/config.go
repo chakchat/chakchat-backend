@@ -37,6 +37,14 @@ type Config struct {
 	PhoneCode struct {
 		SendFrequency time.Duration `mapstructure:"send_frequency"`
 	} `mapstructure:"phone_code"`
+
+	Sms struct {
+		Type string `mapstructure:"type"`
+
+		Stub struct {
+			Addr string `mapstructure:"addr"`
+		} `mapstructure:"stub"`
+	} `mapstructure:"sms"`
 }
 
 type JWTConfig struct {

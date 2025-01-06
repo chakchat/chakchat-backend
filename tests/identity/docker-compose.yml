@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./keys:/app/keys:ro
+
   users-service-stub:
     build:
       context: users-service-stub
@@ -21,3 +22,7 @@ services:
     ports: [6379:6379]
     environment:
       - REDIS_PASSWORD=secret
+  sms-service-stub:
+    build:
+      context: sms-service-stub
+      dockerfile: Dockerfile

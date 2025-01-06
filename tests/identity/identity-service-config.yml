@@ -33,3 +33,7 @@ idempotency:
   data_exp: 10m
 phone_code:
   send_frequency: 1m
+sms:
+  type: stub
+  stub:
+    addr: http://sms-service-stub:5023
