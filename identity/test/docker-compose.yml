@@ -3,7 +3,16 @@ services:
     build:
       context: service-test
       dockerfile: Dockerfile
+    volumes:
+      - ./keys:/app/keys:ro
   users-service-stub:
     build:
       context: users-service-stub
       dockerfile: Dockerfile
+  identity-service:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    volumes:
+      - ./identity-service-config.yml:/app/config.yml
+      - ./keys:/app/keys:ro

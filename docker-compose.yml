@@ -3,13 +3,13 @@ services:
     image: nginx:latest
     ports: [80:80]
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
   identity_service:
     build: ./identity
     ports: [5000:5000]
     volumes:
-      - ./identity/config.yml:/app/config.yml
-      - ./identity/keys:/app/keys
+      - ./identity/config.yml:/app/config.yml:ro
+      - ./identity/keys:/app/keys:ro
     depends_on:
       - redis
   redis:
