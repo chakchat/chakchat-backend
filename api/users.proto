@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package users;
 
+option go_package = ".";
+
 message UserRequest {
     string phoneNumber = 1;
 }
