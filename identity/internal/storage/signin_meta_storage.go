@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/chakchat/chakchat/backend/identity/internal/services" // Actually, I am worried about this dependency
@@ -52,13 +53,15 @@ func (s *SignInMetaStorage) FindMetaByPhone(ctx context.Context, phone string) (
 	idResp := s.client.Get(ctx, phoneKey)
 	if err := idResp.Err(); err != nil {
 		if err == redis.Nil {
+			log.Printf("phone-to-id not found in redis: %s", phoneKey)
 			return nil, false, nil
 		}
 		return nil, false, fmt.Errorf("redis get id by phone failed: %s", err)
 	}
 
-	id, err := uuid.Parse(idResp.String())
+	id, err := uuid.Parse(idResp.Val())
 	if err != nil {
+		log.Printf("uuid parsing failed. uuid was: %s", idResp.Val())
 		return nil, false, fmt.Errorf("uuid parsing failed: %s", err)
 	}
 	return s.FindMeta(ctx, id)
@@ -69,13 +72,14 @@ func (s *SignInMetaStorage) FindMeta(ctx context.Context, signInKey uuid.UUID) (
 	metaResp := s.client.Get(ctx, idKey)
 	if err := metaResp.Err(); err != nil {
 		if err == redis.Nil {
+			log.Printf("meta not found in redis: %s", idKey)
 			return nil, false, nil
 		}
 		return nil, false, fmt.Errorf("redis get meta failed: %s", err)
 	}
 
 	meta := new(services.SignInMeta)
-	if err := json.Unmarshal([]byte(metaResp.String()), meta); err != nil {
+	if err := json.Unmarshal([]byte(metaResp.Val()), meta); err != nil {
 		return nil, false, fmt.Errorf("umarshalling meta failed: %s", err)
 	}
 
@@ -96,11 +100,13 @@ func (s *SignInMetaStorage) Store(ctx context.Context, meta *services.SignInMeta
 	if err := status.Err(); err != nil {
 		return err
 	}
+	log.Printf("meta stored in redis: key=%s, meta=%v", metaKey, meta)
 
 	status = s.client.Set(ctx, phoneKey, id, s.conf.MetaLifetime)
 	if err := status.Err(); err != nil {
 		return err
 	}
+	log.Printf("phone-to-id stored in redis: phoneKey=%s, id=%v", phoneKey, id)
 
 	return nil
 }
