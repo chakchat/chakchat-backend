@@ -3,3 +3,7 @@ services:
     build:
       context: service-test
       dockerfile: Dockerfile
+  users-service-stub:
+    build:
+      context: users-service-stub
+      dockerfile: Dockerfile
