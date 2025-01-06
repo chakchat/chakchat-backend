@@ -11,12 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const (
-	serviceUrl = "http://identity-service:5000"
-
-	headerIdemotencyKey = "Idempotency-Key"
-)
-
 func Test_SendCode(t *testing.T) {
 	type TestCase struct {
 		Name       string
@@ -46,7 +40,7 @@ func Test_SendCode(t *testing.T) {
 
 	for _, test := range cases {
 		t.Run(test.Name, func(t *testing.T) {
-			resp := sendRequest(t, test.Phone, uuid.New())
+			resp := doSendCodeRequest(t, test.Phone, uuid.New())
 			body := common.GetBody(t, resp.Body)
 
 			require.Equal(t, test.StatusCode, resp.StatusCode)
@@ -58,28 +52,27 @@ func Test_SendCode(t *testing.T) {
 func Test_SendCode_FreqExceeded(t *testing.T) {
 	phone := common.NewPhone(common.PhoneExisting)
 
-	resp1 := sendRequest(t, phone, uuid.New())
+	resp1 := doSendCodeRequest(t, phone, uuid.New())
 	require.Equal(t, http.StatusOK, resp1.StatusCode)
 
-	resp2 := sendRequest(t, phone, uuid.New())
+	resp2 := doSendCodeRequest(t, phone, uuid.New())
 	require.Equal(t, http.StatusBadRequest, resp2.StatusCode)
 
 	body := common.GetBody(t, resp2.Body)
 	require.Equal(t, "send_code_freq_exceeded", body.ErrorType)
 }
 
-type Request struct {
-	Phone string `json:"phone"`
-}
-
-func sendRequest(t *testing.T, phone string, idempotencyKey uuid.UUID) *http.Response {
-	reqBody, _ := json.Marshal(Request{
+func doSendCodeRequest(t *testing.T, phone string, idempotencyKey uuid.UUID) *http.Response {
+	type Req struct {
+		Phone string `json:"phone"`
+	}
+	reqBody, _ := json.Marshal(Req{
 		Phone: phone,
 	})
 
-	req, err := http.NewRequest(http.MethodPost, serviceUrl+"/v1.0/signin/send-phone-code", bytes.NewReader(reqBody))
+	req, err := http.NewRequest(http.MethodPost, common.ServiceUrl+"/v1.0/signin/send-phone-code", bytes.NewReader(reqBody))
 	require.NoError(t, err)
-	req.Header.Add(headerIdemotencyKey, idempotencyKey.String())
+	req.Header.Add(common.HeaderIdemotencyKey, idempotencyKey.String())
 
 	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)

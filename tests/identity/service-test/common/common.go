@@ -7,7 +7,14 @@ import (
 	"sync/atomic"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
+)
+
+const (
+	ServiceUrl = "http://identity-service:5000"
+
+	HeaderIdemotencyKey = "Idempotency-Key"
 )
 
 var incNumber atomic.Uint64
@@ -28,7 +35,7 @@ type StdResp struct {
 	ErrorMessage string        `json:"error_message,omitempty"`
 	ErrorDetails []ErrorDetail `json:"error_details,omitempty"`
 
-	Data any `json:"data,omitempty"`
+	Data json.RawMessage `json:"data,omitempty"`
 }
 
 func NewPhone(phoneState string) string {
@@ -36,6 +43,12 @@ func NewPhone(phoneState string) string {
 	n := incNumber.Add(1)
 	nStr := strconv.FormatUint(n, 10)
 	return templ[:10-len(nStr)] + nStr + phoneState
+}
+
+func MatchUserId(phone string) string {
+	id := uuid.Nil.String()
+	id = id[:len(id)-11] + phone
+	return id
 }
 
 func GetBody(t *testing.T, body io.ReadCloser) *StdResp {
