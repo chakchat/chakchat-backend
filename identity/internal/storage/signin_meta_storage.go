@@ -51,6 +51,9 @@ func (s *SignInMetaStorage) FindMetaByPhone(ctx context.Context, phone string) (
 
 	idResp := s.client.Get(ctx, phoneKey)
 	if err := idResp.Err(); err != nil {
+		if err == redis.Nil {
+			return nil, false, nil
+		}
 		return nil, false, fmt.Errorf("redis get id by phone failed: %s", err)
 	}
 

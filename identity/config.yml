@@ -18,7 +18,7 @@ internal_token:
   issuer: identity_service
   audience: 
     - identity_service
-  key_file_path: /app/keys/id_rsa
+  key_file_path: /app/keys/rsa
 invalidated_token_storage:
   exp: 4m # A little bit longer than refresh_token.lifetime
 userservice:
