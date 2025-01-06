@@ -18,9 +18,22 @@ func Test_SignIn(t *testing.T) {
 	signInKey := requestSendPhoneCode(t, phone)
 	code := getPhoneCode(t, phone)
 
-	resp := doSignInRequest(t, signInKey, code, uuid.New())
+	wrongResp := doSignInRequest(t, signInKey, "000000", uuid.New())
+	require.Equal(t, http.StatusBadRequest, wrongResp.StatusCode)
+	require.Equal(t, "wrong_code", common.GetBody(t, wrongResp.Body).ErrorType)
 
+	resp := doSignInRequest(t, signInKey, code, uuid.New())
 	require.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func Test_SignInKeyNotFound(t *testing.T) {
+	// This sign in key is not issued by Identity Service. It just generated here and is not valid.
+	signInKey := uuid.NewString()
+	resp := doSignInRequest(t, signInKey, "123456", uuid.New())
+	body := common.GetBody(t, resp.Body)
+
+	require.Equal(t, http.StatusNotFound, resp.StatusCode)
+	require.Equal(t, "signin_key_not_found", body.ErrorType)
 }
 
 func doSignInRequest(t *testing.T, signInKey, code string, idempotencyKey uuid.UUID) *http.Response {
