@@ -15,18 +15,19 @@ var (
 	ErrInvalidTokenType        = errors.New("jwt token is invalid")
 )
 
-type RefreshTokenChecker interface {
+type RefreshTokenCheckInvalidator interface {
 	Invalidated(context.Context, jwt.Token) (bool, error)
+	Invalidate(context.Context, jwt.Token) error
 }
 
 type RefreshService struct {
 	accessConf  *jwt.Config
 	refreshConf *jwt.Config
 
-	checker RefreshTokenChecker
+	checker RefreshTokenCheckInvalidator
 }
 
-func NewRefreshService(checker RefreshTokenChecker, accessConf, refreshConf *jwt.Config) *RefreshService {
+func NewRefreshService(checker RefreshTokenCheckInvalidator, accessConf, refreshConf *jwt.Config) *RefreshService {
 	return &RefreshService{
 		accessConf:  accessConf,
 		refreshConf: refreshConf,
@@ -48,6 +49,10 @@ func (s *RefreshService) Refresh(ctx context.Context, refresh jwt.Token) (jwt.Pa
 			return jwt.Pair{}, ErrInvalidTokenType
 		}
 		return jwt.Pair{}, ErrInvalidJWT
+	}
+
+	if err := s.checker.Invalidate(ctx, refresh); err != nil {
+		return jwt.Pair{}, fmt.Errorf("refresh token invalidation failed: %s", err)
 	}
 
 	claims := extractPublic(parsed)

@@ -124,6 +124,28 @@ func Test_RefreshJWT(t *testing.T) {
 		respBody := common.GetBody(t, resp.Body)
 		require.Equal(t, "refresh_token_invalidated", respBody.ErrorType)
 	})
+
+	t.Run("InvalidatesAfterRefresh", func(t *testing.T) {
+		refreshJWT := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
+			"typ": "refresh",
+			"jti": uuid.NewString(),
+			"iat": time.Now().Add(-1 * time.Minute).Unix(),
+			"exp": time.Now().Add(10 * time.Minute).Unix(),
+			"iss": "identity_service", // watch identity-service-config.yml
+			"aud": []string{"client"},
+		})
+		refreshToken, err := refreshJWT.SignedString(symKey)
+		require.NoError(t, err)
+
+		resp := doRefreshJWTRequest(t, refreshToken)
+		require.Equal(t, http.StatusOK, resp.StatusCode)
+
+		resp = doRefreshJWTRequest(t, refreshToken)
+		require.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+		respBody := common.GetBody(t, resp.Body)
+		require.Equal(t, "refresh_token_invalidated", respBody.ErrorType)
+	})
 }
 
 func doRefreshJWTRequest(t *testing.T, token string) *http.Response {
