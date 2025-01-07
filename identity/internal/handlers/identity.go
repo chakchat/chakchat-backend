@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"strings"
 
@@ -20,7 +21,7 @@ type IdentityService interface {
 	Idenitfy(ctx context.Context, access jwt.Token) (jwt.InternalToken, error)
 }
 
-func GetIdentity(service IdentityService) gin.HandlerFunc {
+func Identity(service IdentityService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader(HeaderAuthorization)
 		if authHeader == "" {
@@ -41,10 +42,11 @@ func GetIdentity(service IdentityService) gin.HandlerFunc {
 
 		internalToken, err := service.Idenitfy(c, publicToken)
 		if err != nil {
+			log.Printf("met error in identity endpoint: %s", err)
 			switch err {
 			case services.ErrInvalidJWT:
 				c.JSON(http.StatusUnauthorized, restapi.ErrorResponse{
-					ErrorType:    restapi.ErrTypeUnautorized,
+					ErrorType:    restapi.ErrTypeInvalidJWT,
 					ErrorMessage: "Invalid Authorization token",
 				})
 			case services.ErrAccessTokenExpired:
