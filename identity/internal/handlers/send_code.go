@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"regexp"
 
@@ -46,6 +47,7 @@ func SendCode(service SendCodeService) gin.HandlerFunc {
 					ErrorMessage: "Send code operation frequency exceeded",
 				})
 			default:
+				log.Printf("send code endpoint failed: %s", err)
 				restapi.SendInternalError(c)
 			}
 			return

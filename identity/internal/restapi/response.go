@@ -16,7 +16,8 @@ const (
 
 	ErrTypeRefreshTokenExpired     = "refresh_token_expired"
 	ErrTypeRefreshTokenInvalidated = "refresh_token_invalidated"
-	ErrTypeInvalidJWT              = "jwt_invalid"
+	ErrTypeInvalidJWT              = "invalid_token"
+	ErrTypeInvalidTokenType        = "invalid_token_type"
 
 	ErrTypeUnautorized        = "unauthorized"
 	ErrTypeAccessTokenExpired = "access_token_expired"

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/chakchat/chakchat/backend/identity/internal/jwt"
@@ -25,6 +26,7 @@ func RefreshJWT(service RefreshJWTService) gin.HandlerFunc {
 		tokens, err := service.Refresh(c, jwt.Token(req.RefreshToken))
 
 		if err != nil {
+			log.Printf("met error in refresh-jwt: %s", err)
 			switch err {
 			case services.ErrRefreshTokenExpired:
 				c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
@@ -35,6 +37,11 @@ func RefreshJWT(service RefreshJWTService) gin.HandlerFunc {
 				c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
 					ErrorType:    restapi.ErrTypeRefreshTokenInvalidated,
 					ErrorMessage: "Refresh token invalidated",
+				})
+			case services.ErrInvalidTokenType:
+				c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
+					ErrorType:    restapi.ErrTypeInvalidTokenType,
+					ErrorMessage: "Invalid token type",
 				})
 			case services.ErrInvalidJWT:
 				c.JSON(http.StatusBadRequest, restapi.ErrorResponse{

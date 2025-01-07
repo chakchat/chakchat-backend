@@ -1,0 +1,28 @@
+services:
+  test:
+    build:
+      context: service-test
+      dockerfile: Dockerfile
+    volumes:
+      - ./keys:/app/keys:ro
+
+  users-service-stub:
+    build:
+      context: users-service-stub
+      dockerfile: Dockerfile
+  identity-service:
+    build:
+      context: ../../identity
+      dockerfile: Dockerfile
+    volumes:
+      - ./identity-service-config.yml:/app/config.yml
+      - ./keys:/app/keys:ro
+  redis:
+    image: redis:latest
+    ports: [6379:6379]
+    environment:
+      - REDIS_PASSWORD=secret
+  sms-service-stub:
+    build:
+      context: sms-service-stub
+      dockerfile: Dockerfile

@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/chakchat/chakchat/backend/identity/internal/userservice"
@@ -70,6 +71,7 @@ func (s *SendCodeService) SendCode(ctx context.Context, phone string) (signInKey
 	meta := SignInMeta{
 		SignInKey:   uuid.New(),
 		LastRequest: nowUTC(),
+		Phone:       phone,
 	}
 
 	var user *userservice.UserResponse
@@ -95,6 +97,7 @@ func (s *SendCodeService) SendCode(ctx context.Context, phone string) (signInKey
 
 func (s *SendCodeService) validateSendFreq(ctx context.Context, phone string) error {
 	prevMeta, ok, err := s.storage.FindMetaByPhone(ctx, phone)
+	log.Printf("found sign in meta: %+v", prevMeta)
 	if err != nil {
 		return fmt.Errorf("finding SignInMeta error: %s", err)
 	}
@@ -105,6 +108,7 @@ func (s *SendCodeService) validateSendFreq(ctx context.Context, phone string) er
 }
 
 func (s *SendCodeService) fetchUser(ctx context.Context, phone string) (*userservice.UserResponse, error) {
+	// While testing I found out that fiest request takes exactly 8 seconds more
 	user, err := s.users.GetUser(ctx, &userservice.UserRequest{
 		PhoneNumber: phone,
 	})

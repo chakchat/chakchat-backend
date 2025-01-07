@@ -52,6 +52,11 @@ func GetIdentity(service IdentityService) gin.HandlerFunc {
 					ErrorType:    restapi.ErrTypeAccessTokenExpired,
 					ErrorMessage: "Access token expired",
 				})
+			case services.ErrInvalidTokenType:
+				c.JSON(http.StatusUnauthorized, restapi.ErrorResponse{
+					ErrorType:    restapi.ErrTypeInvalidTokenType,
+					ErrorMessage: "Invalid token type",
+				})
 			default:
 				restapi.SendInternalError(c)
 			}

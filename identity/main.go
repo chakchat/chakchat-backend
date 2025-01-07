@@ -24,7 +24,7 @@ func main() {
 	r := gin.New()
 
 	redisClient := connectRedis()
-	sms := &sms.SmsSenderFake{}
+	sms := createSmsSender()
 	usersClient := createUsersClient()
 
 	accessTokenConfig := loadAccessTokenConfig()
@@ -57,6 +57,13 @@ func main() {
 	})
 
 	r.Run(":5000")
+}
+
+func createSmsSender() services.SmsSender {
+	if conf.Sms.Type == "stub" {
+		return sms.NewSmsServerStubSender(conf.Sms.Stub.Addr)
+	}
+	return &sms.SmsSenderFake{}
 }
 
 func createInvalidatedTokenStorage(redisClient *redis.Client) *storage.InvalidatedTokenStorage {

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 )
 
 type InternalToken string
@@ -17,7 +18,10 @@ const (
 	ClaimSub  = "sub"
 )
 
-var ErrTokenExpired = errors.New("token expired")
+var (
+	ErrTokenExpired     = errors.New("token expired")
+	ErrInvalidTokenType = errors.New("invalid token type")
+)
 
 type Token string
 
@@ -139,13 +143,12 @@ func parse(config *Config, token Token) (jwt.MapClaims, error) {
 		return config.publicKey, nil
 	})
 	if err != nil {
-		if jwtErr, ok := err.(jwt.ValidationError); ok && jwtErr.Errors&jwt.ValidationErrorExpired != 0 {
+		if jwtErr, ok := err.(*jwt.ValidationError); ok && jwtErr.Errors&jwt.ValidationErrorExpired != 0 {
 			return nil, ErrTokenExpired
 		}
 		return nil, err
 	}
 	if !parsed.Valid {
-
 		return nil, errors.New("token invalid")
 	}
 
@@ -153,9 +156,14 @@ func parse(config *Config, token Token) (jwt.MapClaims, error) {
 		return nil, errors.New("invalid issuer")
 	}
 
+	if config.Type != "" && claims[ClaimType] != config.Type {
+		return nil, ErrInvalidTokenType
+	}
+
 	// json unmarshals int to float64 so I don't wanna expose this specificty to the usage
 	claims["iat"] = int64(claims["iat"].(float64))
 	claims["exp"] = int64(claims["exp"].(float64))
+	claims["jti"] = uuid.NewString()
 	return claims, nil
 }
 
