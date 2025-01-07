@@ -5,16 +5,16 @@ on:
     branches:
       - '**'
     paths:
-        - backend/identity/
-        - .github/workflows/identity-service-test.yaml
-        - backend/tests/identity/
+      - backend/identity/
+      - .github/workflows/identity-service-test.yaml
+      - backend/tests/identity/
   pull_request:
     branches:
       - main
     paths:
-        - backend/identity/
-        - .github/workflows/identity-service-test.yaml
-        - backend/tests/identity/
+      - backend/identity/
+      - .github/workflows/identity-service-test.yaml
+      - backend/tests/identity/
 
 jobs:
   test:
@@ -26,14 +26,33 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-        
-      - name: Install Docker Compose
+
+      - name: Cache Docker Compose
+        id: docker-compose-cache
+        uses: actions/cache@v3
+        with:
+          path: /usr/local/bin/docker-compose
+          key: ${{ runner.os }}-docker-compose-v2 # Use Docker Compose version in the key
+          restore-keys: |
+            ${{ runner.os }}-docker-compose-
+
+      - name: Install Docker Compose if not cached
         run: |
+          if [ ! -f /usr/local/bin/docker-compose ]; then
             sudo apt-get update
             sudo apt-get install -y docker-compose
+          fi
 
       - name: Verify Docker Compose is available
         run: docker-compose --version
+
+      - name: Cache Docker Layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-docker-layers-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-docker-layers-
 
       - name: Generate keys
         run: | 
@@ -43,7 +62,11 @@ jobs:
           cd ../../..
 
       - name: Build and run services
-        run: docker-compose -f backend/tests/identity/docker-compose.yml up --build --abort-on-container-exit --exit-code-from test
+        run: |
+          docker-compose -f backend/tests/identity/docker-compose.yml \
+          build --build-arg BUILDKIT_INLINE_CACHE=1
+          docker-compose -f backend/tests/identity/docker-compose.yml \
+          up --abort-on-container-exit --exit-code-from test
 
       - name: Tear down
         if: always()
