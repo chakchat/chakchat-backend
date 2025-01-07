@@ -81,6 +81,26 @@ func Test_Identifies(t *testing.T) {
 		body := common.GetBody(t, resp.Body)
 		require.Equal(t, "access_token_expired", body.ErrorType)
 	})
+
+	t.Run("InvalidKey", func(t *testing.T) {
+		accessJWT := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
+			"typ": "access",
+			"jti": uuid.NewString(),
+			"iat": time.Now().Add(-1 * time.Minute).Unix(),
+			"exp": time.Now().Add(10 * time.Minute).Unix(),
+			"iss": "identity_service", // watch identity-service-config.yml
+			"aud": []string{"client"},
+		})
+		wrongKey := symKey[:len(symKey)-1]
+		accessToken, err := accessJWT.SignedString(wrongKey)
+		require.NoError(t, err)
+
+		resp := doIdentityRequest(t, accessToken)
+		require.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+
+		body := common.GetBody(t, resp.Body)
+		require.Equal(t, "invalid_token", body.ErrorType)
+	})
 }
 
 func doIdentityRequest(t *testing.T, accessToken string) *http.Response {
