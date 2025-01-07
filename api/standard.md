@@ -83,10 +83,19 @@ For example, if you want to return paginated list of users, you should return so
 ```
 `error_type` should be machine-readable error type.
 ### Used `error_type` values
-TODO: It should be clear what error_type every endpoint may return.
-| error_type | description |
-| --- | --- |
-| `internal` | Internal server error |
-| `idempotency_key_missing` | Idempotency key is missing |
-| `validation_failed` | Validation failed |
-| `invalid_json` | JSON is unprocessable |
+- `internal` - Internal server error. No details provided.
+- `invalid_json` - Invalid format of JSON. It can't be parsed correctly.
+- `validation_failed` - Some fields are invalid. See `error_details` for details.
+- `user_not_found` - Such User does not exist.
+- `idempotency_key_missing` - No Idempotency-Key header is provided.
+- `send_code_freq_exceeded` - Too many attempts to send code in a short period of time.
+- `signin_key_not_found` - Such Sign-in key does not exist.
+- `wrong_code` - Wrong verification code is provided.
+- `refresh_token_expired` - Refresh JWT token is expired.
+- `refresh_token_invalidated` - Refresh JWT token is invalidated.
+- `invalid_token` - JWT token is invalid. It can't be parsed correctly or fails some validation not described in other error types.
+- `invalid_token_type` - Invalid `typ` field in JWT token.
+- `unauthorized` - Invalid authorization or no authorization provided.
+- `access_token_expired` - Access token is expired.
+
+TODO: Fill new error types.
