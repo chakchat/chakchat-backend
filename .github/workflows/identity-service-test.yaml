@@ -1,0 +1,43 @@
+name: Run Tests with Docker Compose
+
+on:
+  push:
+    branches:
+      - '**'
+    paths:
+        - backend/identity/
+        - .github/workflows/identity-service-test.yaml
+        - backend/tests/identity/
+  pull_request:
+    branches:
+      - main
+    paths:
+        - backend/identity/
+        - .github/workflows/identity-service-test.yaml
+        - backend/tests/identity/
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        
+      - name: Install Docker Compose
+        run: |
+            sudo apt-get update
+            sudo apt-get install -y docker-compose
+
+      - name: Verify Docker Compose is available
+        run: docker-compose --version
+
+      - name: Build and run services
+        run: docker-compose -f backend/tests/identity/docker-compose.yml up --build --abort-on-container-exit --exit-code-from test
+
+      - name: Tear down
+        if: always()
+        run: docker-compose -f backend/tests/identity/docker-compose.yml down
