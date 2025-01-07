@@ -43,7 +43,7 @@ func SignOut(service SignOutService) gin.HandlerFunc {
 }
 
 type signOutRequest struct {
-	RefreshJWT string `json:"refresh_token"`
+	RefreshJWT string `json:"refresh_token" binding:"required"`
 }
 
 type signOutResponse struct{}

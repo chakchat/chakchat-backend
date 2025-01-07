@@ -5,16 +5,16 @@ on:
     branches:
       - '**'
     paths:
-      - backend/identity/
+      - backend/identity/**
       - .github/workflows/identity-service-test.yaml
-      - backend/tests/identity/
+      - backend/tests/identity/**
   pull_request:
     branches:
       - main
     paths:
-      - backend/identity/
+      - backend/identity/**
       - .github/workflows/identity-service-test.yaml
-      - backend/tests/identity/
+      - backend/tests/identity/**
 
 jobs:
   test:

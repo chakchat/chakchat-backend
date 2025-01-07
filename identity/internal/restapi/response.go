@@ -8,6 +8,8 @@ const (
 	ErrTypeValidationFailed = "validation_failed"
 	ErrTypeUserNotFound     = "user_not_found"
 
+	ErrTypeNotFound = "not_found"
+
 	ErrTypeIdempotencyKeyMissing = "idempotency_key_missing"
 
 	ErrTypeSendCodeFreqExceeded = "send_code_freq_exceeded"

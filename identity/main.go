@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/chakchat/chakchat/backend/identity/internal/handlers"
 	"github.com/chakchat/chakchat/backend/identity/internal/idempotency"
 	"github.com/chakchat/chakchat/backend/identity/internal/jwt"
+	"github.com/chakchat/chakchat/backend/identity/internal/restapi"
 	"github.com/chakchat/chakchat/backend/identity/internal/services"
 	"github.com/chakchat/chakchat/backend/identity/internal/sms"
 	"github.com/chakchat/chakchat/backend/identity/internal/storage"
@@ -41,6 +43,13 @@ func main() {
 	signOutService := services.NewSignOutService(invalidatedTokenStorage)
 	identityService := services.NewIdentityService(accessTokenConfig, internalTokenConfig)
 
+	r.NoRoute(func(c *gin.Context) {
+		c.JSON(http.StatusNotFound, restapi.ErrorResponse{
+			ErrorType:    restapi.ErrTypeNotFound,
+			ErrorMessage: "No such endpoint. Make sure that you use correct route and HTTP method.",
+		})
+	})
+
 	r.Group("/v1.0").
 		Use(idempotency.New(idempotencyStorage)).
 		POST("/signin/send-phone-code", handlers.SendCode(sendCodeService)).
@@ -49,7 +58,7 @@ func main() {
 
 	r.Use(gin.Logger())
 	r.PUT("/v1.0/sign-out", handlers.SignOut(signOutService))
-	r.GET("/v1.0/identity", handlers.GetIdentity(identityService))
+	r.GET("/v1.0/identity", handlers.Identity(identityService))
 
 	// Delete this line
 	r.GET("/internal", func(c *gin.Context) {
