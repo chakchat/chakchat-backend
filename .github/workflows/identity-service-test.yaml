@@ -35,6 +35,13 @@ jobs:
       - name: Verify Docker Compose is available
         run: docker-compose --version
 
+      - name: Generate keys
+        run: | 
+          cd backend/tests/identity
+          make keys-rsa
+          make keys-sym
+          cd ../../..
+
       - name: Build and run services
         run: docker-compose -f backend/tests/identity/docker-compose.yml up --build --abort-on-container-exit --exit-code-from test
 
