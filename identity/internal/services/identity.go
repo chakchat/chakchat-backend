@@ -27,6 +27,9 @@ func (i *IdentityService) Idenitfy(ctx context.Context, token jwt.Token) (jwt.In
 		if err == jwt.ErrTokenExpired {
 			return "", ErrAccessTokenExpired
 		}
+		if err == jwt.ErrInvalidTokenType {
+			return "", ErrInvalidTokenType
+		}
 		return "", err
 	}
 
