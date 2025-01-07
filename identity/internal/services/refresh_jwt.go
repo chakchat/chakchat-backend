@@ -12,6 +12,7 @@ var (
 	ErrRefreshTokenExpired     = errors.New("refresh token expired")
 	ErrRefreshTokenInvalidated = errors.New("refresh token invalidated")
 	ErrInvalidJWT              = errors.New("jwt token is invalid")
+	ErrInvalidTokenType        = errors.New("jwt token is invalid")
 )
 
 type RefreshTokenChecker interface {
@@ -42,6 +43,9 @@ func (s *RefreshService) Refresh(ctx context.Context, refresh jwt.Token) (jwt.Pa
 	if err != nil {
 		if err == jwt.ErrTokenExpired {
 			return jwt.Pair{}, ErrRefreshTokenExpired
+		}
+		if err == jwt.ErrInvalidTokenType {
+			return jwt.Pair{}, ErrInvalidTokenType
 		}
 		return jwt.Pair{}, ErrInvalidJWT
 	}
