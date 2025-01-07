@@ -25,3 +25,53 @@ go.work.sum
 
 # Keys
 keys/
+
+# Xcode
+.DS_Store
+build/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.xccheckout
+*.moved-aside
+DerivedData/
+*.xcuserstate
+
+# Swift Package Manager
+.build/
+.swiftpm/xcode/
+
+# CocoaPods
+Pods/
+
+# Carthage
+Carthage/Build/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+# Code Coverage
+*.xccovreport
+*.xccovarchive
+
+# Temporary files
+*.temp
+*.swp
+*.lock
+
+# Archives
+*.xcarchive
+
+
+# Other
+*.log
+*.xcworkspace
