@@ -108,6 +108,7 @@ func (s *SendCodeService) validateSendFreq(ctx context.Context, phone string) er
 }
 
 func (s *SendCodeService) fetchUser(ctx context.Context, phone string) (*userservice.UserResponse, error) {
+	// While testing I found out that fiest request takes exactly 8 seconds more
 	user, err := s.users.GetUser(ctx, &userservice.UserRequest{
 		PhoneNumber: phone,
 	})
