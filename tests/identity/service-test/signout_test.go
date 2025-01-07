@@ -18,7 +18,7 @@ func doSignOutRequest(t *testing.T, refreshToken string) *http.Response {
 	reqBody, _ := json.Marshal(Request{
 		RefreshJWT: refreshToken,
 	})
-	req, err := http.NewRequest(http.MethodPut, common.ServiceUrl+"/v1.0/signout", bytes.NewReader(reqBody))
+	req, err := http.NewRequest(http.MethodPut, common.ServiceUrl+"/v1.0/sign-out", bytes.NewReader(reqBody))
 	require.NoError(t, err)
 	req.Header.Add(common.HeaderIdemotencyKey, uuid.NewString())
 
