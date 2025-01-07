@@ -30,7 +30,7 @@ func (i *IdentityService) Idenitfy(ctx context.Context, token jwt.Token) (jwt.In
 		if err == jwt.ErrInvalidTokenType {
 			return "", ErrInvalidTokenType
 		}
-		return "", err
+		return "", ErrInvalidJWT
 	}
 
 	internalClaims := extractInternal(claims)
