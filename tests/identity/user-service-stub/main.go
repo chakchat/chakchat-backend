@@ -38,14 +38,14 @@ func (ServerStub) GetUser(ctx context.Context, req *userservice.UserRequest) (*u
 	// 79********1 phone numbers have existing owners
 	if phone[len(phone)-1] == '1' {
 		username := "user_with_phone_" + phone
+		name := "User with phone " + phone
 		id := uuid.Nil.String()
 		id = id[:len(id)-11] + phone
 		return &userservice.UserResponse{
 			Status:   userservice.UserResponseStatus_SUCCESS,
+			Name:     &name,
 			UserName: &username,
-			UserId: &userservice.UUID{
-				Value: id,
-			},
+			UserId:   &userservice.UUID{Value: id},
 		}, nil
 	}
 
