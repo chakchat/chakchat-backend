@@ -153,7 +153,7 @@ func createIdempotencyStorage(redisClient *redis.Client) *storage.IdempotencySto
 	return storage.NewIdempotencyStorage(redisClient, idempotencyConf)
 }
 
-func createSignInSendCodeService(sms services.SmsSender, storage services.MetaFindStorer,
+func createSignInSendCodeService(sms services.SmsSender, storage services.SignInMetaFindStorer,
 	users userservice.UserServiceClient) *services.SignInSendCodeService {
 	config := &services.CodeConfig{
 		SendFrequency: conf.PhoneCode.SendFrequency,

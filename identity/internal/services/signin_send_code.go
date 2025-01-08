@@ -36,7 +36,7 @@ type SignInMeta struct {
 	Username string
 }
 
-type MetaFindStorer interface {
+type SignInMetaFindStorer interface {
 	FindMetaByPhone(ctx context.Context, phone string) (*SignInMeta, bool, error)
 	Store(context.Context, *SignInMeta) error
 }
@@ -49,12 +49,12 @@ type SignInSendCodeService struct {
 	config *CodeConfig
 
 	sms     SmsSender
-	storage MetaFindStorer
+	storage SignInMetaFindStorer
 	users   userservice.UserServiceClient
 }
 
 func NewSignInSendCodeService(config *CodeConfig, sms SmsSender,
-	storage MetaFindStorer, users userservice.UserServiceClient) *SignInSendCodeService {
+	storage SignInMetaFindStorer, users userservice.UserServiceClient) *SignInSendCodeService {
 	return &SignInSendCodeService{
 		config:  config,
 		sms:     sms,
@@ -68,20 +68,19 @@ func (s *SignInSendCodeService) SendCode(ctx context.Context, phone string) (sig
 		return uuid.Nil, err
 	}
 
-	meta := SignInMeta{
-		SignInKey:   uuid.New(),
-		LastRequest: nowUTC(),
-		Phone:       phone,
-	}
-
 	var user *userservice.UserResponse
 	if user, err = s.fetchUser(ctx, phone); err != nil {
 		return uuid.Nil, err
 	}
 
-	meta.UserId = uuid.MustParse(user.UserId.GetValue())
-	meta.Username = *user.UserName
-	meta.Code = genCode()
+	meta := SignInMeta{
+		SignInKey:   uuid.New(),
+		LastRequest: nowUTC(),
+		Phone:       phone,
+		UserId:      uuid.MustParse(user.UserId.GetValue()),
+		Username:    *user.UserName,
+		Code:        genCode(),
+	}
 
 	sms := renderCodeSMS(meta.Code)
 	if err := s.sms.SendSms(ctx, phone, sms); err != nil {
@@ -108,7 +107,7 @@ func (s *SignInSendCodeService) validateSendFreq(ctx context.Context, phone stri
 }
 
 func (s *SignInSendCodeService) fetchUser(ctx context.Context, phone string) (*userservice.UserResponse, error) {
-	// While testing I found out that fiest request takes exactly 8 seconds more
+	// While testing I found out that first request takes exactly 8 seconds more
 	user, err := s.users.GetUser(ctx, &userservice.UserRequest{
 		PhoneNumber: phone,
 	})
