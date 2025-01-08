@@ -23,6 +23,8 @@ const (
 
 	ErrTypeUnautorized        = "unauthorized"
 	ErrTypeAccessTokenExpired = "access_token_expired"
+
+	ErrTypeUserAlreadyExists = "user_already_exists"
 )
 
 type ErrorDetail struct {

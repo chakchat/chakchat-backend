@@ -151,7 +151,7 @@ paths:
             application/json:
               schema:
                 "$ref": '#/components/schemas/ErrorResponse'
-  /signup/request-code:
+  /signup/send-phone-code:
     post:
       summary: Request for phone number verification code.
       description: Signup user

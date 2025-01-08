@@ -98,5 +98,6 @@ For example, if you want to return paginated list of users, you should return so
 - `unauthorized` - Invalid authorization or no authorization provided.
 - `access_token_expired` - Access token is expired.
 - `not_found` - Not found. No such endpoint or resource.
+- `user_already_exists` - User already exists
 
 TODO: Fill new error types.
