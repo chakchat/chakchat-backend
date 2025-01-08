@@ -56,7 +56,7 @@ func doSignInRequest(t *testing.T, signInKey, code string, idempotencyKey uuid.U
 }
 
 func requestSendPhoneCode(t *testing.T, phone string) (signInKey string) {
-	req := doSendCodeRequest(t, phone, uuid.New())
+	req := doSignInSendCodeRequest(t, phone, uuid.New())
 	body := common.GetBody(t, req.Body)
 
 	type RespData struct {

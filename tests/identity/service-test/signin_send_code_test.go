@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_SendCode(t *testing.T) {
+func Test_SignInSendCode(t *testing.T) {
 	type TestCase struct {
 		Name       string
 		Phone      string
@@ -40,7 +40,7 @@ func Test_SendCode(t *testing.T) {
 
 	for _, test := range cases {
 		t.Run(test.Name, func(t *testing.T) {
-			resp := doSendCodeRequest(t, test.Phone, uuid.New())
+			resp := doSignInSendCodeRequest(t, test.Phone, uuid.New())
 			body := common.GetBody(t, resp.Body)
 
 			require.Equal(t, test.StatusCode, resp.StatusCode)
@@ -49,20 +49,20 @@ func Test_SendCode(t *testing.T) {
 	}
 }
 
-func Test_SendCode_FreqExceeded(t *testing.T) {
+func Test_SignInSendCode_FreqExceeded(t *testing.T) {
 	phone := common.NewPhone(common.PhoneExisting)
 
-	resp1 := doSendCodeRequest(t, phone, uuid.New())
+	resp1 := doSignInSendCodeRequest(t, phone, uuid.New())
 	require.Equal(t, http.StatusOK, resp1.StatusCode)
 
-	resp2 := doSendCodeRequest(t, phone, uuid.New())
+	resp2 := doSignInSendCodeRequest(t, phone, uuid.New())
 	require.Equal(t, http.StatusBadRequest, resp2.StatusCode)
 
 	body := common.GetBody(t, resp2.Body)
 	require.Equal(t, "send_code_freq_exceeded", body.ErrorType)
 }
 
-func doSendCodeRequest(t *testing.T, phone string, idempotencyKey uuid.UUID) *http.Response {
+func doSignInSendCodeRequest(t *testing.T, phone string, idempotencyKey uuid.UUID) *http.Response {
 	type Req struct {
 		Phone string `json:"phone"`
 	}
