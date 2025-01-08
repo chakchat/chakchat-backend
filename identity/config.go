@@ -30,6 +30,10 @@ type Config struct {
 		Lifetime time.Duration `mapstructure:"lifetime"`
 	} `mapstructure:"signin_meta"`
 
+	SignUpMeta struct {
+		Lifetime time.Duration `mapstructure:"lifetime"`
+	} `mapstructure:"signup_meta"`
+
 	Idempotency struct {
 		DataExp time.Duration `mapstructure:"data_exp"`
 	} `mapstructure:"idempotency"`

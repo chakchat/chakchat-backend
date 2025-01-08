@@ -36,12 +36,16 @@ func main() {
 	idempotencyStorage := createIdempotencyStorage(redisClient)
 	signInMetaStorage := createSignInMetaStorage(redisClient)
 	invalidatedTokenStorage := createInvalidatedTokenStorage(redisClient)
+	signUpMetaStorage := createSignUpMetaStorage(redisClient)
 
 	sendCodeService := createSignInSendCodeService(sms, signInMetaStorage, usersClient)
 	signInService := services.NewSignInService(signInMetaStorage, accessTokenConfig, refreshTokenConfig)
 	refreshService := services.NewRefreshService(invalidatedTokenStorage, accessTokenConfig, refreshTokenConfig)
 	signOutService := services.NewSignOutService(invalidatedTokenStorage)
 	identityService := services.NewIdentityService(accessTokenConfig, internalTokenConfig)
+	signUpSendCodeService := createSignUpSendCodeService(sms, signUpMetaStorage, usersClient)
+	signUpVerifyService := services.NewSignUpVerifyCodeService(signUpMetaStorage)
+	signUpService := services.NewSignUpService(usersClient, signUpMetaStorage)
 
 	r.NoRoute(func(c *gin.Context) {
 		c.JSON(http.StatusNotFound, restapi.ErrorResponse{
@@ -54,7 +58,10 @@ func main() {
 		Use(idempotency.New(idempotencyStorage)).
 		POST("/signin/send-phone-code", handlers.SignInSendCode(sendCodeService)).
 		POST("/signin", handlers.SignIn(signInService)).
-		POST("/refresh-token", handlers.RefreshJWT(refreshService))
+		POST("/refresh-token", handlers.RefreshJWT(refreshService)).
+		POST("/signup/send-phone-code", handlers.SignUpSendCode(signUpSendCodeService)).
+		POST("/signup/verify-code", handlers.SignUpVerifyCode(signUpVerifyService)).
+		POST("/signup", handlers.SignUp(signUpService))
 
 	r.Use(gin.Logger())
 	r.PUT("/v1.0/sign-out", handlers.SignOut(signOutService))
@@ -66,6 +73,21 @@ func main() {
 	})
 
 	r.Run(":5000")
+}
+
+func createSignUpSendCodeService(sms services.SmsSender, storage *storage.SignUpMetaStorage,
+	users userservice.UserServiceClient) *services.SignUpSendCodeService {
+	config := &services.CodeConfig{
+		SendFrequency: conf.PhoneCode.SendFrequency,
+	}
+	return services.NewSignUpSendCodeService(config, sms, storage, users)
+}
+
+func createSignUpMetaStorage(redisClient *redis.Client) *storage.SignUpMetaStorage {
+	stConf := &storage.SignUpMetaConfig{
+		MetaLifetime: conf.SignUpMeta.Lifetime,
+	}
+	return storage.NewSignUpMetaStorage(stConf, redisClient)
 }
 
 func createSmsSender() services.SmsSender {

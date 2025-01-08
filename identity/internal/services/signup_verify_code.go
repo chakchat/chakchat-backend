@@ -14,7 +14,7 @@ var (
 
 type SignUpMetaFindUpdater interface {
 	FindMeta(ctx context.Context, signInKey uuid.UUID) (*SignUpMeta, bool, error)
-	Update(context.Context, *SignUpMeta) error
+	Store(context.Context, *SignUpMeta) error
 }
 
 type SignUpVerifyCodeService struct {
@@ -40,7 +40,7 @@ func (s *SignUpVerifyCodeService) VerifyCode(ctx context.Context, signUpKey uuid
 	}
 
 	meta.Verified = true
-	if err := s.storage.Update(ctx, meta); err != nil {
+	if err := s.storage.Store(ctx, meta); err != nil {
 		return fmt.Errorf("sign up meta update failed: %s", err)
 	}
 
