@@ -11,8 +11,6 @@ tags:
     description: Other users info
   - name: me 
     description: User info about requesting user
-  - name: signup
-    description: Sign Up user
   - name: deleteAccount
     description: Delete user account
 # Response body follows the standard described in standard.md
@@ -198,6 +196,9 @@ paths:
             application/json:
               schema:
                 "$ref": '#/components/schemas/ErrorResponseWithDetails'
+  # TODO:
+  # To be honest I complain about it is one more phone verification.
+  # I don't know if User Service should be responsible for this.
   /me/deletion/request-code:
     post:
       summary: Request for phone number verification code.
@@ -280,96 +281,6 @@ paths:
             application/json:
               schema:
                 "$ref": '#/components/schemas/ErrorResponse'
-        '400':
-          description: Bad Request.
-          content:
-            application/json:
-              schema:
-                "$ref": '#/components/schemas/ErrorResponseWithDetails'
-  /signup/request-code:
-    post:
-      summary: Request for phone number verification code.
-      description: Signup user
-      tags:
-        - signup
-      parameters:
-        - name: Idempotency-Key
-          in: header
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/RequestPhoneCode"
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                "$ref": '#/components/schemas/EmptySuccessResponse'
-        '400':
-          description: Bad Request. Maybe phone number is already used.
-          content:
-            application/json:
-              schema:
-                "$ref": '#/components/schemas/ErrorResponse'
-  /signup/verify-code:
-    post:
-      summary: Verify phone number verification code.
-      description: Verify phone number verification code
-      tags:
-        - signup
-      parameters:
-        - name: Idempotency-Key
-          in: header
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/VerifyPhoneCode"
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                "$ref": '#/components/schemas/EmptySuccessResponse'
-        '400':
-          description: Bad Request. Maybe phone number is already used or code is invalid.
-          content:
-            application/json:
-              schema:
-                "$ref": '#/components/schemas/ErrorResponseWithDetails'
-  # I guess it is idempotent because phone number should be unique.
-  /signup:
-    post:
-      summary: Sign Up user
-      description: Sign Up user
-      tags:
-        - signup
-      requestBody:
-        content:
-          application/json:
-            schema: 
-              "$ref": "#/components/schemas/SignUp"
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/UserProfile'
         '400':
           description: Bad Request.
           content:
@@ -475,22 +386,6 @@ components:
             description: User ids
       required:
         - open_to
-    SignUp:
-      properties:
-        phone:
-          type: string
-          format: phone
-          nullable: false
-        name:
-          type: string
-          nullable: false
-        username:
-          type: string
-          nullable: false
-      required:
-        - phone
-        - name
-        - username
     RequestPhoneCode:
       properties:
         phone:
