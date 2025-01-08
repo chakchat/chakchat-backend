@@ -68,8 +68,9 @@ func (s *RefreshService) Refresh(ctx context.Context, refresh jwt.Token) (jwt.Pa
 
 func extractPublic(claims jwt.Claims) jwt.Claims {
 	return jwt.Claims{
-		jwt.ClaimSub:  claims[jwt.ClaimSub],
-		jwt.ClaimName: claims[jwt.ClaimName],
+		jwt.ClaimSub:      claims[jwt.ClaimSub],
+		jwt.ClaimName:     claims[jwt.ClaimName],
+		jwt.ClaimUsername: claims[jwt.ClaimUsername],
 	}
 }
 

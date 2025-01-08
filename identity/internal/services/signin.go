@@ -46,8 +46,9 @@ func (s *SignInService) SignIn(ctx context.Context, signInKey uuid.UUID, code st
 	}
 
 	claims := jwt.Claims{
-		jwt.ClaimSub:  meta.UserId,
-		jwt.ClaimName: meta.Username,
+		jwt.ClaimSub:      meta.UserId,
+		jwt.ClaimName:     meta.Name,
+		jwt.ClaimUsername: meta.Username,
 	}
 	var pair jwt.Pair
 	if pair.Access, err = jwt.Generate(s.accessConf, claims); err != nil {

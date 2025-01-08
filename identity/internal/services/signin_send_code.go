@@ -33,6 +33,7 @@ type SignInMeta struct {
 	Code        string
 
 	UserId   uuid.UUID
+	Name     string
 	Username string
 }
 
@@ -79,6 +80,7 @@ func (s *SignInSendCodeService) SendCode(ctx context.Context, phone string) (sig
 		Phone:       phone,
 		UserId:      uuid.MustParse(user.UserId.GetValue()),
 		Username:    *user.UserName,
+		Name:        *user.Name,
 		Code:        genCode(),
 	}
 

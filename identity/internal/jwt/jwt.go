@@ -13,9 +13,10 @@ import (
 type InternalToken string
 
 const (
-	ClaimType = "typ"
-	ClaimName = "name"
-	ClaimSub  = "sub"
+	ClaimType     = "typ"
+	ClaimName     = "name"
+	ClaimUsername = "username"
+	ClaimSub      = "sub"
 )
 
 var (

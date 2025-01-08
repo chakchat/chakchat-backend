@@ -44,7 +44,8 @@ func (i *IdentityService) Idenitfy(ctx context.Context, token jwt.Token) (jwt.In
 
 func extractInternal(claims jwt.Claims) jwt.Claims {
 	return jwt.Claims{
-		jwt.ClaimSub:  claims[jwt.ClaimSub],
-		jwt.ClaimName: claims[jwt.ClaimName],
+		jwt.ClaimSub:      claims[jwt.ClaimSub],
+		jwt.ClaimName:     claims[jwt.ClaimName],
+		jwt.ClaimUsername: claims[jwt.ClaimUsername],
 	}
 }
