@@ -17,6 +17,8 @@ services:
     volumes:
       - ./identity-service-config.yml:/app/config.yml
       - ./keys:/app/keys:ro
+    depends_on:
+      - redis
   redis:
     image: redis:latest
     ports: [6379:6379]

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"regexp"
 
@@ -14,7 +15,7 @@ import (
 
 var (
 	usernameRegex = regexp.MustCompile(`^[a-z][_a-z0-9]{2,19}$`)
-	nameRegex     = regexp.MustCompile(`^79\d{9}$`)
+	nameRegex     = regexp.MustCompile(`^.{1,50}$`)
 )
 
 type SignUpService interface {
@@ -67,6 +68,7 @@ func SignUp(service SignUpService) gin.HandlerFunc {
 			return
 		}
 
+		log.Println("sending success response")
 		restapi.SendSuccess(c, signUpResponse{
 			AccessToken:  string(tokens.Access),
 			RefreshToken: string(tokens.Refresh),

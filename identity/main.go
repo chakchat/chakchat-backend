@@ -45,7 +45,7 @@ func main() {
 	identityService := services.NewIdentityService(accessTokenConfig, internalTokenConfig)
 	signUpSendCodeService := createSignUpSendCodeService(sms, signUpMetaStorage, usersClient)
 	signUpVerifyService := services.NewSignUpVerifyCodeService(signUpMetaStorage)
-	signUpService := services.NewSignUpService(usersClient, signUpMetaStorage)
+	signUpService := services.NewSignUpService(accessTokenConfig, refreshTokenConfig, usersClient, signUpMetaStorage)
 
 	r.NoRoute(func(c *gin.Context) {
 		c.JSON(http.StatusNotFound, restapi.ErrorResponse{

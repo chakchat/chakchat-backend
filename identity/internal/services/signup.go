@@ -34,10 +34,13 @@ type SignUpService struct {
 	storage SignUpMetaFindRemover
 }
 
-func NewSignUpService(users userservice.UserServiceClient, storage SignUpMetaFindRemover) *SignUpService {
+func NewSignUpService(accessConf *jwt.Config, refreshConf *jwt.Config, users userservice.UserServiceClient,
+	storage SignUpMetaFindRemover) *SignUpService {
 	return &SignUpService{
-		users:   users,
-		storage: storage,
+		accessConf:  accessConf,
+		refreshConf: refreshConf,
+		users:       users,
+		storage:     storage,
 	}
 }
 
