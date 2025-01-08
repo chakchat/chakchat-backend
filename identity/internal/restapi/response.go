@@ -24,8 +24,9 @@ const (
 	ErrTypeUnautorized        = "unauthorized"
 	ErrTypeAccessTokenExpired = "access_token_expired"
 
-	ErrTypeUserAlreadyExists = "user_already_exists"
-	ErrTypeSignUpKeyNotFound = "signup_key_not_found"
+	ErrTypeUserAlreadyExists     = "user_already_exists"
+	ErrTypeSignUpKeyNotFound     = "signup_key_not_found"
+	ErrTypeUsernameAlreadyExists = "username_already_exists"
 )
 
 type ErrorDetail struct {

@@ -217,7 +217,7 @@ paths:
   /signup:
     post:
       summary: Sign Up user
-      description: Sign Up user
+      description: Sign Up userw
       tags:
         - signup
       parameters:
