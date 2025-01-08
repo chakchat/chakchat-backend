@@ -28,7 +28,7 @@ func Test_Success(t *testing.T) {
 		SendFrequency: 1 * time.Minute,
 	}
 
-	sender := NewSendCodeService(&config, smsSender, &metaStorage, userService)
+	sender := NewSignInSendCodeService(&config, smsSender, &metaStorage, userService)
 
 	// Act
 	signInKey, err := sender.SendCode(context.Background(), "+79998887766")
@@ -67,7 +67,7 @@ func Test_Error(t *testing.T) {
 		SendFrequency: 1 * time.Minute,
 	}
 
-	sender := NewSendCodeService(config, smsSender, metaStorage, userService)
+	sender := NewSignInSendCodeService(config, smsSender, metaStorage, userService)
 
 	t.Run("FrequencyExceeded", func(t *testing.T) {
 		// Act

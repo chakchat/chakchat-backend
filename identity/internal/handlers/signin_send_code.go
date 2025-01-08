@@ -15,11 +15,11 @@ import (
 // Only russian phone numbers for now. Just hard-coded
 var phoneRegex = regexp.MustCompile(`^[78]9\d{9}$`)
 
-type SendCodeService interface {
+type SignInSendCodeService interface {
 	SendCode(ctx context.Context, phone string) (signInKey uuid.UUID, err error)
 }
 
-func SendCode(service SendCodeService) gin.HandlerFunc {
+func SignInSendCode(service SignInSendCodeService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req sendCodeRequest
 		if err := c.ShouldBindBodyWithJSON(&req); err != nil {
