@@ -13,7 +13,7 @@ import (
 
 func Test_Success(t *testing.T) {
 	// Arrange
-	userService := usersServiceMock{
+	userService := userServiceMock{
 		resp: &userservice.UserResponse{
 			Status:   userservice.UserResponseStatus_SUCCESS,
 			UserName: new(string),
@@ -43,7 +43,7 @@ func Test_Error(t *testing.T) {
 	now, _ := time.Parse(time.DateTime, "2024-12-28 03:00:01")
 	nowUTC = func() time.Time { return now }
 
-	userService := &usersServiceMock{
+	userService := &userServiceMock{
 		resp: &userservice.UserResponse{
 			Status:   userservice.UserResponseStatus_SUCCESS,
 			UserName: new(string),
@@ -98,11 +98,11 @@ func Test_Error(t *testing.T) {
 	})
 }
 
-type usersServiceMock struct {
+type userServiceMock struct {
 	resp *userservice.UserResponse
 }
 
-func (s usersServiceMock) GetUser(ctx context.Context, in *userservice.UserRequest,
+func (s userServiceMock) GetUser(ctx context.Context, in *userservice.UserRequest,
 	opts ...grpc.CallOption) (*userservice.UserResponse, error) {
 	return s.resp, nil
 }

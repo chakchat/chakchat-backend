@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package users;
+package user;
 
 option go_package = ".";
 
@@ -25,6 +25,6 @@ message UserResponse {
     optional UUID userId = 3;
 }
 
-service UsersService {
+service UserService {
     rpc GetUser(UserRequest) returns (UserResponse); 
 }

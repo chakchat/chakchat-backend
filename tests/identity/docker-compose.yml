@@ -6,9 +6,9 @@ services:
     volumes:
       - ./keys:/app/keys:ro
 
-  users-service-stub:
+  user-service-stub:
     build:
-      context: users-service-stub
+      context: user-service-stub
       dockerfile: Dockerfile
   identity-service:
     build:
