@@ -14,18 +14,18 @@ var (
 	ErrWrongCode         = errors.New("wrong phone verification code")
 )
 
-type MetaFindRemover interface {
+type SignInMetaFindRemover interface {
 	FindMeta(ctx context.Context, signInKey uuid.UUID) (*SignInMeta, bool, error)
 	Remove(ctx context.Context, signInKey uuid.UUID) error
 }
 
 type SignInService struct {
-	storage     MetaFindRemover
+	storage     SignInMetaFindRemover
 	accessConf  *jwt.Config
 	refreshConf *jwt.Config
 }
 
-func NewSignInService(storage MetaFindRemover, accessConf, refreshConf *jwt.Config) *SignInService {
+func NewSignInService(storage SignInMetaFindRemover, accessConf, refreshConf *jwt.Config) *SignInService {
 	return &SignInService{
 		storage:     storage,
 		accessConf:  accessConf,
