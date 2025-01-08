@@ -349,7 +349,7 @@ components:
     SignUpSendPhoneCodeResponse:
       type: object
       properties:
-        signin_key:
+        signup_key:
           description: The device should use the key generated for phone code request. It connects requests.
           type: string
           format: uuid
