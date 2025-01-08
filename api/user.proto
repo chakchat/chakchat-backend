@@ -25,6 +25,26 @@ message UserResponse {
     optional UUID userId = 3;
 }
 
+message CreateUserRequest {
+    string phoneNumber = 1;
+    string name = 2;
+    string username = 3;
+}
+
+enum CreateUserStatus {
+    CREATED = 0;
+    CREATE_FAILED = 1;
+    ALREADY_EXISTS = 2;
+    VALIDATION_FAILED = 3;
+}
+
+message CreateUserResponse {
+    CreateUserStatus status = 1;
+    optional UUID userId = 2;
+    optional string userName = 3;
+}
+
 service UserService {
     rpc GetUser(UserRequest) returns (UserResponse); 
+    rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
 }
