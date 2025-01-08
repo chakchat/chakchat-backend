@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	prefixPhoneToKey = "PhoneToKey:"
-	prefixMeta       = "SignInMeta:"
+	prefixPhoneToSignInKey = "PhoneToKey:"
+	prefixSignInMeta       = "SignInMeta:"
 )
 
 type SignInMetaConfig struct {
@@ -34,7 +34,7 @@ func NewSignInMetaStorage(conf *SignInMetaConfig, client *redis.Client) *SignInM
 }
 
 func (s *SignInMetaStorage) Remove(ctx context.Context, signInKey uuid.UUID) error {
-	idKey := prefixMeta + signInKey.String()
+	idKey := prefixSignInMeta + signInKey.String()
 
 	// Here I don't delete PhoneToId relation
 	// It may cause bugs if these entities will be used in other scenarios
@@ -48,7 +48,7 @@ func (s *SignInMetaStorage) Remove(ctx context.Context, signInKey uuid.UUID) err
 }
 
 func (s *SignInMetaStorage) FindMetaByPhone(ctx context.Context, phone string) (*services.SignInMeta, bool, error) {
-	phoneKey := prefixPhoneToKey + phone
+	phoneKey := prefixPhoneToSignInKey + phone
 
 	keyResp := s.client.Get(ctx, phoneKey)
 	if err := keyResp.Err(); err != nil {
@@ -68,7 +68,7 @@ func (s *SignInMetaStorage) FindMetaByPhone(ctx context.Context, phone string) (
 }
 
 func (s *SignInMetaStorage) FindMeta(ctx context.Context, signInKey uuid.UUID) (*services.SignInMeta, bool, error) {
-	idKey := prefixMeta + signInKey.String()
+	idKey := prefixSignInMeta + signInKey.String()
 	metaResp := s.client.Get(ctx, idKey)
 	if err := metaResp.Err(); err != nil {
 		if err == redis.Nil {
@@ -93,8 +93,8 @@ func (s *SignInMetaStorage) Store(ctx context.Context, meta *services.SignInMeta
 	}
 
 	key := meta.SignInKey.String()
-	metaKey := prefixMeta + key
-	phoneKey := prefixPhoneToKey + meta.Phone
+	metaKey := prefixSignInMeta + key
+	phoneKey := prefixPhoneToSignInKey + meta.Phone
 
 	status := s.client.Set(ctx, metaKey, metaJson, s.conf.MetaLifetime)
 	if err := status.Err(); err != nil {
