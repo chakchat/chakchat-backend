@@ -220,6 +220,13 @@ paths:
       description: Sign Up user
       tags:
         - signup
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         content:
           application/json:
