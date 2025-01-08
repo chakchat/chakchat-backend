@@ -12,16 +12,16 @@ var (
 	ErrSignUpKeyNotFound = errors.New("sign up key not found")
 )
 
-type SignUpMetaFindRemover interface {
+type SignUpMetaFindUpdater interface {
 	FindMeta(ctx context.Context, signInKey uuid.UUID) (*SignUpMeta, bool, error)
-	Remove(ctx context.Context, signInKey uuid.UUID) error
+	Update(context.Context, *SignUpMeta) error
 }
 
 type SignUpVerifyCodeService struct {
-	storage SignUpMetaFindRemover
+	storage SignUpMetaFindUpdater
 }
 
-func NewSignUpVerifyCodeService(storage SignUpMetaFindRemover) *SignUpVerifyCodeService {
+func NewSignUpVerifyCodeService(storage SignUpMetaFindUpdater) *SignUpVerifyCodeService {
 	return &SignUpVerifyCodeService{
 		storage: storage,
 	}
@@ -39,8 +39,9 @@ func (s *SignUpVerifyCodeService) VerifyCode(ctx context.Context, signUpKey uuid
 		return ErrWrongCode
 	}
 
-	if err := s.storage.Remove(ctx, signUpKey); err != nil {
-		return fmt.Errorf("sign up key removal failed: %s", err)
+	meta.Verified = true
+	if err := s.storage.Update(ctx, meta); err != nil {
+		return fmt.Errorf("sign up meta update failed: %s", err)
 	}
 
 	return nil

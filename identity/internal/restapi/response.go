@@ -27,6 +27,7 @@ const (
 	ErrTypeUserAlreadyExists     = "user_already_exists"
 	ErrTypeSignUpKeyNotFound     = "signup_key_not_found"
 	ErrTypeUsernameAlreadyExists = "username_already_exists"
+	ErrTypePhoneNotVerified      = "phone_not_verified"
 )
 
 type ErrorDetail struct {

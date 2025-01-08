@@ -19,6 +19,7 @@ type SignUpMeta struct {
 	LastRequest time.Time
 	Phone       string
 	Code        string
+	Verified    bool
 }
 
 type SignUpMetaFindStorer interface {
@@ -58,6 +59,7 @@ func (s *SignUpSendCodeService) SendCode(ctx context.Context, phone string) (sig
 		LastRequest: nowUTC(),
 		Phone:       phone,
 		Code:        genCode(),
+		Verified:    false,
 	}
 
 	sms := renderCodeSMS(meta.Code)

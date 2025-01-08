@@ -56,6 +56,11 @@ func SignUp(service SignUpService) gin.HandlerFunc {
 					ErrorType:    restapi.ErrTypeSignUpKeyNotFound,
 					ErrorMessage: "Sign up key not found",
 				})
+			case services.ErrPhoneNotVerified:
+				c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
+					ErrorType:    restapi.ErrTypePhoneNotVerified,
+					ErrorMessage: "Phone is not verified",
+				})
 			default:
 				restapi.SendInternalError(c)
 			}
