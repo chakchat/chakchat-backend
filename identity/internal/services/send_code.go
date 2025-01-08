@@ -50,11 +50,11 @@ type SendCodeService struct {
 
 	sms     SmsSender
 	storage MetaFindStorer
-	users   userservice.UsersServiceClient
+	users   userservice.UserServiceClient
 }
 
 func NewSendCodeService(config *CodeConfig, sms SmsSender,
-	storage MetaFindStorer, users userservice.UsersServiceClient) *SendCodeService {
+	storage MetaFindStorer, users userservice.UserServiceClient) *SendCodeService {
 	return &SendCodeService{
 		config:  config,
 		sms:     sms,

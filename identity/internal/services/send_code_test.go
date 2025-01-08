@@ -107,6 +107,11 @@ func (s userServiceMock) GetUser(ctx context.Context, in *userservice.UserReques
 	return s.resp, nil
 }
 
+func (s userServiceMock) CreateUser(ctx context.Context, in *userservice.CreateUserRequest,
+	opts ...grpc.CallOption) (*userservice.CreateUserResponse, error) {
+	panic("why do you use it here?")
+}
+
 type metaStorageFake struct {
 	s []*SignInMeta
 }
