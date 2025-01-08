@@ -5,3 +5,6 @@ keys-rsa:
 
 keys-sym:
 	openssl rand -hex 64 > keys/sym
+
+gen-grpc:
+	protoc --go_out="./internal/userservice" --go-grpc_out="./internal/userservice" --proto_path="../../api" user.proto

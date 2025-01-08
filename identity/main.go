@@ -116,14 +116,14 @@ func loadInternalTokenConfig() *jwt.Config {
 	return res
 }
 
-func createUsersClient() userservice.UsersServiceClient {
+func createUsersClient() userservice.UserServiceClient {
 	addr := conf.UserService.GrpcAddr
 	// TODO: Insecure transport should be replaced in the future
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatal(err)
 	}
-	return userservice.NewUsersServiceClient(conn)
+	return userservice.NewUserServiceClient(conn)
 }
 
 func connectRedis() *redis.Client {
@@ -154,7 +154,7 @@ func createIdempotencyStorage(redisClient *redis.Client) *storage.IdempotencySto
 }
 
 func createSendCodeService(sms services.SmsSender, storage services.MetaFindStorer,
-	users userservice.UsersServiceClient) *services.SendCodeService {
+	users userservice.UserServiceClient) *services.SendCodeService {
 	config := &services.CodeConfig{
 		SendFrequency: conf.PhoneCode.SendFrequency,
 	}

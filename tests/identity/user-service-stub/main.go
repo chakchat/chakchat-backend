@@ -17,7 +17,7 @@ func main() {
 	}
 
 	ser := grpc.NewServer()
-	ser.RegisterService(&userservice.UsersService_ServiceDesc, NewServerStub())
+	ser.RegisterService(&userservice.UserService_ServiceDesc, NewServerStub())
 
 	err = ser.Serve(lis)
 	if err != nil {
@@ -26,14 +26,14 @@ func main() {
 }
 
 type ServerStub struct {
-	userservice.UnimplementedUsersServiceServer
+	userservice.UnimplementedUserServiceServer
 }
 
 func NewServerStub() *ServerStub {
 	return &ServerStub{}
 }
 
-func (s ServerStub) GetUser(ctx context.Context, req *userservice.UserRequest) (*userservice.UserResponse, error) {
+func (ServerStub) GetUser(ctx context.Context, req *userservice.UserRequest) (*userservice.UserResponse, error) {
 	phone := req.GetPhoneNumber()
 	// 79********1 phone numbers have existing owners
 	if phone[len(phone)-1] == '1' {
@@ -62,7 +62,11 @@ func (s ServerStub) GetUser(ctx context.Context, req *userservice.UserRequest) (
 	}, nil
 }
 
-var _ userservice.UsersServiceServer = ServerStub{}
+func (ServerStub) CreateUser(ctx context.Context, req *userservice.CreateUserRequest) (*userservice.CreateUserResponse, error) {
+	panic("it is not implemented for now")
+}
+
+var _ userservice.UserServiceServer = ServerStub{}
 
 type User struct {
 	Id       uuid.UUID
