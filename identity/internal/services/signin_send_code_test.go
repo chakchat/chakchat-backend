@@ -16,6 +16,7 @@ func Test_Success(t *testing.T) {
 	userService := userServiceMock{
 		resp: &userservice.UserResponse{
 			Status:   userservice.UserResponseStatus_SUCCESS,
+			Name:     new(string),
 			UserName: new(string),
 			UserId: &userservice.UUID{
 				Value: "6c056fb3-7efc-483a-9506-4336456ac79f",
@@ -46,6 +47,7 @@ func Test_Error(t *testing.T) {
 	userService := &userServiceMock{
 		resp: &userservice.UserResponse{
 			Status:   userservice.UserResponseStatus_SUCCESS,
+			Name:     new(string),
 			UserName: new(string),
 			UserId: &userservice.UUID{
 				Value: "6c056fb3-7efc-483a-9506-4336456ac79f",
