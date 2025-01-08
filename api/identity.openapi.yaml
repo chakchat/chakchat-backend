@@ -6,6 +6,11 @@ info:
 servers:
   - url: http://localhost:80/api/identity/v1.0/
     description: nginx reverse-proxied localhost
+tags:
+  - name: sign in/out
+    description: Sign In user
+  - name: signup
+    description: Sign Up user
 paths:
   /signin/send-phone-code:
     post:
@@ -146,6 +151,96 @@ paths:
             application/json:
               schema:
                 "$ref": '#/components/schemas/ErrorResponse'
+  /signup/request-code:
+    post:
+      summary: Request for phone number verification code.
+      description: Signup user
+      tags:
+        - signup
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/SignUpSendPhoneCodeRequest"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/SignUpSendPhoneCodeResponse'
+        '400':
+          description: Bad Request. Maybe phone number is already used.
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
+  /signup/verify-code:
+    post:
+      summary: Verify phone number verification code.
+      description: Verify phone number verification code
+      tags:
+        - signup
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/SignUpVerifyPhoneCodeRequest"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/EmptySuccessResponse'
+        '400':
+          description: Bad Request. Maybe phone number is already used or code is invalid.
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponseWithDetails'
+  # I guess it is idempotent because phone number should be unique.
+  /signup:
+    post:
+      summary: Sign Up user
+      description: Sign Up user
+      tags:
+        - signup
+      requestBody:
+        content:
+          application/json:
+            schema: 
+              "$ref": "#/components/schemas/SignUpRequest"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SignInResponse'
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponseWithDetails'
 components:
   schemas:
     RefreshTokenRequest:
@@ -235,6 +330,54 @@ components:
           nullable: false
       required:
         - refresh_token
+    SignUpSendPhoneCodeRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+          format: phone
+          nullable: false
+      required:
+        - phone
+    SignUpSendPhoneCodeResponse:
+      type: object
+      properties:
+        signin_key:
+          description: The device should use the key generated for phone code request. It connects requests.
+          type: string
+          format: uuid
+          nullable: false
+      required:
+        - signin_key
+    SignUpVerifyPhoneCodeRequest:
+      type: object
+      properties:
+        signup_key:
+          type: string
+          format: uuid
+          nullable: false
+        code:
+          type: string
+          nullable: false
+      required:
+        - signup_key
+        - code
+    SignUpRequest:
+      properties:
+        signup_key:
+          type: string
+          format: uuid
+          nullable: false
+        name:
+          type: string
+          nullable: false
+        username:
+          type: string
+          nullable: false
+      required:
+        - signin_key
+        - name
+        - username
     EmptySuccessResponse:
       type: object
       example: {}
@@ -260,7 +403,7 @@ components:
                 type: string
                 nullable: false
       example:
-        error_type: invalid_input
+        error_type: verification_failed
         error_message: Input is invalid
         error_details:
           - field: some_field
