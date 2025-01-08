@@ -29,6 +29,8 @@ redis:
   db: 0
 signin_meta:
   lifetime: 2m
+signup_meta:
+  lifetime: 2m
 idempotency:
   data_exp: 10m
 phone_code:
