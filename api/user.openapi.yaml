@@ -1,10 +1,10 @@
 openapi: 3.0.3
 info:
-  title: Users Service REST API
-  description: Users Service REST API
+  title: User Service REST API
+  description: User Service REST API
   version: "1.0"
 servers:
-  - url: http://localhost:80/api/users/v1.0/
+  - url: http://localhost:80/api/user/v1.0/
     description: nginx reverse-proxied localhost
 tags:
   - name: others
