@@ -63,7 +63,20 @@ func (ServerStub) GetUser(ctx context.Context, req *userservice.UserRequest) (*u
 }
 
 func (ServerStub) CreateUser(ctx context.Context, req *userservice.CreateUserRequest) (*userservice.CreateUserResponse, error) {
-	panic("it is not implemented for now")
+	if req.Username == "already_exists" {
+		return &userservice.CreateUserResponse{
+			Status: userservice.CreateUserStatus_ALREADY_EXISTS,
+		}, nil
+	}
+
+	return &userservice.CreateUserResponse{
+		Status: userservice.CreateUserStatus_CREATED,
+		UserId: &userservice.UUID{
+			Value: uuid.NewString(),
+		},
+		Name:     &req.Name,
+		UserName: &req.Username,
+	}, nil
 }
 
 var _ userservice.UserServiceServer = ServerStub{}
