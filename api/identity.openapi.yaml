@@ -151,7 +151,7 @@ paths:
             application/json:
               schema:
                 "$ref": '#/components/schemas/ErrorResponse'
-  /signup/request-code:
+  /signup/send-phone-code:
     post:
       summary: Request for phone number verification code.
       description: Signup user
@@ -217,9 +217,16 @@ paths:
   /signup:
     post:
       summary: Sign Up user
-      description: Sign Up user
+      description: Sign Up userw
       tags:
         - signup
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         content:
           application/json:

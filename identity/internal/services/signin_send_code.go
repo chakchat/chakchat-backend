@@ -45,7 +45,7 @@ type CodeConfig struct {
 	SendFrequency time.Duration
 }
 
-type SendCodeService struct {
+type SignInSendCodeService struct {
 	config *CodeConfig
 
 	sms     SmsSender
@@ -53,9 +53,9 @@ type SendCodeService struct {
 	users   userservice.UserServiceClient
 }
 
-func NewSendCodeService(config *CodeConfig, sms SmsSender,
-	storage MetaFindStorer, users userservice.UserServiceClient) *SendCodeService {
-	return &SendCodeService{
+func NewSignInSendCodeService(config *CodeConfig, sms SmsSender,
+	storage MetaFindStorer, users userservice.UserServiceClient) *SignInSendCodeService {
+	return &SignInSendCodeService{
 		config:  config,
 		sms:     sms,
 		storage: storage,
@@ -63,7 +63,7 @@ func NewSendCodeService(config *CodeConfig, sms SmsSender,
 	}
 }
 
-func (s *SendCodeService) SendCode(ctx context.Context, phone string) (signInKey uuid.UUID, err error) {
+func (s *SignInSendCodeService) SendCode(ctx context.Context, phone string) (signInKey uuid.UUID, err error) {
 	if err := s.validateSendFreq(ctx, phone); err != nil {
 		return uuid.Nil, err
 	}
@@ -95,7 +95,7 @@ func (s *SendCodeService) SendCode(ctx context.Context, phone string) (signInKey
 	return meta.SignInKey, err
 }
 
-func (s *SendCodeService) validateSendFreq(ctx context.Context, phone string) error {
+func (s *SignInSendCodeService) validateSendFreq(ctx context.Context, phone string) error {
 	prevMeta, ok, err := s.storage.FindMetaByPhone(ctx, phone)
 	log.Printf("found sign in meta: %+v", prevMeta)
 	if err != nil {
@@ -107,7 +107,7 @@ func (s *SendCodeService) validateSendFreq(ctx context.Context, phone string) er
 	return nil
 }
 
-func (s *SendCodeService) fetchUser(ctx context.Context, phone string) (*userservice.UserResponse, error) {
+func (s *SignInSendCodeService) fetchUser(ctx context.Context, phone string) (*userservice.UserResponse, error) {
 	// While testing I found out that fiest request takes exactly 8 seconds more
 	user, err := s.users.GetUser(ctx, &userservice.UserRequest{
 		PhoneNumber: phone,

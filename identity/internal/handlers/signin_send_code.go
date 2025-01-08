@@ -15,19 +15,19 @@ import (
 // Only russian phone numbers for now. Just hard-coded
 var phoneRegex = regexp.MustCompile(`^[78]9\d{9}$`)
 
-type SendCodeService interface {
+type SignInSendCodeService interface {
 	SendCode(ctx context.Context, phone string) (signInKey uuid.UUID, err error)
 }
 
-func SendCode(service SendCodeService) gin.HandlerFunc {
+func SignInSendCode(service SignInSendCodeService) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var req sendCodeRequest
+		var req signInSendCodeRequest
 		if err := c.ShouldBindBodyWithJSON(&req); err != nil {
 			restapi.SendUnprocessableJSON(c)
 			return
 		}
 
-		if errors := validateSendCode(&req); len(errors) != 0 {
+		if errors := validateSignInSendCode(&req); len(errors) != 0 {
 			restapi.SendValidationError(c, errors)
 			return
 		}
@@ -53,21 +53,21 @@ func SendCode(service SendCodeService) gin.HandlerFunc {
 			return
 		}
 
-		restapi.SendSuccess(c, sendCodeResponse{
+		restapi.SendSuccess(c, signInSendCodeResponse{
 			SignInKey: signInKey,
 		})
 	}
 }
 
-type sendCodeRequest struct {
+type signInSendCodeRequest struct {
 	Phone string `json:"phone" binding:"required"`
 }
 
-type sendCodeResponse struct {
+type signInSendCodeResponse struct {
 	SignInKey uuid.UUID `json:"signin_key"`
 }
 
-func validateSendCode(req *sendCodeRequest) []restapi.ErrorDetail {
+func validateSignInSendCode(req *signInSendCodeRequest) []restapi.ErrorDetail {
 	var errors []restapi.ErrorDetail
 	if !phoneRegex.MatchString(req.Phone) {
 		errors = append(errors, restapi.ErrorDetail{

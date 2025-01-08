@@ -37,7 +37,7 @@ func main() {
 	signInMetaStorage := createSignInMetaStorage(redisClient)
 	invalidatedTokenStorage := createInvalidatedTokenStorage(redisClient)
 
-	sendCodeService := createSendCodeService(sms, signInMetaStorage, usersClient)
+	sendCodeService := createSignInSendCodeService(sms, signInMetaStorage, usersClient)
 	signInService := services.NewSignInService(signInMetaStorage, accessTokenConfig, refreshTokenConfig)
 	refreshService := services.NewRefreshService(invalidatedTokenStorage, accessTokenConfig, refreshTokenConfig)
 	signOutService := services.NewSignOutService(invalidatedTokenStorage)
@@ -52,7 +52,7 @@ func main() {
 
 	r.Group("/v1.0").
 		Use(idempotency.New(idempotencyStorage)).
-		POST("/signin/send-phone-code", handlers.SendCode(sendCodeService)).
+		POST("/signin/send-phone-code", handlers.SignInSendCode(sendCodeService)).
 		POST("/signin", handlers.SignIn(signInService)).
 		POST("/refresh-token", handlers.RefreshJWT(refreshService))
 
@@ -153,12 +153,12 @@ func createIdempotencyStorage(redisClient *redis.Client) *storage.IdempotencySto
 	return storage.NewIdempotencyStorage(redisClient, idempotencyConf)
 }
 
-func createSendCodeService(sms services.SmsSender, storage services.MetaFindStorer,
-	users userservice.UserServiceClient) *services.SendCodeService {
+func createSignInSendCodeService(sms services.SmsSender, storage services.MetaFindStorer,
+	users userservice.UserServiceClient) *services.SignInSendCodeService {
 	config := &services.CodeConfig{
 		SendFrequency: conf.PhoneCode.SendFrequency,
 	}
-	return services.NewSendCodeService(config, sms, storage, users)
+	return services.NewSignInSendCodeService(config, sms, storage, users)
 }
 
 func readKey(path string) []byte {
