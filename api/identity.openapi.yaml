@@ -175,7 +175,10 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": '#/components/schemas/SignUpSendPhoneCodeResponse'
+                type: object
+                properties:
+                  data:
+                    "$ref": '#/components/schemas/SignUpSendPhoneCodeResponse'
         '400':
           description: Bad Request. Maybe phone number is already used.
           content:
