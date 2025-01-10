@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/chakchat/chakchat/backend/identity/pkg/jwt"
+	"github.com/chakchat/chakchat/backend/shared/go/jwt"
 )
 
 var ErrAccessTokenExpired = errors.New("access token expired")

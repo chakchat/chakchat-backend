@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/chakchat/chakchat/backend/identity/pkg/idempotency"
+	"github.com/chakchat/chakchat/backend/shared/go/idempotency"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 )
