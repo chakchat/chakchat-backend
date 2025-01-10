@@ -9,6 +9,10 @@ const (
 	ErrTypeNotFound              = "not_found"
 	ErrTypeIdempotencyKeyMissing = "idempotency_key_missing"
 	ErrTypeUnautorized           = "unauthorized"
+
+	ErrTypeInvalidHeader   = "invalid_header"
+	ErrTypeContentTooLarge = "content_too_large"
+	ErrTypeInvalidForm     = "invalid_form"
 )
 
 type ErrorDetail struct {
