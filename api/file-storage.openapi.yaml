@@ -29,10 +29,19 @@ paths:
       requestBody:
         description: File to upload. It can be a binary file or a text file. (image/png is only for example).
         content:
-          image/png:
+          multipart/form-data:
             schema:
-              type: string
-              format: binary
+              type: object
+              properties:
+                file_name:
+                  type: string
+                mime_type:
+                  type: string
+                  format: mime-type
+                  example: image/png
+                file:
+                  type: string
+                  format: binary
       responses:
         '200':
           description: OK
