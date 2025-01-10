@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/chakchat/chakchat/backend/identity/internal/jwt"
 	"github.com/chakchat/chakchat/backend/identity/internal/restapi"
 	"github.com/chakchat/chakchat/backend/identity/internal/services"
+	"github.com/chakchat/chakchat/backend/identity/pkg/jwt"
 	"github.com/gin-gonic/gin"
 )
 

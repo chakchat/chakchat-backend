@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/chakchat/chakchat/backend/identity/internal/jwt"
 	"github.com/chakchat/chakchat/backend/identity/internal/userservice"
+	"github.com/chakchat/chakchat/backend/identity/pkg/jwt"
 	"github.com/google/uuid"
 )
 
