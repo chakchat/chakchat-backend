@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/chakchat/chakchat/backend/identity/internal/userservice"
-	"github.com/chakchat/chakchat/backend/identity/pkg/jwt"
+	"github.com/chakchat/chakchat/backend/shared/go/jwt"
 	"github.com/google/uuid"
 )
 
