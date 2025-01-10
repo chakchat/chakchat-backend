@@ -1,17 +1,24 @@
 package handlers
 
 import (
+	"fmt"
+
 	"github.com/chakchat/chakchat/backend/file-storage/internal/restapi"
 	"github.com/chakchat/chakchat/backend/file-storage/internal/services"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
+type MultipartUploadConfig struct {
+	MinFileSize int64
+	MaxPartSize int64
+}
+
 type UploadInitService interface {
 	Init(*services.UploadInitRequest) (uploadId uuid.UUID, err error)
 }
 
-func UploadInit(service UploadInitService) gin.HandlerFunc {
+func UploadInit(conf *MultipartUploadConfig, service UploadInitService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req uploadInitRequest
 		if err := c.ShouldBindBodyWithJSON(&req); err != nil {
@@ -19,7 +26,7 @@ func UploadInit(service UploadInitService) gin.HandlerFunc {
 			return
 		}
 
-		if errors := validateUploadInit(&req); len(errors) != 0 {
+		if errors := validateUploadInit(conf, &req); len(errors) != 0 {
 			restapi.SendValidationError(c, errors)
 			return
 		}
@@ -52,12 +59,12 @@ type uploadInitResponse struct {
 	UploadId uuid.UUID
 }
 
-func validateUploadInit(req *uploadInitRequest) []restapi.ErrorDetail {
+func validateUploadInit(conf *MultipartUploadConfig, req *uploadInitRequest) []restapi.ErrorDetail {
 	var errors []restapi.ErrorDetail
-	if req.FileSize > 0 {
+	if req.FileSize < conf.MinFileSize {
 		errors = append(errors, restapi.ErrorDetail{
 			Field:   "file_size",
-			Message: "File size must be non-negative. How did you even get it bro?",
+			Message: fmt.Sprintf("File size must be not less than %d bytes", conf.MinFileSize),
 		})
 	}
 	return errors
