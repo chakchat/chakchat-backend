@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/chakchat/chakchat/backend/identity/internal/jwt"
+	"github.com/chakchat/chakchat/backend/identity/pkg/jwt"
 	"github.com/redis/go-redis/v9"
 )
 

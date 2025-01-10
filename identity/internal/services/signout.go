@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/chakchat/chakchat/backend/identity/internal/jwt"
+	"github.com/chakchat/chakchat/backend/identity/pkg/jwt"
 )
 
 type RefreshTokenInvalidator interface {
