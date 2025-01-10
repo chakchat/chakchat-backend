@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/chakchat/chakchat/backend/shared/go/restapi"
+	"github.com/chakchat/chakchat/backend/shared/go/internal/restapi"
 	"github.com/gin-gonic/gin"
 )
 
