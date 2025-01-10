@@ -1,0 +1,432 @@
+openapi: 3.0.3
+info:
+  title: File Storage Service
+  version: "1.0"
+  description: File Storage Service REST API
+servers:
+  - url: http://localhost:80/api/file-storage/v1.0/
+    description: nginx reverse-proxied localhost
+tags:
+  - name: upload
+    description: Upload a file
+  - name: get
+paths:
+  /upload:
+    post:
+      tags:
+        - upload
+      summary: Upload a small file
+      description: "Upload a small file TODO: specify size"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: File to upload. It can be a binary file or a text file. (image/png is only for example).
+        content:
+          image/png:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/FileResponse"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponseWithDetails"
+        '413':
+          description: Payload too large
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        
+  /upload/multipart/init:
+    post:
+      tags:
+        - upload
+      summary: Initialize upload
+      description: Initialize upload
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/UploadInitRequest"
+      responses:
+        '200':
+          description: Upload initialized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/UploadInitResponse"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponseWithDetails"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+
+
+  /upload/multipart/chunk:
+    put:
+      tags:
+        - upload
+      summary: Upload a chunk
+      description: Upload a chunk
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                part_number:
+                  type: integer
+                  description: Part number. May be 1-3000
+                upload_id:
+                  type: string
+                  description: Upload ID
+                  format: uuid
+                file:
+                  type: string
+                  format: binary
+                  description: File to upload. It can be a binary file or a text file. (image/png is only for example).
+              required:
+                - file
+                - part_number
+                - upload_id
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/EmptySuccessResponse"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponseWithDetails"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  /upload/multipart/abort:
+    put:
+      tags:
+        - upload
+      summary: Abort upload
+      description: Abort upload
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/UploadAbortRequest"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/EmptySuccessResponse"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponseWithDetails"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  /upload/multipart/complete:
+    post:
+      tags:
+        - upload
+      summary: Complete upload
+      description: Complete upload
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/UploadCompleteRequest"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+               type: object
+               properties:
+                 data:
+                   "$ref": "#/components/schemas/FileResponse"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponseWithDetails"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  /file/{fileId}:
+    get:
+      tags:
+        - get
+      summary: Get file metadata
+      description: Get file metadata
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/FileResponse"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponseWithDetails"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    UploadInitRequest:
+      type: object
+      properties:
+        file_name:
+          type: string
+          description: File name
+        file_size:
+          type: integer
+          description: File size
+        mime_type:
+          type: string
+          description: File mime type
+      required:
+        - file_name
+        - file_size
+        - mime_type
+    UploadInitResponse:
+      type: object
+      properties:
+        upload_id:
+          type: string
+          description: Upload ID
+      required:
+        - upload_id
+    UploadAbortRequest:
+      type: object
+      properties:
+        upload_id:
+          type: string
+          description: Upload ID
+          format: uuid
+      required:
+        - upload_id
+    UploadCompleteRequest:
+      type: object
+      properties:
+        upload_id:
+          type: string
+          description: Upload ID
+          format: uuid
+        parts:
+          type: array
+          items:
+            type: object
+            properties:
+              part_number:
+                type: integer
+                description: Part number. May be 1-3000
+            required:
+              - part_number
+      required:
+        - parts
+        - upload_id
+    FileResponse:
+      type: object
+      properties:
+        file_name:
+          type: string
+          description: File name
+        file_size:
+          type: integer
+          description: File size
+        mime_type:
+          type: string
+          description: File mime type
+        file_id: 
+          type: string
+          description: File ID
+          format: uuid
+        file_url:
+          type: string
+          description: File URL
+          format: url
+      required:
+        - file_name
+        - file_size 
+        - mime_type
+        - file_id
+        - file_url
+    EmptySuccessResponse:
+      type: object
+      example: {}
+    ErrorResponseWithDetails:
+      type: object
+      description: Error response specified by standard.md
+      properties:
+        error_type:
+          type: string
+          nullable: false
+        error_message:
+          type: string
+          nullable: false
+        error_details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                nullable: false
+              message:
+                type: string
+                nullable: false
+      example:
+        error_type: verification_failed
+        error_message: Input is invalid
+        error_details:
+          - field: some_field
+            message: Some field is invalid  
+    ErrorResponse:
+      type: object
+      description: Error response specified by standard.md
+      properties:
+        error_type:
+          type: string
+          nullable: false
+        error_message:
+          type: string
+          nullable: false
+        error_details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                nullable: false
+              message:
+                type: string
+                nullable: false
+      example:
+        error_type: invalid_input
+        error_message: Input is invalid
+        error_details: []
