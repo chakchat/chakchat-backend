@@ -14,7 +14,7 @@ type UploadFileRequest struct {
 	File io.Reader
 }
 
-type UploadFileResponse struct {
+type FileMeta struct {
 	FileName string
 	MimeType string
 	FileSize int64

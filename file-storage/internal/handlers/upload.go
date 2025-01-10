@@ -17,7 +17,7 @@ const (
 )
 
 type UploadService interface {
-	Upload(*services.UploadFileRequest) (*services.UploadFileResponse, error)
+	Upload(*services.UploadFileRequest) (*services.FileMeta, error)
 }
 
 type UploadConfig struct {
@@ -63,7 +63,7 @@ func Upload(conf *UploadConfig, service UploadService) gin.HandlerFunc {
 			return
 		}
 
-		restapi.SendSuccess(c, UploadResponse{
+		restapi.SendSuccess(c, fileResponse{
 			FileName: resp.FileName,
 			FileSize: resp.FileSize,
 			MimeType: resp.MimeType,
@@ -73,7 +73,7 @@ func Upload(conf *UploadConfig, service UploadService) gin.HandlerFunc {
 	}
 }
 
-type UploadResponse struct {
+type fileResponse struct {
 	FileName string    `json:"file_name"`
 	FileSize int64     `json:"file_size"`
 	MimeType string    `json:"mime_type"`

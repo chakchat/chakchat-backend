@@ -13,6 +13,8 @@ const (
 	ErrTypeInvalidHeader   = "invalid_header"
 	ErrTypeContentTooLarge = "content_too_large"
 	ErrTypeInvalidForm     = "invalid_form"
+
+	ErrTypeFileNotFound = "file_not_found"
 )
 
 type ErrorDetail struct {
