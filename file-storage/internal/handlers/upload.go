@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"mime/multipart"
 	"net/http"
@@ -17,7 +18,7 @@ const (
 )
 
 type UploadService interface {
-	Upload(*services.UploadFileRequest) (*services.FileMeta, error)
+	Upload(context.Context, *services.UploadFileRequest) (*services.FileMeta, error)
 }
 
 type UploadConfig struct {
@@ -50,7 +51,7 @@ func Upload(conf *UploadConfig, service UploadService) gin.HandlerFunc {
 		}
 
 		defer file.Close()
-		resp, err := service.Upload(&services.UploadFileRequest{
+		resp, err := service.Upload(c, &services.UploadFileRequest{
 			FileName: fileHeader.Filename,
 			MimeType: fileHeader.Header.Get(headerContentType),
 			FileSize: fileHeader.Size,

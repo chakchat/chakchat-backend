@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/chakchat/chakchat/backend/file-storage/internal/restapi"
@@ -10,7 +11,7 @@ import (
 )
 
 type UploadAbortService interface {
-	Abort(uploadId uuid.UUID) error
+	Abort(ctx context.Context, uploadId uuid.UUID) error
 }
 
 func UploadAbort(service UploadAbortService) gin.HandlerFunc {
@@ -21,7 +22,7 @@ func UploadAbort(service UploadAbortService) gin.HandlerFunc {
 			return
 		}
 
-		err := service.Abort(req.UploadId)
+		err := service.Abort(c, req.UploadId)
 
 		if err != nil {
 			if err == services.ErrUploadNotFound {

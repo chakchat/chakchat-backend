@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"context"
+
 	"github.com/chakchat/chakchat/backend/file-storage/internal/restapi"
 	"github.com/chakchat/chakchat/backend/file-storage/internal/services"
 	"github.com/gin-gonic/gin"
@@ -13,7 +15,7 @@ type MultipartUploadConfig struct {
 }
 
 type UploadInitService interface {
-	Init(*services.UploadInitRequest) (uploadId uuid.UUID, err error)
+	Init(context.Context, *services.UploadInitRequest) (uploadId uuid.UUID, err error)
 }
 
 func UploadInit(conf *MultipartUploadConfig, service UploadInitService) gin.HandlerFunc {
@@ -24,7 +26,7 @@ func UploadInit(conf *MultipartUploadConfig, service UploadInitService) gin.Hand
 			return
 		}
 
-		uploadId, err := service.Init(&services.UploadInitRequest{
+		uploadId, err := service.Init(c, &services.UploadInitRequest{
 			FileName: req.FileName,
 			MimeType: req.MimeType,
 		})
