@@ -115,12 +115,12 @@ paths:
                 "$ref": "#/components/schemas/ErrorResponse"
 
 
-  /upload/multipart/chunk:
+  /upload/multipart/part:
     put:
       tags:
         - upload
-      summary: Upload a chunk
-      description: Upload a chunk
+      summary: Upload a part
+      description: Upload a part
       security:
         - bearerAuth: []
       requestBody:
@@ -311,15 +311,11 @@ components:
         file_name:
           type: string
           description: File name
-        file_size:
-          type: integer
-          description: File size
         mime_type:
           type: string
           description: File mime type
       required:
         - file_name
-        - file_size
         - mime_type
     UploadInitResponse:
       type: object

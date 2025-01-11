@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"fmt"
-
 	"github.com/chakchat/chakchat/backend/file-storage/internal/restapi"
 	"github.com/chakchat/chakchat/backend/file-storage/internal/services"
 	"github.com/gin-gonic/gin"
@@ -26,14 +24,8 @@ func UploadInit(conf *MultipartUploadConfig, service UploadInitService) gin.Hand
 			return
 		}
 
-		if errors := validateUploadInit(conf, &req); len(errors) != 0 {
-			restapi.SendValidationError(c, errors)
-			return
-		}
-
 		uploadId, err := service.Init(&services.UploadInitRequest{
 			FileName: req.FileName,
-			FileSize: req.FileSize,
 			MimeType: req.MimeType,
 		})
 		if err != nil {
@@ -51,21 +43,9 @@ func UploadInit(conf *MultipartUploadConfig, service UploadInitService) gin.Hand
 
 type uploadInitRequest struct {
 	FileName string `json:"file_name" binding:"required"`
-	FileSize int64  `json:"file_size" binding:"required"`
 	MimeType string `json:"mime_type" binding:"required"`
 }
 
 type uploadInitResponse struct {
 	UploadId uuid.UUID
-}
-
-func validateUploadInit(conf *MultipartUploadConfig, req *uploadInitRequest) []restapi.ErrorDetail {
-	var errors []restapi.ErrorDetail
-	if req.FileSize < conf.MinFileSize {
-		errors = append(errors, restapi.ErrorDetail{
-			Field:   "file_size",
-			Message: fmt.Sprintf("File size must be not less than %d bytes", conf.MinFileSize),
-		})
-	}
-	return errors
 }
