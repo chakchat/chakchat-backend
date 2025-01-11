@@ -1,4 +1,4 @@
-name: Identity Service Unit Test
+name: Shared Go Library Unit Test
 
 on:
   push:
