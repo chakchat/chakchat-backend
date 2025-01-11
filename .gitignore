@@ -25,6 +25,7 @@ go.work.sum
 
 # Keys
 keys/
+ssl/
 
 # Xcode
 .DS_Store
