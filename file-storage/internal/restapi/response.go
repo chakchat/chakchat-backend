@@ -14,7 +14,8 @@ const (
 	ErrTypeContentTooLarge = "content_too_large"
 	ErrTypeInvalidForm     = "invalid_form"
 
-	ErrTypeFileNotFound = "file_not_found"
+	ErrTypeFileNotFound   = "file_not_found"
+	ErrTypeUploadNotFound = "upload_not_found"
 )
 
 type ErrorDetail struct {
