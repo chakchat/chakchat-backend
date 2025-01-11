@@ -15,7 +15,14 @@ paths:
   /signin/send-phone-code:
     post:
       summary: Sign In user
-      description: Sign In user
+      description: | 
+        Sign In user
+        Possible `error_type` values:
+        - `invalid_json`
+        - `validation_failed`
+        - `user_not_found`
+        - `send_code_freq_exceeded`
+        - `internal`
       tags:
         - sign in/out
       parameters:
@@ -55,7 +62,14 @@ paths:
   /signin:
     post:
       summary: Sign In user
-      description: Sign In user
+      description: |
+        Sign In user
+        Possible `error_type` values:
+        - `invalid_json`
+        - `validation_failed`
+        - `signin_key_not_found`
+        - `wrong_code`
+        - `internal`
       tags:
         - sign in/out
       parameters:
@@ -89,7 +103,15 @@ paths:
   /refresh-token:
     post:
       summary: Refresh user token
-      description: Refresh user token
+      description: |
+        Refresh user token
+        Possible `error_type` values:
+        - `invalid_json`
+        - `refresh_token_expired`
+        - `refresh_token_invalidated`
+        - `invalid_token_type`
+        - `invalid_token`
+        - `internal`
       tags:
         - sign in/out
       parameters:
@@ -123,7 +145,12 @@ paths:
   /sign-out:
     put:
       summary: Sign Out user
-      description: Sign Out user
+      description: | 
+        Sign Out user
+        Possible `error_type` values:
+        - `invalid_json`
+        - `invalid_token`
+        - `internal`
       tags:
         - sign in/out
       parameters:
@@ -154,7 +181,14 @@ paths:
   /signup/send-phone-code:
     post:
       summary: Request for phone number verification code.
-      description: Signup user
+      description: |
+        Signup user
+        Possible `error_type` values:
+        - `invalid_json`
+        - `validation_failed`
+        - `user_already_exists`
+        - `send_code_freq_exceeded`
+        - `internal`
       tags:
         - signup
       parameters:
@@ -188,7 +222,13 @@ paths:
   /signup/verify-code:
     post:
       summary: Verify phone number verification code.
-      description: Verify phone number verification code
+      description: |
+        Verify phone number verification code
+        Possible `error_type` values:
+        - `invalid_json`
+        - `signup_key_not_found`
+        - `wrong_code`
+        - `internal`
       tags:
         - signup
       parameters:
@@ -220,7 +260,15 @@ paths:
   /signup:
     post:
       summary: Sign Up user
-      description: Sign Up userw
+      description: |
+        Sign Up userw
+        Possible `error_type` values:
+        - `invalid_json`
+        - `validation_failed`
+        - `username_already_exists`
+        - `signup_key_not_found`
+        - `phone_not_verified`
+        - `internal`
       tags:
         - signup
       parameters:
