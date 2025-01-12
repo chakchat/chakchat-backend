@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -64,11 +65,12 @@ func (s *UploadCompleteService) Complete(ctx context.Context, req *UploadComplet
 	}
 
 	file := &FileMeta{
-		FileName: upload.FileName,
-		MimeType: upload.MimeType,
-		FileSize: *head.ContentLength,
-		FileId:   upload.FileId,
-		FileUrl:  *res.Location,
+		FileName:  upload.FileName,
+		MimeType:  upload.MimeType,
+		FileSize:  *head.ContentLength,
+		FileId:    upload.FileId,
+		FileUrl:   *res.Location,
+		CreatedAt: time.Now(),
 	}
 	if err := s.fileMetaStorage.Store(ctx, file); err != nil {
 		return nil, fmt.Errorf("storing file metadata failed: %s", err)

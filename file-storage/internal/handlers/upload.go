@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"mime/multipart"
 	"net/http"
+	"time"
 
 	"github.com/chakchat/chakchat/backend/file-storage/internal/restapi"
 	"github.com/chakchat/chakchat/backend/file-storage/internal/services"
@@ -65,19 +66,21 @@ func Upload(conf *UploadConfig, service UploadService) gin.HandlerFunc {
 		}
 
 		restapi.SendSuccess(c, fileResponse{
-			FileName: resp.FileName,
-			FileSize: resp.FileSize,
-			MimeType: resp.MimeType,
-			FileId:   resp.FileId,
-			FileUrl:  resp.FileUrl,
+			FileName:  resp.FileName,
+			FileSize:  resp.FileSize,
+			MimeType:  resp.MimeType,
+			FileId:    resp.FileId,
+			FileUrl:   resp.FileUrl,
+			CreatedAt: resp.CreatedAt,
 		})
 	}
 }
 
 type fileResponse struct {
-	FileName string    `json:"file_name"`
-	FileSize int64     `json:"file_size"`
-	MimeType string    `json:"mime_type"`
-	FileId   uuid.UUID `json:"file_id"`
-	FileUrl  string    `json:"file_url"`
+	FileName  string    `json:"file_name"`
+	FileSize  int64     `json:"file_size"`
+	MimeType  string    `json:"mime_type"`
+	FileId    uuid.UUID `json:"file_id"`
+	FileUrl   string    `json:"file_url"`
+	CreatedAt time.Time `json:"created_at"`
 }

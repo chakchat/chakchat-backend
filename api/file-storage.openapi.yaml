@@ -386,12 +386,17 @@ components:
           type: string
           description: File URL
           format: url
+        created_at:
+          type: string
+          description: File creation date
+          format: date-time
       required:
         - file_name
         - file_size 
         - mime_type
         - file_id
         - file_url
+        - created_at
     EmptySuccessResponse:
       type: object
       example: {}

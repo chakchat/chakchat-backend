@@ -49,11 +49,12 @@ func UploadComplete(service UploadCompleteService) gin.HandlerFunc {
 		}
 
 		restapi.SendSuccess(c, fileResponse{
-			FileName: file.FileName,
-			FileSize: file.FileSize,
-			MimeType: file.MimeType,
-			FileId:   file.FileId,
-			FileUrl:  file.FileUrl,
+			FileName:  file.FileName,
+			FileSize:  file.FileSize,
+			MimeType:  file.MimeType,
+			FileId:    file.FileId,
+			FileUrl:   file.FileUrl,
+			CreatedAt: file.CreatedAt,
 		})
 	}
 }

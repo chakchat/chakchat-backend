@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -19,11 +20,12 @@ type UploadFileRequest struct {
 }
 
 type FileMeta struct {
-	FileName string
-	MimeType string
-	FileSize int64
-	FileId   uuid.UUID
-	FileUrl  string
+	FileName  string
+	MimeType  string
+	FileSize  int64
+	FileId    uuid.UUID
+	FileUrl   string
+	CreatedAt time.Time
 }
 
 type FileMetaStorer interface {
@@ -61,11 +63,12 @@ func (s *UploadService) Upload(ctx context.Context, req *UploadFileRequest) (*Fi
 	}
 
 	file := &FileMeta{
-		FileName: req.FileName,
-		MimeType: req.MimeType,
-		FileSize: *res.Size,
-		FileId:   fileId,
-		FileUrl:  s.conf.UrlPrefix + fileId.String(),
+		FileName:  req.FileName,
+		MimeType:  req.MimeType,
+		FileSize:  *res.Size,
+		FileId:    fileId,
+		FileUrl:   s.conf.UrlPrefix + fileId.String(),
+		CreatedAt: time.Now(),
 	}
 
 	if err := s.storer.Store(ctx, file); err != nil {
