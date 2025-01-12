@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/chakchat/chakchat/backend/shared/go/jwt"
 )
@@ -24,6 +25,7 @@ func NewIdentityService(userConf, internalConf *jwt.Config) *IdentityService {
 func (i *IdentityService) Idenitfy(ctx context.Context, token jwt.Token) (jwt.InternalToken, error) {
 	claims, err := jwt.Parse(i.userConf, token)
 	if err != nil {
+		log.Printf("jwt validation failed: %s", err)
 		if err == jwt.ErrTokenExpired {
 			return "", ErrAccessTokenExpired
 		}
