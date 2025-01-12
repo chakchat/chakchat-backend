@@ -1,0 +1,21 @@
+jwt:
+  signing_method: HS512
+  lifetime: 3m
+  issuer: identity_service
+  audience: 
+    - file_storage_service
+  key_file_path: /app/keys/rsa.pub
+redis:
+  addr: redis:6379
+  password: secret
+  db: 0
+idempotency:
+  data_exp: 10m
+upload:
+  file_size_limit: 10485760 # 10MB
+multipart_upload:
+  min_file_size: 524288000 # 10MB
+  max_part_size: 1048576 # 100MB
+s3:
+  bucket: demo-chakchat-yandex-storage
+  url_prefix: https://storage.yandexcloud.net/demo-chakchat-yandex-storage
