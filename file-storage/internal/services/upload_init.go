@@ -16,10 +16,11 @@ type UploadInitRequest struct {
 
 type UploadMeta struct {
 	PublicUploadId uuid.UUID
-	Key            uuid.UUID
+	Key            string
 	FileName       string
 	MimeType       string
 	S3UploadId     string
+	FileId         uuid.UUID
 }
 
 type UploadMetaStorer interface {
@@ -54,7 +55,8 @@ func (s *UploadInitService) Init(ctx context.Context, req *UploadInitRequest) (u
 
 	meta := &UploadMeta{
 		PublicUploadId: uuid.New(),
-		Key:            fileId,
+		FileId:         fileId,
+		Key:            fileId.String(),
 		FileName:       req.FileName,
 		MimeType:       req.MimeType,
 		S3UploadId:     *res.UploadId,
