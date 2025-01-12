@@ -43,7 +43,7 @@ type S3Config struct {
 	UrlPrefix string
 }
 
-func NewFileMetaStorer(storer FileMetaStorer, client *s3.Client, conf *S3Config) *UploadService {
+func NewUploadService(storer FileMetaStorer, client *s3.Client, conf *S3Config) *UploadService {
 	return &UploadService{
 		storer: storer,
 		client: &s3.Client{},
