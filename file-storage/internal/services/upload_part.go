@@ -26,7 +26,7 @@ type UploadPartResponse struct {
 }
 
 type UploadMetaGetter interface {
-	Get(uuid.UUID) (*UploadMeta, bool, error)
+	Get(context.Context, uuid.UUID) (*UploadMeta, bool, error)
 }
 
 type UploadPartService struct {
@@ -44,7 +44,7 @@ func NewUploadPartService(metaGetter UploadMetaGetter, client *s3.Client, conf *
 }
 
 func (s *UploadPartService) UploadPart(ctx context.Context, req *UploadPartRequest) (*UploadPartResponse, error) {
-	meta, ok, err := s.metaGetter.Get(req.UploadId)
+	meta, ok, err := s.metaGetter.Get(ctx, req.UploadId)
 	if err != nil {
 		return nil, fmt.Errorf("upload-meta getting failed: %s", err)
 	}

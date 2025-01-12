@@ -27,7 +27,7 @@ type FileMeta struct {
 }
 
 type FileMetaStorer interface {
-	Store(*FileMeta) error
+	Store(context.Context, *FileMeta) error
 }
 
 type UploadService struct {
@@ -68,7 +68,7 @@ func (s *UploadService) Upload(ctx context.Context, req *UploadFileRequest) (*Fi
 		FileUrl:  s.conf.UrlPrefix + fileId.String(),
 	}
 
-	if err := s.storer.Store(file); err != nil {
+	if err := s.storer.Store(ctx, file); err != nil {
 		return nil, fmt.Errorf("file meta storing failed: %s", err)
 	}
 	return file, nil

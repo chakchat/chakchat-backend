@@ -24,7 +24,7 @@ type UploadMeta struct {
 }
 
 type UploadMetaStorer interface {
-	Store(*UploadMeta) error
+	Store(context.Context, *UploadMeta) error
 }
 
 type UploadInitService struct {
@@ -62,7 +62,7 @@ func (s *UploadInitService) Init(ctx context.Context, req *UploadInitRequest) (u
 		S3UploadId:     *res.UploadId,
 	}
 
-	if err := s.metaStorer.Store(meta); err != nil {
+	if err := s.metaStorer.Store(ctx, meta); err != nil {
 		return uuid.Nil, fmt.Errorf("upload meta storing failed: %s", err)
 	}
 	return meta.PublicUploadId, nil

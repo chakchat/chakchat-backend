@@ -11,7 +11,7 @@ import (
 
 type UploadMetaGetRemover interface {
 	UploadMetaGetter
-	Remove(uuid.UUID) error
+	Remove(context.Context, uuid.UUID) error
 }
 
 type UploadAbortService struct {
@@ -29,7 +29,7 @@ func NewUploadAbortService(metaStorage UploadMetaGetRemover, client *s3.Client, 
 }
 
 func (s *UploadAbortService) Abort(ctx context.Context, uploadId uuid.UUID) error {
-	meta, ok, err := s.metaStorage.Get(uploadId)
+	meta, ok, err := s.metaStorage.Get(ctx, uploadId)
 	if err != nil {
 		return fmt.Errorf("getting upload meta failed: %s", err)
 	}
@@ -46,7 +46,7 @@ func (s *UploadAbortService) Abort(ctx context.Context, uploadId uuid.UUID) erro
 		return fmt.Errorf("multipart upload aborting failed: %s", err)
 	}
 
-	if err := s.metaStorage.Remove(meta.PublicUploadId); err != nil {
+	if err := s.metaStorage.Remove(ctx, meta.PublicUploadId); err != nil {
 		return fmt.Errorf("upload meta removing failed: %s", err)
 	}
 	return nil

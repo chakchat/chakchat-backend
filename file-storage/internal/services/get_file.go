@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -10,7 +11,7 @@ import (
 var ErrFileNotFound = errors.New("file not found")
 
 type FileMetaGetter interface {
-	GetFileMeta(uuid.UUID) (*FileMeta, bool, error)
+	GetFileMeta(context.Context, uuid.UUID) (*FileMeta, bool, error)
 }
 
 type GetFileService struct {
@@ -23,8 +24,8 @@ func NewGetFileService(getter FileMetaGetter) *GetFileService {
 	}
 }
 
-func (s *GetFileService) GetFile(fileId uuid.UUID) (*FileMeta, error) {
-	meta, ok, err := s.getter.GetFileMeta(fileId)
+func (s *GetFileService) GetFile(ctx context.Context, fileId uuid.UUID) (*FileMeta, error) {
+	meta, ok, err := s.getter.GetFileMeta(ctx, fileId)
 	if err != nil {
 		return nil, fmt.Errorf("getting file metadata failed: %s", err)
 	}
