@@ -6,6 +6,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func SendUnautorized(c *gin.Context) {
+	c.JSON(http.StatusUnauthorized, ErrorResponse{
+		ErrorType:    ErrTypeUnautorized,
+		ErrorMessage: "Unauthorized",
+	})
+}
+
 func SendSuccess(c *gin.Context, data any) {
 	c.JSON(http.StatusOK, SuccessResponse{
 		Data: data,
