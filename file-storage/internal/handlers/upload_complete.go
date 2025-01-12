@@ -11,7 +11,7 @@ import (
 )
 
 type UploadCompleteService interface {
-	Complete(context.Context, *services.UploadCompleteRequest) (services.FileMeta, error)
+	Complete(context.Context, *services.UploadCompleteRequest) (*services.FileMeta, error)
 }
 
 func UploadComplete(service UploadCompleteService) gin.HandlerFunc {
@@ -26,6 +26,7 @@ func UploadComplete(service UploadCompleteService) gin.HandlerFunc {
 		for _, part := range req.Parts {
 			parts = append(parts, services.UploadPart{
 				PartNumber: part.PartNumber,
+				ETag:       part.ETag,
 			})
 		}
 		file, err := service.Complete(c, &services.UploadCompleteRequest{
@@ -60,6 +61,7 @@ func UploadComplete(service UploadCompleteService) gin.HandlerFunc {
 type uploadCompleteRequest struct {
 	UploadId uuid.UUID `json:"upload_id" binding:"required"`
 	Parts    []struct {
-		PartNumber int `json:"part_number" binding:"required"`
+		PartNumber int    `json:"part_number" binding:"required"`
+		ETag       string `json:"e_tag" binding:"required"`
 	} `json:"parts" binding:"required"`
 }
