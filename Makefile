@@ -9,4 +9,4 @@ keys-rsa:
 	openssl rsa -in keys/rsa -pubout -out keys/rsa.pub
 
 keys-sym:
-	openssl rand -hex 64 > keys/sym
+	openssl rand -hex 64 | tr -d '\n' > keys/sym
