@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/chakchat/chakchat/backend/file-storage/internal/restapi"
@@ -12,7 +13,7 @@ import (
 const paramFileId = "fileId"
 
 type GetFileService interface {
-	GetFile(uuid.UUID) (*services.FileMeta, error)
+	GetFile(context.Context, uuid.UUID) (*services.FileMeta, error)
 }
 
 func GetFile(service GetFileService) gin.HandlerFunc {
@@ -28,7 +29,7 @@ func GetFile(service GetFileService) gin.HandlerFunc {
 			return
 		}
 
-		file, err := service.GetFile(fileId)
+		file, err := service.GetFile(c, fileId)
 		if err != nil {
 			if err == services.ErrFileNotFound {
 				c.JSON(http.StatusNotFound, restapi.ErrorResponse{

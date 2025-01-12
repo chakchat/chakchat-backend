@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"io"
 	"mime/multipart"
 	"net/http"
 	"strconv"
@@ -20,7 +19,7 @@ const (
 )
 
 type UploadPartService interface {
-	UploadPart(ctx context.Context, partNumber int, uploadId uuid.UUID, part io.Reader) error
+	UploadPart(context.Context, *services.UploadPartRequest) (*services.UploadPartResponse, error)
 }
 
 func UploadPart(conf *MultipartUploadConfig, service UploadPartService) gin.HandlerFunc {
@@ -67,7 +66,11 @@ func UploadPart(conf *MultipartUploadConfig, service UploadPartService) gin.Hand
 			return
 		}
 
-		err = service.UploadPart(c, partNumber, uploadId, filePart)
+		part, err := service.UploadPart(c, &services.UploadPartRequest{
+			PartNumber: partNumber,
+			UploadId:   uploadId,
+			Part:       filePart,
+		})
 
 		if err != nil {
 			if err == services.ErrUploadNotFound {
@@ -81,6 +84,12 @@ func UploadPart(conf *MultipartUploadConfig, service UploadPartService) gin.Hand
 			return
 		}
 
-		restapi.SendSuccess(c, struct{}{})
+		restapi.SendSuccess(c, uploadPartResponse{
+			ETag: part.ETag,
+		})
 	}
+}
+
+type uploadPartResponse struct {
+	ETag string `json:"e_tag"`
 }

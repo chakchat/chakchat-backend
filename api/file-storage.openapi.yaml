@@ -150,7 +150,7 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/EmptySuccessResponse"
+                "$ref": "#/components/schemas/UploadPartResponse"
         '400':
           description: Bad request
           content:
@@ -325,6 +325,14 @@ components:
           description: Upload ID
       required:
         - upload_id
+    UploadPartResponse:
+      type: object
+      properties:
+        e_tag:
+          type: string
+          description: Part ETag
+      required:
+        - e_tag
     UploadAbortRequest:
       type: object
       properties:
@@ -349,8 +357,12 @@ components:
               part_number:
                 type: integer
                 description: Part number. May be 1-3000
+              e_tag:
+                type: string
+                description: Part ETag
             required:
               - part_number
+              - e_tag
       required:
         - parts
         - upload_id
