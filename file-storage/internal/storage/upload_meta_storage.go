@@ -1,4 +1,4 @@
-package main
+package storage
 
 import (
 	"context"
@@ -20,6 +20,12 @@ type UploadMeta struct {
 
 type UploadMetaStorage struct {
 	db *gorm.DB
+}
+
+func NewUploadMetaStorage(db *gorm.DB) *UploadMetaStorage {
+	return &UploadMetaStorage{
+		db: db,
+	}
 }
 
 func (s *UploadMetaStorage) Get(ctx context.Context, id uuid.UUID) (*services.UploadMeta, bool, error) {
