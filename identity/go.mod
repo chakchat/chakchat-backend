@@ -3,7 +3,7 @@ module github.com/chakchat/chakchat/backend/identity
 go 1.23.1
 
 require (
-	github.com/chakchat/chakchat/backend/shared/go v0.0.0-20250110133003-612cba9a69e7
+	github.com/chakchat/chakchat/backend/shared/go v0.0.0-20250112123615-17ca1333cc1a
 	github.com/google/uuid v1.6.0
 	github.com/redis/go-redis/v9 v9.7.0
 	github.com/spf13/viper v1.19.0

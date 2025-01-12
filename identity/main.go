@@ -168,11 +168,11 @@ func createSignInMetaStorage(redisClient *redis.Client) *storage.SignInMetaStora
 	return storage.NewSignInMetaStorage(config, redisClient)
 }
 
-func createIdempotencyStorage(redisClient *redis.Client) *storage.IdempotencyStorage {
-	idempotencyConf := &storage.IdempotencyConfig{
+func createIdempotencyStorage(redisClient *redis.Client) idempotency.IdempotencyStorage {
+	idempotencyConf := &idempotency.IdempotencyConfig{
 		DataExp: conf.Idempotency.DataExp,
 	}
-	return storage.NewIdempotencyStorage(redisClient, idempotencyConf)
+	return idempotency.NewStorage(redisClient, idempotencyConf)
 }
 
 func createSignInSendCodeService(sms services.SmsSender, storage services.SignInMetaFindStorer,
