@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"log"
 	"strings"
 
 	"github.com/chakchat/chakchat/backend/shared/go/internal/restapi"
@@ -23,22 +24,44 @@ const (
 
 type Claims map[string]any
 
-func NewJWT(conf *jwt.Config) gin.HandlerFunc {
+type JWTConfig struct {
+	Conf          *jwt.Config
+	Aud           string
+	DefaultHeader string
+}
+
+func NewJWT(conf *JWTConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		header := c.Request.Header.Get(headerAuthorization)
+		var headerName string
+		if conf.DefaultHeader != "" {
+			headerName = conf.DefaultHeader
+		} else {
+			headerName = headerAuthorization
+		}
+
+		header := c.Request.Header.Get(headerName)
 		token, ok := strings.CutPrefix(header, "Bearer ")
 		if !ok {
+			log.Println("Unautorized because of invalid header")
 			restapi.SendUnautorized(c)
 			c.Abort()
 			return
 		}
 
-		claims, err := jwt.Parse(conf, jwt.Token(token))
+		var claims jwt.Claims
+		var err error
+		if conf.Aud != "" {
+			claims, err = jwt.ParseWithAud(conf.Conf, jwt.Token(token), conf.Aud)
+		} else {
+			claims, err = jwt.Parse(conf.Conf, jwt.Token(token))
+		}
 		if err != nil {
+			log.Printf("Unauthorized: %s", err)
 			restapi.SendUnautorized(c)
 			c.Abort()
 			return
 		}
+
 		setClaims(c, Claims(claims))
 
 		c.Next()

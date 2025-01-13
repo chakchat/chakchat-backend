@@ -13,13 +13,17 @@ import (
 )
 
 func Test_AuthJwtMiddleware(t *testing.T) {
-	conf := &jwt.Config{
-		SigningMethod: "HS512",
-		Lifetime:      2 * time.Minute,
-		Issuer:        "iss",
-		Audience:      []string{"aud"},
-		Type:          "internal_access",
-		SymmetricKey:  []byte("I_DONT_WANNA_GEN_A_KEY_SO_I_PASTE_UUID_2a7e232f79ef4a3caced0c504553afa9"),
+	conf := &JWTConfig{
+		Conf: &jwt.Config{
+			SigningMethod: "HS512",
+			Lifetime:      2 * time.Minute,
+			Issuer:        "iss",
+			Audience:      []string{"aud"},
+			Type:          "internal_access",
+			SymmetricKey:  []byte("I_DONT_WANNA_GEN_A_KEY_SO_I_PASTE_UUID_2a7e232f79ef4a3caced0c504553afa9"),
+		},
+		Aud:           "",
+		DefaultHeader: "",
 	}
 
 	t.Run("NoAuthorizationHeader", func(t *testing.T) {
