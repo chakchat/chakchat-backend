@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"time"
@@ -61,6 +62,7 @@ func Upload(conf *UploadConfig, service UploadService) gin.HandlerFunc {
 		if err != nil {
 			// TODO: for now I don't know what may occur here
 			// But please handle errors properly.
+			log.Printf("uploading file failed: %s", err)
 			restapi.SendInternalError(c)
 			return
 		}

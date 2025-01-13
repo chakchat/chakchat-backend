@@ -1,5 +1,5 @@
 jwt:
-  signing_method: HS512
+  signing_method: RS256
   lifetime: 3m
   issuer: identity_service
   audience: 
@@ -18,4 +18,4 @@ multipart_upload:
   max_part_size: 1048576 # 100MB
 s3:
   bucket: demo-chakchat-yandex-storage
-  url_prefix: https://storage.yandexcloud.net/demo-chakchat-yandex-storage
+  url_prefix: https://storage.yandexcloud.net/demo-chakchat-yandex-storage/

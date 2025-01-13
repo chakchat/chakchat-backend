@@ -60,7 +60,10 @@ func main() {
 		})
 	})
 
-	authMiddleware := auth.NewJWT(jwtConf)
+	authMiddleware := auth.NewJWT(&auth.JWTConfig{
+		Conf:          jwtConf,
+		DefaultHeader: "X-Internal-Token",
+	})
 
 	r.Group("/").
 		Use(idempotency.New(idempStorage)).

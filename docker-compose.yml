@@ -19,6 +19,8 @@ services:
     volumes:
       - ./file-storage/config.yml:/app/config.yml:ro
       - ./keys/rsa.pub:/app/keys/rsa.pub:ro
+      - C:/Users/1234/OneDrive/Изображения/Wallpaper/wallpaperflare.com_wallpaper2.jpg:/Users/1234/OneDrive/Изображения/Wallpaper/wallpaperflare.com_wallpaper2.jpg
+      # - ${USERPROFILE}/.aws:/.aws:ro
     environment:
       FILE_STORAGE_AWS_ACCESS_KEY_ID: ${FILE_STORAGE_AWS_ACCESS_KEY_ID}
       FILE_STORAGE_AWS_REGION: ${FILE_STORAGE_AWS_REGION}
