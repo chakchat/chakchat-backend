@@ -46,13 +46,14 @@ type S3Config struct {
 func NewUploadService(storer FileMetaStorer, client *s3.Client, conf *S3Config) *UploadService {
 	return &UploadService{
 		storer: storer,
-		client: &s3.Client{},
+		client: client,
+		conf:   conf,
 	}
 }
 
 func (s *UploadService) Upload(ctx context.Context, req *UploadFileRequest) (*FileMeta, error) {
 	fileId := uuid.New()
-	res, err := s.client.PutObject(ctx, &s3.PutObjectInput{
+	_, err := s.client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket:      aws.String(s.conf.Bucket),
 		Key:         aws.String(fileId.String()),
 		Body:        req.File,
@@ -65,7 +66,7 @@ func (s *UploadService) Upload(ctx context.Context, req *UploadFileRequest) (*Fi
 	file := &FileMeta{
 		FileName:  req.FileName,
 		MimeType:  req.MimeType,
-		FileSize:  *res.Size,
+		FileSize:  req.FileSize,
 		FileId:    fileId,
 		FileUrl:   s.conf.UrlPrefix + fileId.String(),
 		CreatedAt: time.Now(),

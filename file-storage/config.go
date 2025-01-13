@@ -73,6 +73,6 @@ func loadConfig(file string) *Config {
 	if err := viper.UnmarshalExact(&conf); err != nil {
 		log.Fatalf("viper config unmarshalling failed: %s", err)
 	}
-	log.Printf("CONFIG: %#v", conf)
+
 	return conf
 }
