@@ -50,6 +50,7 @@ func main() {
 	uploadInitService := services.NewUploadInitService(uploadMetaStorage, s3Client, s3Config)
 	uploadPartService := services.NewUploadPartService(uploadMetaStorage, s3Client, s3Config)
 	uploadAbortService := services.NewUploadAbortService(uploadMetaStorage, s3Client, s3Config)
+	uploadCompleteService := services.NewUploadCompleteService(fileMetaStorage, uploadMetaStorage, s3Client, s3Config)
 
 	r := gin.New()
 
@@ -70,7 +71,7 @@ func main() {
 		Use(authMiddleware).
 		POST("/v1.0/upload", handlers.Upload(uploadConfig, uploadService)).
 		POST("/v1.0/upload/multipart/init", handlers.UploadInit(multipartConfig, uploadInitService)).
-		POST("/v1.0")
+		POST("/v1.0/upload/multipart/complete", handlers.UploadComplete(uploadCompleteService))
 
 	r.Group("/").
 		Use(authMiddleware).

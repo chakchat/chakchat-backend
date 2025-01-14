@@ -61,6 +61,7 @@ func UploadPart(conf *MultipartUploadConfig, service UploadPartService) gin.Hand
 
 		filePart, _, err := c.Request.FormFile(fieldFile)
 		if err != nil {
+			log.Printf("parsing form file failed: %s", err)
 			c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
 				ErrorType:    restapi.ErrTypeInvalidForm,
 				ErrorMessage: "Can't parse form file",
