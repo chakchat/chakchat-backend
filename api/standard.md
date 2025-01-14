@@ -103,3 +103,22 @@ For example, if you want to return paginated list of users, you should return so
 - `username_already_exists` - Username already exists.
 
 TODO: Fill new error types.
+
+user:
+  id
+  username
+  name
+  photo
+  phone
+  dateOfBirth
+  created_at timestamp
+
+  phone_visibility
+
+
+
+user_phone_visibility
+  owner_id 
+  viewer_id
+
+user_dateOfBirth_visibility

@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package user;
+
+option go_package = ".";
+option java_package = "org.example.user";
+option java_generic_services = true;
+
+message UserRequest {
+    string phoneNumber = 1;
+}
+
+message UUID {
+    string value = 1;
+}
+
+enum UserResponseStatus {
+    SUCCESS = 0;
+    FAILED = 1;
+    NOT_FOUND = 2;
+}
+
+message UserResponse {
+    UserResponseStatus status = 1;
+    // If password verified then 
+    optional string name = 2;
+    optional string userName = 3;
+    optional UUID userId = 4;
+}
+
+message CreateUserRequest {
+    string phoneNumber = 1;
+    string name = 2;
+    string username = 3;
+}
+
+enum CreateUserStatus {
+    CREATED = 0;
+    CREATE_FAILED = 1;
+    ALREADY_EXISTS = 2;
+    VALIDATION_FAILED = 3;
+}
+
+message CreateUserResponse {
+    CreateUserStatus status = 1;
+    optional UUID userId = 2;
+    optional string name = 3;
+    optional string userName = 4;
+}
+
+service UserService {
+    rpc GetUser(UserRequest) returns (UserResponse); 
+    rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+}
