@@ -69,7 +69,7 @@ func main() {
 		Use(idempotency.New(idempStorage)).
 		Use(authMiddleware).
 		POST("/v1.0/upload", handlers.Upload(uploadConfig, uploadService)).
-		POST("/v1.0/upload/init", handlers.UploadInit(multipartConfig, uploadInitService)).
+		POST("/v1.0/upload/multipart/init", handlers.UploadInit(multipartConfig, uploadInitService)).
 		POST("/v1.0")
 
 	r.Group("/").

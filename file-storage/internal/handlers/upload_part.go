@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"strconv"
@@ -32,9 +33,10 @@ func UploadPart(conf *MultipartUploadConfig, service UploadPartService) gin.Hand
 				})
 				return
 			}
+			log.Printf("parsing multipart form failed: %s", err)
 			c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
 				ErrorType:    restapi.ErrTypeInvalidForm,
-				ErrorMessage: restapi.ErrTypeInvalidForm,
+				ErrorMessage: "Can't parse multipart form",
 				ErrorDetails: []restapi.ErrorDetail{},
 			})
 			return
@@ -51,8 +53,8 @@ func UploadPart(conf *MultipartUploadConfig, service UploadPartService) gin.Hand
 		uploadId, err := uuid.Parse(c.Request.FormValue(fieldUploadId))
 		if err != nil {
 			restapi.SendValidationError(c, []restapi.ErrorDetail{{
-				Field:   fieldPartNumber,
-				Message: "",
+				Field:   fieldUploadId,
+				Message: "Upload Id is missing",
 			}})
 			return
 		}
@@ -80,6 +82,7 @@ func UploadPart(conf *MultipartUploadConfig, service UploadPartService) gin.Hand
 				})
 				return
 			}
+			log.Printf("upload part failed: %s", err)
 			restapi.SendInternalError(c)
 			return
 		}
