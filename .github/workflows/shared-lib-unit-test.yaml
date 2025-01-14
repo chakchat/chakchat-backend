@@ -5,15 +5,15 @@ on:
     branches:
       - '**'
     paths:
-        - backend/shared/go/**.go
-        - backend/shared/go/**/go.mod
+        - shared/go/**.go
+        - shared/go/**/go.mod
         - .github/workflows/shared-lib-unit-test.yaml
   pull_request:
     branches:
       - main
     paths:
-      - backend/shared/go/**.go
-      - backend/shared/go/**/go.mod
+      - shared/go/**.go
+      - shared/go/**/go.mod
       - .github/workflows/shared-lib-unit-test.yaml
 jobs:
     unit-test:
@@ -26,5 +26,5 @@ jobs:
             go-version: 1.23.1
         - name: Test
           run: |
-            cd backend/shared/go
+            cd shared/go
             go test -v -race ./...

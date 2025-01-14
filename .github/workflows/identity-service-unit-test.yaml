@@ -5,15 +5,15 @@ on:
     branches:
       - '**'
     paths:
-        - backend/identity/**.go
-        - backend/identity/**/go.mod
+        - identity/**.go
+        - identity/**/go.mod
         - .github/workflows/identity-service-unit-test.yaml
   pull_request:
     branches:
       - main
     paths:
-      - backend/identity/**.go
-      - backend/identity/**/go.mod
+      - identity/**.go
+      - identity/**/go.mod
       - .github/workflows/identity-service-unit-test.yaml
 jobs:
     unit-test:
@@ -26,5 +26,5 @@ jobs:
             go-version: 1.23.1
         - name: Test
           run: |
-            cd backend/identity
+            cd identity
             go test -v -race ./...
