@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chakchat/chakchat/backend/shared/go/jwt"
+	"github.com/chakchat/chakchat-backend/shared/go/jwt"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 )

@@ -10,4 +10,4 @@ test:
 	docker compose up --build --abort-on-container-exit --exit-code-from test
 
 gen-grpc:
-	protoc --go_out="./user-service-stub/userservice" --go-grpc_out="./user-service-stub/userservice" --proto_path="../../../api" user.proto
+	protoc --go_out="./user-service-stub/userservice" --go-grpc_out="./user-service-stub/userservice" --proto_path="../../api" user.proto

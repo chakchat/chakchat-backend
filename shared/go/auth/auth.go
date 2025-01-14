@@ -5,8 +5,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/chakchat/chakchat/backend/shared/go/internal/restapi"
-	"github.com/chakchat/chakchat/backend/shared/go/jwt"
+	"github.com/chakchat/chakchat-backend/shared/go/internal/restapi"
+	"github.com/chakchat/chakchat-backend/shared/go/jwt"
 	"github.com/gin-gonic/gin"
 )
 
