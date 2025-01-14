@@ -49,5 +49,5 @@ type uploadInitRequest struct {
 }
 
 type uploadInitResponse struct {
-	UploadId uuid.UUID
+	UploadId uuid.UUID `json:"upload_id"`
 }
