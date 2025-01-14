@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/chakchat/chakchat/backend/file-storage/internal/services"
+	"github.com/chakchat/chakchat-backend/file-storage/internal/services"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )

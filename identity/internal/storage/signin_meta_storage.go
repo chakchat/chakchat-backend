@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/chakchat/chakchat/backend/identity/internal/services" // Actually, I am worried about this dependency
+	"github.com/chakchat/chakchat-backend/identity/internal/services" // Actually, I am worried about this dependency
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 )
