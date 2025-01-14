@@ -10,3 +10,6 @@ keys-rsa:
 
 keys-sym:
 	openssl rand -hex 64 | tr -d '\n' > keys/sym
+
+run: 
+	docker-compose up --build --abort-on-container-exit
