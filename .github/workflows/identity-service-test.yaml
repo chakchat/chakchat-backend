@@ -5,16 +5,16 @@ on:
     branches:
       - '**'
     paths:
-      - identity/**
+      - identity-service/**
       - .github/workflows/identity-service-test.yaml
-      - tests/identity/**
+      - tests/identity-service/**
   pull_request:
     branches:
       - main
     paths:
-      - identity/**
+      - identity-service/**
       - .github/workflows/identity-service-test.yaml
-      - tests/identity/**
+      - tests/identity-service/**
 
 jobs:
   test:
@@ -56,20 +56,20 @@ jobs:
 
       - name: Generate keys
         run: | 
-          cd tests/identity
+          cd tests/identity-service
           make keys-rsa
           make keys-sym
           cd ../..
 
       - name: Build
         run: |
-          docker-compose -f tests/identity/docker-compose.yml \
+          docker-compose -f tests/identity-service/docker-compose.yml \
           build --build-arg BUILDKIT_INLINE_CACHE=1
       - name: Run tests
         run: |
-          docker-compose -f tests/identity/docker-compose.yml \
+          docker-compose -f tests/identity-service/docker-compose.yml \
           up --abort-on-container-exit --exit-code-from test
 
       - name: Tear down
         if: always()
-        run: docker-compose -f tests/identity/docker-compose.yml down
+        run: docker-compose -f tests/identity-service/docker-compose.yml down
