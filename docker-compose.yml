@@ -14,7 +14,7 @@ services:
     depends_on:
       - redis
   file-storage-service:
-    build: ./file-storage
+    build: ./file-storage-service
     ports: [5004:5004]
     volumes:
       - ./file-storage/config.yml:/app/config.yml:ro

@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/chakchat/chakchat-backend/file-storage/internal/restapi"
-	"github.com/chakchat/chakchat-backend/file-storage/internal/services"
+	"github.com/chakchat/chakchat-backend/file-storage-service/internal/restapi"
+	"github.com/chakchat/chakchat-backend/file-storage-service/internal/services"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )

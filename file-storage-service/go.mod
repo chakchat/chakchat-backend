@@ -1,4 +1,4 @@
-module github.com/chakchat/chakchat-backend/file-storage
+module github.com/chakchat/chakchat-backend/file-storage-service
 
 go 1.23.1
 
