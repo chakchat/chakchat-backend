@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/chakchat/chakchat-backend/identity/internal/restapi"
-	"github.com/chakchat/chakchat-backend/identity/internal/services"
+	"github.com/chakchat/chakchat-backend/identity-service/internal/restapi"
+	"github.com/chakchat/chakchat-backend/identity-service/internal/services"
 	"github.com/chakchat/chakchat-backend/shared/go/jwt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

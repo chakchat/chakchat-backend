@@ -1,4 +1,4 @@
-module github.com/chakchat/chakchat-backend/identity
+module github.com/chakchat/chakchat-backend/identity-service
 
 go 1.23.1
 

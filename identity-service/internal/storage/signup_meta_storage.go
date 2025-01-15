@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/chakchat/chakchat-backend/identity/internal/services"
+	"github.com/chakchat/chakchat-backend/identity-service/internal/services"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 )

@@ -9,7 +9,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/chakchat/chakchat-backend/identity/internal/userservice"
+	"github.com/chakchat/chakchat-backend/identity-service/internal/userservice"
 	"github.com/google/uuid"
 )
 

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chakchat/chakchat-backend/identity/internal/userservice"
+	"github.com/chakchat/chakchat-backend/identity-service/internal/userservice"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
