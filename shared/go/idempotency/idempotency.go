@@ -3,6 +3,7 @@ package idempotency
 import (
 	"bytes"
 	"context"
+	"log"
 	"net/http"
 	"strings"
 
@@ -72,14 +73,22 @@ func (m *idempotencyMiddleware) Handle(c *gin.Context) {
 	c.Next()
 
 	if resp := capturer.ExtractResponse(); captureCondition(resp) {
-		err := m.storage.Store(context.Background(), key, resp) // This operation shouldn't be stopped such easily
+		// I think I must guarantee that idempotent endpoint will NOT be re-executed
+		// So, some retries are performed if storing response fails
+		// Store() looks idempotent so everything is okay
+		var err error
+		for range 3 {
+			// This operation shouldn't be stopped such easily.
+			// So, I pass Background() context to prevent cancellation.
+			err = m.storage.Store(context.Background(), key, resp)
+			if err == nil {
+				break
+			}
+		}
 		if err != nil {
-			// TODO: what to do then
-			// I think I must guarantee that idempotent endpoint will NOT be re-executed
-			// But in this scenario this concept goes wrong
-			// Maybe `storage.Store()` retry?
-			// I guess no, especially if Store() is deteministic
-			// But what do I do?
+			log.Printf("idempotency middleware: all Store() retries failed. Last error: %s", err)
+			// I guess no 500 response should be returned because c.Next() succeeded
+			// We are just gonna pray that user will not re-execute with same key
 		}
 	}
 }
