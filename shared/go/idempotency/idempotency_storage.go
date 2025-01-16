@@ -87,8 +87,13 @@ func (s *idempotencyStorage) Store(ctx context.Context, key string, resp *Captur
 		BodyKey:    prefixIdempotencyData + uuid.NewString(),
 	}
 
+	metaJson, err := json.Marshal(meta)
+	if err != nil {
+		return fmt.Errorf("marshalling meta failed: %s", err)
+	}
+
 	metaKey := prefixIdempotencyMeta + meta.BodyKey
-	if err := s.client.Set(ctx, metaKey, meta, s.conf.DataExp).Err(); err != nil {
+	if err := s.client.Set(ctx, metaKey, string(metaJson), s.conf.DataExp).Err(); err != nil {
 		return fmt.Errorf("redis response caching failed: %s", err)
 	}
 
