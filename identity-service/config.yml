@@ -22,7 +22,7 @@ internal_token:
 invalidated_token_storage:
   exp: 4m # A little bit longer than refresh_token.lifetime
 userservice:
-  grpc_addr: localhost:8080
+  grpc_addr: user-service-stub:9090
 redis:
   addr: redis:6379
   password: secret
@@ -36,4 +36,6 @@ idempotency:
 phone_code:
   send_frequency: 1m
 sms:
-  type: fake 
+  type: stub
+  stub:
+    addr: http://sms-service-stub:5023
