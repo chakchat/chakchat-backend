@@ -94,7 +94,7 @@ func Verify(config *Config, token Token) error {
 
 // If you need to parse token use only ParseWithAud function because it also verifies.
 func VerifyWithAud(config *Config, token Token, aud string) error {
-	_, err := Parse(config, token)
+	_, err := ParseWithAud(config, token, aud)
 	return err
 }
 
