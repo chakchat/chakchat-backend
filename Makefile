@@ -28,3 +28,4 @@ identity-service-test:
 
 .PHONY: test
 test: unit-test identity-service-test
+	echo "All tests passed"
