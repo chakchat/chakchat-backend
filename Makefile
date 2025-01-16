@@ -11,5 +11,20 @@ keys-rsa:
 keys-sym:
 	openssl rand -hex 64 | tr -d '\n' > keys/sym
 
+gen: gen-ssl-cert keys-rsa keys-sym
+
 run: 
 	docker-compose up --build --abort-on-container-exit
+
+clean:
+	docker-compose down --volumes
+
+unit-test:
+	cd identity-service && go test ./...
+	cd file-storage-service && go test ./...
+
+identity-service-test:
+	cd tests/identity-service && make test
+
+.PHONY: test
+test: unit-test identity-service-test
