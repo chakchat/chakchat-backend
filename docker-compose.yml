@@ -5,6 +5,9 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - identity-service
+      - file-storage-service
   identity-service:
     build: ./identity-service
     ports: [5000:5000]
