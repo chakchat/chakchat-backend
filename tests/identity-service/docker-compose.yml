@@ -8,7 +8,7 @@ services:
 
   user-service-stub:
     build:
-      context: user-service-stub
+      context: ../../stubs/user-service-stub
       dockerfile: Dockerfile
   identity-service:
     build:
@@ -26,5 +26,5 @@ services:
       - REDIS_PASSWORD=secret
   sms-service-stub:
     build:
-      context: sms-service-stub
+      context: ../../stubs/sms-service-stub
       dockerfile: Dockerfile
