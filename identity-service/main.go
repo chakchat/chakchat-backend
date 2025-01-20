@@ -54,6 +54,8 @@ func main() {
 		})
 	})
 
+	r.Use(gin.Logger())
+
 	r.Group("/v1.0").
 		Use(idempotency.New(idempotencyStorage)).
 		POST("/signin/send-phone-code", handlers.SignInSendCode(sendCodeService)).
@@ -63,7 +65,6 @@ func main() {
 		POST("/signup/verify-code", handlers.SignUpVerifyCode(signUpVerifyService)).
 		POST("/signup", handlers.SignUp(signUpService))
 
-	r.Use(gin.Logger())
 	r.PUT("/v1.0/sign-out", handlers.SignOut(signOutService))
 	r.GET("/v1.0/identity", handlers.Identity(identityService))
 
