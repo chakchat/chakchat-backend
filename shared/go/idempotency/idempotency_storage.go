@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	prefixIdempotencyMeta = "IdempotencyData:Meta"
-	prefixIdempotencyData = "IdempotencyData:Data"
+	prefixIdempotencyMeta = "IdempotencyData:Meta:"
+	prefixIdempotencyData = "IdempotencyData:Data:"
 )
 
 type IdempotencyConfig struct {
@@ -50,7 +50,7 @@ func (s *idempotencyStorage) Get(ctx context.Context, key string) (*CapturedResp
 	}
 
 	var meta cachedRespMeta
-	if err := json.Unmarshal([]byte(metaRes.String()), &meta); err != nil {
+	if err := json.Unmarshal([]byte(metaRes.Val()), &meta); err != nil {
 		return nil, false, fmt.Errorf("cached response metadata unmarshalling failed: %s", err)
 	}
 
@@ -64,7 +64,7 @@ func (s *idempotencyStorage) Get(ctx context.Context, key string) (*CapturedResp
 		Headers:    meta.Headers,
 		Body:       body,
 	}
-	return resp, false, nil
+	return resp, true, nil
 }
 
 func (s *idempotencyStorage) getBody(ctx context.Context, bodyKey string) ([]byte, error) {
@@ -92,7 +92,8 @@ func (s *idempotencyStorage) Store(ctx context.Context, key string, resp *Captur
 		return fmt.Errorf("marshalling meta failed: %s", err)
 	}
 
-	metaKey := prefixIdempotencyMeta + meta.BodyKey
+	metaKey := prefixIdempotencyMeta + key
+
 	if err := s.client.Set(ctx, metaKey, string(metaJson), s.conf.DataExp).Err(); err != nil {
 		return fmt.Errorf("redis response caching failed: %s", err)
 	}

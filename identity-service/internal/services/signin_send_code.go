@@ -6,7 +6,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/chakchat/chakchat-backend/identity-service/internal/userservice"
@@ -98,7 +97,7 @@ func (s *SignInSendCodeService) SendCode(ctx context.Context, phone string) (sig
 
 func (s *SignInSendCodeService) validateSendFreq(ctx context.Context, phone string) error {
 	prevMeta, ok, err := s.storage.FindMetaByPhone(ctx, phone)
-	log.Printf("found sign in meta: %+v", prevMeta)
+
 	if err != nil {
 		return fmt.Errorf("finding SignInMeta error: %s", err)
 	}

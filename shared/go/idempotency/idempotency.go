@@ -38,6 +38,8 @@ type idempotencyMiddleware struct {
 }
 
 func (m *idempotencyMiddleware) Handle(c *gin.Context) {
+	defer c.Abort()
+
 	key := c.GetHeader(HeaderIdempotencyKey)
 	if key == "" {
 		errResp := restapi.ErrorResponse{
@@ -45,7 +47,6 @@ func (m *idempotencyMiddleware) Handle(c *gin.Context) {
 			ErrorMessage: "No \"" + HeaderIdempotencyKey + "\" header provided",
 		}
 		c.JSON(http.StatusBadRequest, errResp)
-		c.Abort()
 		return
 	}
 
@@ -54,12 +55,12 @@ func (m *idempotencyMiddleware) Handle(c *gin.Context) {
 
 	cached, ok, err := m.storage.Get(c, key)
 	if err != nil {
+		log.Printf("idempotency middleware: gettings cached response failed: %s", err)
 		restapi.SendInternalError(c)
 		return
 	}
 	if ok {
 		writeCached(c, cached)
-		c.Abort()
 		return
 	}
 	// Check if storage (and this func too) was cancelled
@@ -109,11 +110,12 @@ func writeCached(c *gin.Context, cached *CapturedResponse) {
 	_, err := c.Writer.Write(cached.Body)
 	if err != nil {
 		// I don't know what case this error mean|
-
+		log.Printf("idempotency: writing cached body failed: %s", err)
 		// I remove headers added from response not to mix them
 		for h := range cached.Headers {
 			c.Writer.Header().Del(h)
 		}
+		// TODO: it appends response, not overwrites!
 		restapi.SendInternalError(c)
 		return
 	}
