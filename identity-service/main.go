@@ -23,8 +23,6 @@ import (
 var conf *Config = loadConfig("/app/config.yml")
 
 func main() {
-	r := gin.New()
-
 	redisClient := connectRedis()
 	sms := createSmsSender()
 	usersClient := createUsersClient()
@@ -46,6 +44,8 @@ func main() {
 	signUpSendCodeService := createSignUpSendCodeService(sms, signUpMetaStorage, usersClient)
 	signUpVerifyService := services.NewSignUpVerifyCodeService(signUpMetaStorage)
 	signUpService := services.NewSignUpService(accessTokenConfig, refreshTokenConfig, usersClient, signUpMetaStorage)
+
+	r := gin.New()
 
 	r.NoRoute(func(c *gin.Context) {
 		c.JSON(http.StatusNotFound, restapi.ErrorResponse{
