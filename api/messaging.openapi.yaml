@@ -260,6 +260,8 @@ paths:
       summary: Create a group
       description: Create a group
       tags: [group chat]
+      security:
+        - bearerAuth: []
       parameters:
         - name: Idempotency-Key
           in: header
