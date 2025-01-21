@@ -101,24 +101,5 @@ For example, if you want to return paginated list of users, you should return so
 - `user_already_exists` - User already exists
 - `signup_key_not_found` - Sign-up key does not exist.
 - `username_already_exists` - Username already exists.
-
-TODO: Fill new error types.
-
-user:
-  id
-  username
-  name
-  photo
-  phone
-  dateOfBirth
-  created_at timestamp
-
-  phone_visibility
-
-
-
-user_phone_visibility
-  owner_id 
-  viewer_id
-
-user_dateOfBirth_visibility
+- `forbidden` - Forbidden. User is not allowed to perform this action.
+- `invalid_param` - Invalid query or route parameter.

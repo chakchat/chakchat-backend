@@ -73,5 +73,8 @@ func setClaims(c *gin.Context, claims Claims) {
 }
 
 func GetClaims(ctx context.Context) Claims {
-	return ctx.Value(keyClaims).(Claims)
+	if val := ctx.Value(keyClaims); val != nil {
+		return val.(Claims)
+	}
+	return nil
 }
