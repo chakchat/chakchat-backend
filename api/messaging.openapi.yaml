@@ -486,6 +486,91 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+  /chat/group/{chatId}/photo:
+    put:
+      summary: Update group photo
+      description: Update group photo
+      tags: [group chat]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateGroupPhotoRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/GroupChat'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseWithDetails'
+    delete:
+      summary: Delete group photo
+      description: Delete group photo
+      tags: [group chat]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GroupChat"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
   /chat/group/secret:
     post:
       summary: Create secret group chat
@@ -541,6 +626,15 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    UpdateGroupPhotoRequest:
+      type: object
+      properties:
+        photo_id:
+          type: string
+          format: uuid
+          description: Photo id. It is used to identify photo loaded to file storage.
+      required:
+        - photo_id
     CreateGroupRequest:
       type: object
       properties:
@@ -606,6 +700,9 @@ components:
           format: uuid
         secret:
           type: boolean
+        group_photo:
+          type: string
+          format: url
       required:
         - id
         - name
