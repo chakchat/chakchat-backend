@@ -255,6 +255,45 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /chat/group:
+    post:
+      summary: Create a group
+      description: Create a group
+      tags: [group chat]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CreateGroupRequest"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/GroupChat"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponseWithDetails"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
   /chat/group/{chatId}:
     get:
       summary: Get group
@@ -379,6 +418,8 @@ paths:
       summary: Add new member
       description: Add new member to group chat
       tags: [group chat]
+      security:
+        - bearerAuth: []
       parameters:
         - name: chatId
           in: path
@@ -413,6 +454,8 @@ paths:
       summary: Delete a group chat member
       description: Delete a group chat member
       tags: [group chat]
+      security:
+        - bearerAuth: []
       parameters:
         - name: chatId
           in: path
@@ -443,7 +486,54 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-
+  /chat/group/secret:
+    post:
+      summary: Create secret group chat
+      description: Create secret group chat
+      tags: [group chat]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          description: Idempotency key
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSecretGroupRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/GroupChat'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseWithDetails'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   securitySchemes:
     bearerAuth:
@@ -451,6 +541,38 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    CreateGroupRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        members:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required:
+        - name
+        - description
+        - members
+    CreateSecretGroupRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        members:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required:
+        - name
+        - description
+        - members
     UpdateGroupChatRequest:
       type: object
       properties:
@@ -482,6 +604,8 @@ components:
         admin_id:
           type: string
           format: uuid
+        secret:
+          type: boolean
       required:
         - id
         - name
@@ -489,6 +613,7 @@ components:
         - members
         - created_at
         - admin_id
+        - secret
     CreateSecretChatRequest:
       type: object
       properties:
