@@ -3,7 +3,7 @@ module github.com/chakchat/chakchat-backend/identity-service
 go 1.23.1
 
 require (
-	github.com/chakchat/chakchat-backend/shared/go v0.0.0-20250116144346-7cee4397e8a8
+	github.com/chakchat/chakchat-backend/shared/go v0.0.0-20250120132945-fdfde22b59fb
 	github.com/google/uuid v1.6.0
 	github.com/redis/go-redis/v9 v9.7.0
 	github.com/spf13/viper v1.19.0
@@ -15,7 +15,7 @@ require (
 	github.com/bytedance/sonic v1.12.7 // indirect
 	github.com/bytedance/sonic/loader v0.2.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/cloudwego/base64x v0.1.4 // indirect
+	github.com/cloudwego/base64x v0.1.5 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
