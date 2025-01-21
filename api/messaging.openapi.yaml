@@ -5,8 +5,33 @@ info:
 servers:
   - url: http://localhost:80/api/messaging/v1.0/
 tags:
+  - name: chats
   - name: personal chat
+  - name: group chat
 paths:
+  /chat/my/all:
+    get:
+      summary: Get all chats
+      description: Get all chats
+      tags: [chats]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/AllChatsResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/ErrorResponse'
   /chat/personal/{chatId}:
     get:
       summary: Get chat
@@ -634,6 +659,38 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    AllChatsResponse:
+      type: object
+      properties:
+        chats:
+          type: array
+          items:
+            $ref: '#/components/schemas/GenericChat'
+      required:
+        - chats
+    GenericChat:
+      type: object
+      properties:
+        chat_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [personal, group]
+        secret: 
+          type: boolean
+        name:
+          type: string
+        chat_photo:
+          type: string
+          format: url
+        # TODO: Add message preview. (As well as in other places)
+      required:
+        - chat_id
+        - type
+        - secret
+        - name
+        - chat_photo
     UpdateGroupPhotoRequest:
       type: object
       properties:
