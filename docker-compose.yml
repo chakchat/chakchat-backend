@@ -10,7 +10,6 @@ services:
       - file-storage-service
   identity-service:
     build: ./identity-service
-    ports: [5000:5000]
     volumes:
       - ./identity-service/config.yml:/app/config.yml:ro
       - ./keys:/app/keys:ro
@@ -18,7 +17,6 @@ services:
       - redis
   file-storage-service:
     build: ./file-storage-service
-    ports: [5004:5004]
     volumes:
       - ./file-storage-service/config.yml:/app/config.yml:ro
       - ./keys/rsa.pub:/app/keys/rsa.pub:ro
@@ -33,7 +31,6 @@ services:
       - postgres
   postgres:
     image: postgres:latest
-    ports: [5432:5432]
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
@@ -42,7 +39,6 @@ services:
       - POSTGRES_DB=file_metadata
   redis:
     image: redis:latest
-    ports: [6379:6379]
     volumes:
       - redis_data:/data
     environment:
