@@ -25,6 +25,8 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+    implementation 'org.hibernate.orm:hibernate-core:6.2.5.Final'
+    implementation 'com.mysql:mysql-connector-j:9.1.0'
 }
 
 sourceSets {

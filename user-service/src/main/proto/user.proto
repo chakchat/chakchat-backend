@@ -3,7 +3,7 @@ syntax = "proto3";
 package user;
 
 option go_package = ".";
-option java_package = "org.example.user";
+option java_package = "org.example.service";
 option java_generic_services = true;
 
 message UserRequest {
