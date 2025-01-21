@@ -4,15 +4,18 @@ info:
   version: 0.0.1
 servers:
   - url: http://localhost:80/api/messaging/v1.0/
+tags:
+  - name: personal chat
 paths: 
-  /chat/{id}:
+  /chat/personal/{chatId}:
     get:
       summary: Get chat
       description: Get chat
+      tags: [personal chat]
       security:
         - bearerAuth: []
       parameters:
-        - name: id
+        - name: chatId
           in: path
           required: true
           schema:
@@ -26,7 +29,7 @@ paths:
                 type: object
                 properties:
                   data:
-                    $ref: '#/components/schemas/Chat'
+                    $ref: '#/components/schemas/PersonalChat'
         '401':
           description: Unauthorized
           content:
@@ -39,6 +42,221 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /chat/personal:
+    post:
+      summary: Create chat
+      description: Create chat
+      tags: [personal chat]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Idempotency key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePersonalChatRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PersonalChat'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseWithDetails'
+  /chat/personal/block/{chatId}:
+    put:
+      summary: Block chat
+      description: Block chat
+      tags: [personal chat]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptySuccessResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseWithDetails'
+  /chat/personal/unblock/{chatId}:
+    put:
+      summary: Unblock chat
+      description: Unblock chat
+      tags: [personal chat]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptySuccessResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseWithDetails'
+  /chat/personal/secret:
+    post:
+      summary: Create secret chat
+      description: Create secret chat
+      tags: [personal chat]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          description: Idempotency key
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSecretChatRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SecretChat'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseWithDetails'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /chat/personal/delete/{chatId}/{deleteMode}:
+    delete:
+      summary: Delete chat
+      description: Delete chat
+      tags: [personal chat]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: deleteMode
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [only_me, all]
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptySuccessResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseWithDetails'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
 components:
   securitySchemes:
     bearerAuth:
@@ -46,17 +264,67 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
-    Chat:
+    CreateSecretChatRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          format: uuid
+      required:
+        - member_id
+    SecretChat:
       type: object
       properties:
         id:
           type: string
           format: uuid
+        member_id:
+          type: string
+          format: uuid
+        blocked:
+          type: boolean
+        blocked_by:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: List of user ids who blocked this chat
+    CreatePersonalChatRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          format: uuid
+      required:
+        - member_id
+    PersonalChat:
+      type: object
+      properties:
+        chat_id:
+          type: string
+          format: uuid
         name:
           type: string
+        member_id:
+          type: string
+          format: uuid
+        blocked:
+          type: boolean
+        blocked_by:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: List of user ids who blocked this chat
         # TODO: Here should be:
         # 1. Preview updates
         # 2. Aggregated all updates
+      required:
+        - chat_id
+        - name
+        - member_id
+        - blocked
+        - blocked_by
     EmptySuccessResponse:
       type: object
       example: {}
