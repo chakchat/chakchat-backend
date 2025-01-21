@@ -6,7 +6,7 @@ servers:
   - url: http://localhost:80/api/messaging/v1.0/
 tags:
   - name: personal chat
-paths: 
+paths:
   /chat/personal/{chatId}:
     get:
       summary: Get chat
@@ -104,7 +104,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EmptySuccessResponse'
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PersonalChat'
         '401':
           description: Unauthorized
           content:
@@ -143,7 +146,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EmptySuccessResponse'
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PersonalChat'
         '401':
           description: Unauthorized
           content:
@@ -191,7 +197,7 @@ paths:
                 type: object
                 properties:
                   data:
-                    $ref: '#/components/schemas/SecretChat'
+                    $ref: '#/components/schemas/PersonalChat'
         '401':
           description: Unauthorized
           content:
@@ -721,23 +727,6 @@ components:
           format: uuid
       required:
         - member_id
-    SecretChat:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        member_id:
-          type: string
-          format: uuid
-        blocked:
-          type: boolean
-        blocked_by:
-          type: array
-          items:
-            type: string
-            format: uuid
-          description: List of user ids who blocked this chat
     CreatePersonalChatRequest:
       type: object
       properties:
@@ -765,6 +754,8 @@ components:
             type: string
             format: uuid
           description: List of user ids who blocked this chat
+        secret:
+          type: boolean
         # TODO: Here should be:
         # 1. Preview updates
         # 2. Aggregated all updates
@@ -774,6 +765,7 @@ components:
         - member_id
         - blocked
         - blocked_by
+        - secret
     EmptySuccessResponse:
       type: object
       example: {}
