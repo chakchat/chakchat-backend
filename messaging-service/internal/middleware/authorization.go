@@ -11,13 +11,34 @@ import (
 	"github.com/google/uuid"
 )
 
-const paramGroupId = "chatId"
+const paramChatId = "chatId"
 
-type GroupAdminChecker interface {
-	Check(userId, chatId uuid.UUID) error
+type InChatNotBlockedChecker interface {
+	CheckChatNotBlocked(userId, chatId uuid.UUID) error
 }
 
-func GroupAdminAuthorization(checker GroupAdminChecker) gin.HandlerFunc {
+type InChatChecker interface {
+	CheckChat(userId, chatId uuid.UUID) error
+}
+
+type GroupAdminChecker interface {
+	CheckAdmin(userId, chatId uuid.UUID) error
+}
+
+// Checks if user is in chat and not blocked
+func NotBlockedAuthorization(ch InChatNotBlockedChecker) gin.HandlerFunc {
+	return chatActionAuthorization(ch.CheckChatNotBlocked)
+}
+
+func InChatAuthorization(ch InChatChecker) gin.HandlerFunc {
+	return chatActionAuthorization(ch.CheckChat)
+}
+
+func GroupAdminAuthorization(ch GroupAdminChecker) gin.HandlerFunc {
+	return chatActionAuthorization(ch.CheckAdmin)
+}
+
+func chatActionAuthorization(checker func(userId, chatId uuid.UUID) error) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Abort()
 
@@ -32,9 +53,9 @@ func GroupAdminAuthorization(checker GroupAdminChecker) gin.HandlerFunc {
 			return
 		}
 
-		chatIdParam := c.Param(paramGroupId)
+		chatIdParam := c.Param(paramChatId)
 		if chatIdParam == "" {
-			log.Printf("%s param is not found. But all these endpoints must require this param", paramGroupId)
+			log.Printf("%s param is not found. But all these endpoints must require this param", paramChatId)
 			// I think it is internal server error because this middleware
 			// because this middleware must not be executed on endpoints that doesn't require this authorization policy
 			restapi.SendInternalError(c)
@@ -44,12 +65,12 @@ func GroupAdminAuthorization(checker GroupAdminChecker) gin.HandlerFunc {
 		if err != nil {
 			c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
 				ErrorType:    restapi.ErrTypeInvalidParam,
-				ErrorMessage: "Invalid " + paramGroupId + " uuid parameter",
+				ErrorMessage: "Invalid " + paramChatId + " uuid parameter",
 			})
 			return
 		}
 
-		if err := checker.Check(userId, chatId); err != nil {
+		if err := checker(userId, chatId); err != nil {
 			c.JSON(http.StatusForbidden, restapi.ErrorResponse{
 				ErrorType:    restapi.ErrTypeForbidden,
 				ErrorMessage: "Forbidden. You doesn't have permission to perform this action",
