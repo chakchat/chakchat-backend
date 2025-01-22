@@ -13,16 +13,25 @@ import (
 
 const paramChatId = "chatId"
 
-type UserInChatChecker interface {
-	CheckChat(userId, chatId uuid.UUID) error
+type InChatNotBlockedChecker interface {
+	CheckChatNotBlocked(userId, chatId uuid.UUID) error
 }
 
-func UserInChatAuthorization(ch UserInChatChecker) gin.HandlerFunc {
-	return chatActionAuthorization(ch.CheckChat)
+type InChatChecker interface {
+	CheckChat(userId, chatId uuid.UUID) error
 }
 
 type GroupAdminChecker interface {
 	CheckAdmin(userId, chatId uuid.UUID) error
+}
+
+// Checks if user is in chat and not blocked
+func NotBlockedAuthorization(ch InChatNotBlockedChecker) gin.HandlerFunc {
+	return chatActionAuthorization(ch.CheckChatNotBlocked)
+}
+
+func InChatAuthorization(ch InChatChecker) gin.HandlerFunc {
+	return chatActionAuthorization(ch.CheckChat)
 }
 
 func GroupAdminAuthorization(ch GroupAdminChecker) gin.HandlerFunc {
