@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/restapi"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/restapi"
 	"github.com/chakchat/chakchat-backend/shared/go/auth"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
