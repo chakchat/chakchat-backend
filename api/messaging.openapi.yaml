@@ -798,8 +798,6 @@ components:
         chat_id:
           type: string
           format: uuid
-        name:
-          type: string
         member_id:
           type: string
           format: uuid
@@ -818,7 +816,6 @@ components:
         # 2. Aggregated all updates
       required:
         - chat_id
-        - name
         - member_id
         - blocked
         - blocked_by
