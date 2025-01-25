@@ -35,8 +35,6 @@ type PersonalChat struct {
 	CreatedAt Timestamp
 }
 
-// TODO: I guess all methods should create domain events
-
 func NewPersonalChat(users [2]UserID) (*PersonalChat, error) {
 	return &PersonalChat{
 		ID:        ChatID(uuid.New()),
