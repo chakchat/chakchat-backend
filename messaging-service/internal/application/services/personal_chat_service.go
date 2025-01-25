@@ -27,7 +27,7 @@ func NewPersonalChatService(repo repository.PersonalChatRepository) *PersonalCha
 	}
 }
 
-func (s *PersonalChatService) BlockPersonalChat(userId, chatId uuid.UUID) error {
+func (s *PersonalChatService) BlockChat(userId, chatId uuid.UUID) error {
 	chat, err := s.repo.FindById(domain.ChatID(chatId))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
@@ -55,7 +55,7 @@ func (s *PersonalChatService) BlockPersonalChat(userId, chatId uuid.UUID) error 
 	return nil
 }
 
-func (s *PersonalChatService) UnblockPersonalChat(userId, chatId uuid.UUID) error {
+func (s *PersonalChatService) UnblockChat(userId, chatId uuid.UUID) error {
 	chat, err := s.repo.FindById(domain.ChatID(chatId))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
