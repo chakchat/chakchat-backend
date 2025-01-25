@@ -1,4 +1,4 @@
-package entities
+package domain
 
 import (
 	"errors"
@@ -77,7 +77,7 @@ func (c *PersonalChat) UnblockBy(user UserID) error {
 		return member == user
 	})
 
-	if c.Blocked {
+	if c.Blocked && len(c.BlockedBy) == 0 {
 		c.Blocked = false
 	}
 	return nil

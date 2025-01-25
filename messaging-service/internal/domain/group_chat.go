@@ -1,4 +1,4 @@
-package entities
+package domain
 
 type GroupChat struct {
 	ID      ChatID
