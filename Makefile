@@ -1,10 +1,10 @@
 gen-ssl-cert:
-	sudo mkdir -p ssl
-	sudo openssl genrsa -out ssl/self-signed.key 2048
-	sudo openssl req -new -x509 -key ssl/self-signed.key -out ssl/self-signed.crt -days 365
+	mkdir -p ssl
+	openssl genrsa -out ssl/self-signed.key 2048
+	openssl req -new -x509 -key ssl/self-signed.key -out ssl/self-signed.crt -days 365
 	
 keys-rsa:
-	mkdir keys
+	mkdir -p keys
 	openssl genrsa -out keys/rsa 2048
 	openssl rsa -in keys/rsa -pubout -out keys/rsa.pub
 
