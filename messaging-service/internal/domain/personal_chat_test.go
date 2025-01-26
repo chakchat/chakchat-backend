@@ -7,6 +7,24 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestPersonalChat_New_Success(t *testing.T) {
+	user1 := UserID(uuid.MustParse("4f5d5d50-585b-4bd5-bb1c-82ca01427f8c"))
+	user2 := UserID(uuid.MustParse("bdb22462-1a18-434e-8b68-91b997bf9553"))
+
+	chat, err := NewPersonalChat([2]UserID{user1, user2})
+
+	require.NoError(t, err)
+	require.Equal(t, [2]UserID{user1, user2}, chat.Members)
+	require.NotZero(t, chat.ID)
+}
+
+func TestPersonalChat_New_Fails(t *testing.T) {
+	user := UserID(uuid.MustParse("4f5d5d50-585b-4bd5-bb1c-82ca01427f8c"))
+
+	_, err := NewPersonalChat([2]UserID{user, user})
+	require.Equal(t, ErrChatWithMyself, err)
+}
+
 func TestPersonalChat_BlockBy_Success(t *testing.T) {
 	user1 := UserID(uuid.MustParse("4f5d5d50-585b-4bd5-bb1c-82ca01427f8c"))
 	user2 := UserID(uuid.MustParse("bdb22462-1a18-434e-8b68-91b997bf9553"))

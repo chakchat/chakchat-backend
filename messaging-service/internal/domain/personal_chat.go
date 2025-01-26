@@ -12,6 +12,8 @@ var (
 	ErrAlreadyBlocked   = errors.New("chat is already blocked")
 	ErrAlreadyUnblocked = errors.New("chat is already unblocked")
 	ErrUserNotMember    = errors.New("user is not member of a chat")
+
+	ErrChatWithMyself = errors.New("chat with myself")
 )
 
 type (
@@ -36,6 +38,10 @@ type PersonalChat struct {
 }
 
 func NewPersonalChat(users [2]UserID) (*PersonalChat, error) {
+	if users[0] == users[1] {
+		return nil, ErrChatWithMyself
+	}
+
 	return &PersonalChat{
 		ID:        ChatID(uuid.New()),
 		Members:   users,
