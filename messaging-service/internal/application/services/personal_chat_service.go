@@ -88,18 +88,10 @@ func (s *PersonalChatService) UnblockChat(userId, chatId uuid.UUID) error {
 }
 
 func (s *PersonalChatService) CreateChat(members [2]uuid.UUID) (*dto.PersonalChatDTO, error) {
-	domainMembers := [2]domain.UserID{
-		domain.UserID(members[0]),
-		domain.UserID(members[1]),
-	}
-	_, err := s.repo.FindByMembers(domainMembers)
+	domainMembers := [2]domain.UserID{domain.UserID(members[0]), domain.UserID(members[1])}
 
-	if err != nil && err != repository.ErrNotFound {
-		return nil, errors.Join(ErrUnknown, err)
-	}
-
-	if errors.Is(err, repository.ErrNotFound) {
-		return nil, ErrChatAlreadyExists
+	if err := s.validateChatNotExists(domainMembers); err != nil {
+		return nil, err
 	}
 
 	chat, err := domain.NewPersonalChat(domainMembers)
@@ -118,4 +110,43 @@ func (s *PersonalChatService) CreateChat(members [2]uuid.UUID) (*dto.PersonalCha
 
 	chatDto := dto.NewPersonalChatDTO(createdChat)
 	return &chatDto, nil
+}
+
+func (s *PersonalChatService) CreateSecretChat(members [2]uuid.UUID) (*dto.PersonalChatDTO, error) {
+	domainMembers := [2]domain.UserID{domain.UserID(members[0]), domain.UserID(members[1])}
+
+	if err := s.validateChatNotExists(domainMembers); err != nil {
+		return nil, err
+	}
+
+	chat, err := domain.NewSecretPersonalChat(domainMembers)
+
+	if err != nil {
+		if errors.Is(err, domain.ErrChatWithMyself) {
+			return nil, ErrChatWithMyself
+		}
+		return nil, errors.Join(ErrUnknown, err)
+	}
+
+	createdChat, err := s.repo.Create(chat)
+	if err != nil {
+		return nil, errors.Join(ErrUnknown, err)
+	}
+
+	chatDto := dto.NewPersonalChatDTO(createdChat)
+	return &chatDto, nil
+}
+
+func (s *PersonalChatService) validateChatNotExists(members [2]domain.UserID) error {
+	_, err := s.repo.FindByMembers(members)
+
+	if err != nil && err != repository.ErrNotFound {
+		return errors.Join(ErrUnknown, err)
+	}
+
+	if !errors.Is(err, repository.ErrNotFound) {
+		return ErrChatAlreadyExists
+	}
+
+	return nil
 }
