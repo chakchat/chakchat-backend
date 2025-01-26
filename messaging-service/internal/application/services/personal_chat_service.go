@@ -103,12 +103,12 @@ func (s *PersonalChatService) CreateChat(members [2]uuid.UUID) (*dto.PersonalCha
 		return nil, errors.Join(ErrUnknown, err)
 	}
 
-	createdChat, err := s.repo.Create(chat)
+	chat, err = s.repo.Create(chat)
 	if err != nil {
 		return nil, errors.Join(ErrUnknown, err)
 	}
 
-	chatDto := dto.NewPersonalChatDTO(createdChat)
+	chatDto := dto.NewPersonalChatDTO(chat)
 	return &chatDto, nil
 }
 
@@ -128,12 +128,25 @@ func (s *PersonalChatService) CreateSecretChat(members [2]uuid.UUID) (*dto.Perso
 		return nil, errors.Join(ErrUnknown, err)
 	}
 
-	createdChat, err := s.repo.Create(chat)
+	chat, err = s.repo.Create(chat)
 	if err != nil {
 		return nil, errors.Join(ErrUnknown, err)
 	}
 
-	chatDto := dto.NewPersonalChatDTO(createdChat)
+	chatDto := dto.NewPersonalChatDTO(chat)
+	return &chatDto, nil
+}
+
+func (s *PersonalChatService) GetChatById(chatId uuid.UUID) (*dto.PersonalChatDTO, error) {
+	chat, err := s.repo.FindById(domain.ChatID(chatId))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, ErrChatNotFound
+		}
+		return nil, errors.Join(ErrUnknown, err)
+	}
+
+	chatDto := dto.NewPersonalChatDTO(chat)
 	return &chatDto, nil
 }
 
