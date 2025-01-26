@@ -150,6 +150,23 @@ func (s *PersonalChatService) GetChatById(chatId uuid.UUID) (*dto.PersonalChatDT
 	return &chatDto, nil
 }
 
+func (s *PersonalChatService) DeleteChat(chatId uuid.UUID, deleteForAll bool) error {
+	chat, err := s.repo.FindById(domain.ChatID(chatId))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return ErrChatNotFound
+		}
+		return errors.Join(ErrUnknown, err)
+	}
+
+	// TODO: put other logic here after you decide what to do with messages
+
+	if err := s.repo.Delete(chat.ID); err != nil {
+		return errors.Join(ErrUnknown, err)
+	}
+	return nil
+}
+
 func (s *PersonalChatService) validateChatNotExists(members [2]domain.UserID) error {
 	_, err := s.repo.FindByMembers(members)
 
