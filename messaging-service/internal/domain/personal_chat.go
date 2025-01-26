@@ -48,6 +48,23 @@ func NewPersonalChat(users [2]UserID) (*PersonalChat, error) {
 		Secret:    false,
 		Blocked:   false,
 		BlockedBy: nil,
+		// TODO: idk maybe it should be set when creating in the database.
+		CreatedAt: Timestamp(TimeFunc().Unix()),
+	}, nil
+}
+
+func NewSecretPersonalChat(users [2]UserID) (*PersonalChat, error) {
+	if users[0] == users[1] {
+		return nil, ErrChatWithMyself
+	}
+
+	return &PersonalChat{
+		ID:        ChatID(uuid.New()),
+		Members:   users,
+		Secret:    true,
+		Blocked:   false,
+		BlockedBy: nil,
+		// TODO: idk maybe it should be set when creating in the database.
 		CreatedAt: Timestamp(TimeFunc().Unix()),
 	}, nil
 }
