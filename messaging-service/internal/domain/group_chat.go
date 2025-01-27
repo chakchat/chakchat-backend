@@ -21,6 +21,8 @@ var (
 
 	ErrUserAlreadyMember = errors.New("user is already a member of a chat")
 	ErrMemberIsAdmin     = errors.New("group member is admin")
+
+	ErrGroupPhotoEmpty = errors.New("group photo is empty")
 )
 
 type GroupChat struct {
@@ -74,6 +76,20 @@ func (g *GroupChat) UpdateInfo(name, description string) error {
 
 	g.Name = name
 	g.Description = description
+	return nil
+}
+
+func (g *GroupChat) UpdatePhoto(photo URL) error {
+	g.GroupPhoto = photo
+	return nil
+}
+
+func (g *GroupChat) DeletePhoto() error {
+	if g.GroupPhoto == "" {
+		return ErrGroupPhotoEmpty
+	}
+
+	g.GroupPhoto = ""
 	return nil
 }
 
