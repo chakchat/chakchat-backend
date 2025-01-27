@@ -1,6 +1,11 @@
 package domain
 
-import "errors"
+import (
+	"errors"
+	"slices"
+
+	"github.com/google/uuid"
+)
 
 const (
 	maxGroupNameLen   = 50
@@ -8,6 +13,8 @@ const (
 )
 
 var (
+	ErrAdminNotMember = errors.New("group members doesn't include admin")
+
 	ErrGroupNameEmpty   = errors.New("group name is empty")
 	ErrGroupNameTooLong = errors.New("group name is too long")
 	ErrGroupDescTooLong = errors.New("group description is too long")
@@ -25,6 +32,38 @@ type GroupChat struct {
 	CreatedAt   Timestamp
 }
 
+func NewGroupChat(admin UserID, members []UserID, name string) (*GroupChat, error) {
+	return newGroup(admin, members, name, false)
+}
+
+func NewSecretGroupChat(admin UserID, members []UserID, name string) (*GroupChat, error) {
+	return newGroup(admin, members, name, true)
+}
+
+func newGroup(admin UserID, members []UserID, name string, secret bool) (*GroupChat, error) {
+	if err := validateGroupInfo(name, ""); err != nil {
+		return nil, err
+	}
+
+	if !slices.Contains(members, admin) {
+		return nil, ErrAdminNotMember
+	}
+
+	normMembers := normilizeMembers(members)
+
+	return &GroupChat{
+		ID:          ChatID(uuid.New()),
+		Admin:       admin,
+		Members:     normMembers,
+		Secret:      secret,
+		Name:        name,
+		Description: "",
+		GroupPhoto:  "",
+		// Maybe this should not be set here
+		CreatedAt: Timestamp(TimeFunc().Unix()),
+	}, nil
+}
+
 func (g *GroupChat) UpdateInfo(name, description string) error {
 	if err := validateGroupInfo(name, description); err != nil {
 		return err
@@ -33,6 +72,20 @@ func (g *GroupChat) UpdateInfo(name, description string) error {
 	g.Name = name
 	g.Description = description
 	return nil
+}
+
+func normilizeMembers(members []UserID) []UserID {
+	met := make(map[UserID]struct{}, len(members))
+	normMembers := make([]UserID, 0, len(members))
+
+	for _, member := range members {
+		if _, ok := met[member]; !ok {
+			normMembers = append(normMembers, member)
+			met[member] = struct{}{}
+		}
+	}
+
+	return normMembers
 }
 
 func validateGroupInfo(name, description string) error {
