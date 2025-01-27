@@ -18,6 +18,9 @@ var (
 	ErrGroupNameEmpty   = errors.New("group name is empty")
 	ErrGroupNameTooLong = errors.New("group name is too long")
 	ErrGroupDescTooLong = errors.New("group description is too long")
+
+	ErrUserAlreadyMember = errors.New("user is already a member of a chat")
+	ErrMemberIsAdmin     = errors.New("group member is admin")
 )
 
 type GroupChat struct {
@@ -71,6 +74,29 @@ func (g *GroupChat) UpdateInfo(name, description string) error {
 
 	g.Name = name
 	g.Description = description
+	return nil
+}
+
+func (g *GroupChat) AddMember(newMember UserID) error {
+	if slices.Contains(g.Members, newMember) {
+		return ErrUserAlreadyMember
+	}
+
+	g.Members = append(g.Members, newMember)
+	return nil
+}
+
+func (g *GroupChat) DeleteMember(member UserID) error {
+	if g.Admin == member {
+		return ErrMemberIsAdmin
+	}
+
+	i := slices.Index(g.Members, member)
+	if i == -1 {
+		return ErrUserNotMember
+	}
+
+	g.Members = slices.Delete(g.Members, i, i+1)
 	return nil
 }
 
