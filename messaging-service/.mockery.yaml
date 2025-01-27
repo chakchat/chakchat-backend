@@ -1,0 +1,16 @@
+with-expecter: True  # Generate Expecter methods for better type safety
+inpackage: False     # Generate mocks in a separate package
+testonly: False      # Generate mocks for non-test code
+force-file-write: True  # Overwrites existing files
+packages:
+  github.com/chakchat/chakchat-backend/messaging-service/internal/application/repository:
+    config:
+      # Don't use `mockery` directly, use `go generate ./...` instead (or `make gen`)
+      dir: ./mocks
+      filename: mock_personal_chat_repository.go 
+      outpkg: mocks
+      pkgname: mocks
+      mockname: "Mock{{.InterfaceName}}"
+      template: testify
+    interfaces:
+      PersonalChatRepository:
