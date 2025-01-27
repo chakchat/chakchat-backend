@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
@@ -31,8 +32,8 @@ func NewPersonalChatService(repo repository.PersonalChatRepository) *PersonalCha
 	}
 }
 
-func (s *PersonalChatService) BlockChat(userId, chatId uuid.UUID) error {
-	chat, err := s.repo.FindById(domain.ChatID(chatId))
+func (s *PersonalChatService) BlockChat(ctx context.Context, userId, chatId uuid.UUID) error {
+	chat, err := s.repo.FindById(ctx, domain.ChatID(chatId))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return ErrChatNotFound
@@ -52,15 +53,15 @@ func (s *PersonalChatService) BlockChat(userId, chatId uuid.UUID) error {
 		return errors.Join(ErrUnknown, err)
 	}
 
-	if _, err := s.repo.Update(chat); err != nil {
+	if _, err := s.repo.Update(ctx, chat); err != nil {
 		return errors.Join(ErrUnknown, err)
 	}
 
 	return nil
 }
 
-func (s *PersonalChatService) UnblockChat(userId, chatId uuid.UUID) error {
-	chat, err := s.repo.FindById(domain.ChatID(chatId))
+func (s *PersonalChatService) UnblockChat(ctx context.Context, userId, chatId uuid.UUID) error {
+	chat, err := s.repo.FindById(ctx, domain.ChatID(chatId))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return ErrChatNotFound
@@ -80,17 +81,17 @@ func (s *PersonalChatService) UnblockChat(userId, chatId uuid.UUID) error {
 		return errors.Join(ErrUnknown, err)
 	}
 
-	if _, err := s.repo.Update(chat); err != nil {
+	if _, err := s.repo.Update(ctx, chat); err != nil {
 		return errors.Join(ErrUnknown, err)
 	}
 
 	return nil
 }
 
-func (s *PersonalChatService) CreateChat(members [2]uuid.UUID) (*dto.PersonalChatDTO, error) {
+func (s *PersonalChatService) CreateChat(ctx context.Context, members [2]uuid.UUID) (*dto.PersonalChatDTO, error) {
 	domainMembers := [2]domain.UserID{domain.UserID(members[0]), domain.UserID(members[1])}
 
-	if err := s.validateChatNotExists(domainMembers); err != nil {
+	if err := s.validateChatNotExists(ctx, domainMembers); err != nil {
 		return nil, err
 	}
 
@@ -103,7 +104,7 @@ func (s *PersonalChatService) CreateChat(members [2]uuid.UUID) (*dto.PersonalCha
 		return nil, errors.Join(ErrUnknown, err)
 	}
 
-	chat, err = s.repo.Create(chat)
+	chat, err = s.repo.Create(ctx, chat)
 	if err != nil {
 		return nil, errors.Join(ErrUnknown, err)
 	}
@@ -112,10 +113,11 @@ func (s *PersonalChatService) CreateChat(members [2]uuid.UUID) (*dto.PersonalCha
 	return &chatDto, nil
 }
 
-func (s *PersonalChatService) CreateSecretChat(members [2]uuid.UUID) (*dto.PersonalChatDTO, error) {
+func (s *PersonalChatService) CreateSecretChat(ctx context.Context,
+	members [2]uuid.UUID) (*dto.PersonalChatDTO, error) {
 	domainMembers := [2]domain.UserID{domain.UserID(members[0]), domain.UserID(members[1])}
 
-	if err := s.validateChatNotExists(domainMembers); err != nil {
+	if err := s.validateChatNotExists(ctx, domainMembers); err != nil {
 		return nil, err
 	}
 
@@ -128,7 +130,7 @@ func (s *PersonalChatService) CreateSecretChat(members [2]uuid.UUID) (*dto.Perso
 		return nil, errors.Join(ErrUnknown, err)
 	}
 
-	chat, err = s.repo.Create(chat)
+	chat, err = s.repo.Create(ctx, chat)
 	if err != nil {
 		return nil, errors.Join(ErrUnknown, err)
 	}
@@ -137,8 +139,9 @@ func (s *PersonalChatService) CreateSecretChat(members [2]uuid.UUID) (*dto.Perso
 	return &chatDto, nil
 }
 
-func (s *PersonalChatService) GetChatById(chatId uuid.UUID) (*dto.PersonalChatDTO, error) {
-	chat, err := s.repo.FindById(domain.ChatID(chatId))
+func (s *PersonalChatService) GetChatById(ctx context.Context,
+	chatId uuid.UUID) (*dto.PersonalChatDTO, error) {
+	chat, err := s.repo.FindById(ctx, domain.ChatID(chatId))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, ErrChatNotFound
@@ -150,8 +153,8 @@ func (s *PersonalChatService) GetChatById(chatId uuid.UUID) (*dto.PersonalChatDT
 	return &chatDto, nil
 }
 
-func (s *PersonalChatService) DeleteChat(chatId uuid.UUID, deleteForAll bool) error {
-	chat, err := s.repo.FindById(domain.ChatID(chatId))
+func (s *PersonalChatService) DeleteChat(ctx context.Context, chatId uuid.UUID, deleteForAll bool) error {
+	chat, err := s.repo.FindById(ctx, domain.ChatID(chatId))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return ErrChatNotFound
@@ -161,14 +164,14 @@ func (s *PersonalChatService) DeleteChat(chatId uuid.UUID, deleteForAll bool) er
 
 	// TODO: put other logic here after you decide what to do with messages
 
-	if err := s.repo.Delete(chat.ID); err != nil {
+	if err := s.repo.Delete(ctx, chat.ID); err != nil {
 		return errors.Join(ErrUnknown, err)
 	}
 	return nil
 }
 
-func (s *PersonalChatService) validateChatNotExists(members [2]domain.UserID) error {
-	_, err := s.repo.FindByMembers(members)
+func (s *PersonalChatService) validateChatNotExists(ctx context.Context, members [2]domain.UserID) error {
+	_, err := s.repo.FindByMembers(ctx, members)
 
 	if err != nil && err != repository.ErrNotFound {
 		return errors.Join(ErrUnknown, err)
