@@ -10,6 +10,7 @@ var (
 	ErrNotFound = errors.New("not found")
 )
 
+//go:generate mockery
 type PersonalChatRepository interface {
 	// Should return ErrNotFound if entity is not found
 	FindById(chatId domain.ChatID) (*domain.PersonalChat, error)
