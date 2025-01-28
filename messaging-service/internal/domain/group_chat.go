@@ -94,7 +94,7 @@ func (g *GroupChat) DeletePhoto() error {
 }
 
 func (g *GroupChat) AddMember(newMember UserID) error {
-	if slices.Contains(g.Members, newMember) {
+	if g.IsMember(newMember) {
 		return ErrUserAlreadyMember
 	}
 
@@ -114,6 +114,10 @@ func (g *GroupChat) DeleteMember(member UserID) error {
 
 	g.Members = slices.Delete(g.Members, i, i+1)
 	return nil
+}
+
+func (g *GroupChat) IsMember(user UserID) bool {
+	return slices.Contains(g.Members, user)
 }
 
 func normilizeMembers(members []UserID) []UserID {
