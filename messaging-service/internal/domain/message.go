@@ -2,6 +2,8 @@ package domain
 
 import (
 	"errors"
+
+	"github.com/google/uuid"
 )
 
 type UpdateID int64
@@ -16,32 +18,16 @@ const (
 	MaxTextMessageLen = 1000
 )
 
-type TextMessage struct {
+type Message struct {
 	ID       UpdateID
 	ChatID   ChatID
 	SenderID UserID
 
-	Text   string
 	SentAt Timestamp
 	Read   bool
 }
 
-func NewTextMessage(sender UserID, text string, sentAt Timestamp) (TextMessage, error) {
-	if text == "" {
-		return TextMessage{}, ErrEmptyMessage
-	}
-	if len(text) > MaxTextMessageLen {
-		return TextMessage{}, ErrTextMessageTooLong
-	}
-
-	return TextMessage{
-		SenderID: sender,
-		Text:     text,
-		SentAt:   sentAt,
-	}, nil
-}
-
-func (m *TextMessage) AssignToPersonalChat(chat *PersonalChat) error {
+func (m *Message) AssignToPersonalChat(chat *PersonalChat) error {
 	if !chat.IsMember(m.SenderID) {
 		return ErrUserNotMember
 	}
@@ -53,11 +39,57 @@ func (m *TextMessage) AssignToPersonalChat(chat *PersonalChat) error {
 	return nil
 }
 
-func (m *TextMessage) AssignToGroupChat(group *GroupChat) error {
+func (m *Message) AssignToGroupChat(group *GroupChat) error {
 	if !group.IsMember(m.SenderID) {
 		return ErrUserNotMember
 	}
 
 	m.ChatID = group.ID
 	return nil
+}
+
+type TextMessage struct {
+	Message
+	Text string
+}
+
+func NewTextMessage(sender UserID, text string, sentAt Timestamp) (TextMessage, error) {
+	if text == "" {
+		return TextMessage{}, ErrEmptyMessage
+	}
+	if len(text) > MaxTextMessageLen {
+		return TextMessage{}, ErrTextMessageTooLong
+	}
+
+	return TextMessage{
+		Message: Message{
+			SenderID: sender,
+			SentAt:   sentAt,
+		},
+		Text: text,
+	}, nil
+}
+
+type FileMeta struct {
+	FileId    uuid.UUID
+	FileName  string
+	MimeType  string
+	FileSize  int64
+	FileUrl   URL
+	CreatedAt Timestamp
+}
+
+type FileMessage struct {
+	Message
+	File FileMeta
+}
+
+func NewFileMessage(sender UserID, file FileMeta, sentAt Timestamp) (FileMessage, error) {
+	return FileMessage{
+		Message: Message{
+			SenderID: sender,
+			SentAt:   sentAt,
+		},
+		File: file,
+	}, nil
 }
