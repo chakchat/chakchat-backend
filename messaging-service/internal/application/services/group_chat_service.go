@@ -137,3 +137,20 @@ func (s *GroupChatService) UpdateGroupInfo(ctx context.Context, req UpdateGroupI
 	groupDto := dto.NewGroupChatDTO(group)
 	return &groupDto, nil
 }
+
+func (s *GroupChatService) DeleteGroup(ctx context.Context, chatId uuid.UUID) error {
+	chat, err := s.repo.FindById(ctx, domain.ChatID(chatId))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return ErrChatNotFound
+		}
+		return errors.Join(ErrInternal, err)
+	}
+
+	// TODO: put other logic here after you decide what to do with messages
+
+	if err := s.repo.Delete(ctx, chat.ID); err != nil {
+		return errors.Join(ErrInternal, err)
+	}
+	return nil
+}
