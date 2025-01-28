@@ -4,6 +4,8 @@
 package mocks
 
 import (
+	"context"
+
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -36,8 +38,8 @@ func (_m *MockPersonalChatRepository) EXPECT() *MockPersonalChatRepository_Expec
 }
 
 // Create provides a mock function for the type MockPersonalChatRepository
-func (_mock *MockPersonalChatRepository) Create(chat *domain.PersonalChat) (*domain.PersonalChat, error) {
-	ret := _mock.Called(chat)
+func (_mock *MockPersonalChatRepository) Create(context1 context.Context, personalChat *domain.PersonalChat) (*domain.PersonalChat, error) {
+	ret := _mock.Called(context1, personalChat)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Create")
@@ -45,18 +47,18 @@ func (_mock *MockPersonalChatRepository) Create(chat *domain.PersonalChat) (*dom
 
 	var r0 *domain.PersonalChat
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(*domain.PersonalChat) (*domain.PersonalChat, error)); ok {
-		return returnFunc(chat)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *domain.PersonalChat) (*domain.PersonalChat, error)); ok {
+		return returnFunc(context1, personalChat)
 	}
-	if returnFunc, ok := ret.Get(0).(func(*domain.PersonalChat) *domain.PersonalChat); ok {
-		r0 = returnFunc(chat)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *domain.PersonalChat) *domain.PersonalChat); ok {
+		r0 = returnFunc(context1, personalChat)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*domain.PersonalChat)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(*domain.PersonalChat) error); ok {
-		r1 = returnFunc(chat)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, *domain.PersonalChat) error); ok {
+		r1 = returnFunc(context1, personalChat)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -69,39 +71,40 @@ type MockPersonalChatRepository_Create_Call struct {
 }
 
 // Create is a helper method to define mock.On call
-//   - chat
-func (_e *MockPersonalChatRepository_Expecter) Create(chat interface{}) *MockPersonalChatRepository_Create_Call {
-	return &MockPersonalChatRepository_Create_Call{Call: _e.mock.On("Create", chat)}
+//   - context1
+//   - personalChat
+func (_e *MockPersonalChatRepository_Expecter) Create(context1 interface{}, personalChat interface{}) *MockPersonalChatRepository_Create_Call {
+	return &MockPersonalChatRepository_Create_Call{Call: _e.mock.On("Create", context1, personalChat)}
 }
 
-func (_c *MockPersonalChatRepository_Create_Call) Run(run func(chat *domain.PersonalChat)) *MockPersonalChatRepository_Create_Call {
+func (_c *MockPersonalChatRepository_Create_Call) Run(run func(context1 context.Context, personalChat *domain.PersonalChat)) *MockPersonalChatRepository_Create_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*domain.PersonalChat))
+		run(args[0].(context.Context), args[1].(*domain.PersonalChat))
 	})
 	return _c
 }
 
-func (_c *MockPersonalChatRepository_Create_Call) Return(personalChat *domain.PersonalChat, err error) *MockPersonalChatRepository_Create_Call {
-	_c.Call.Return(personalChat, err)
+func (_c *MockPersonalChatRepository_Create_Call) Return(personalChat1 *domain.PersonalChat, err error) *MockPersonalChatRepository_Create_Call {
+	_c.Call.Return(personalChat1, err)
 	return _c
 }
 
-func (_c *MockPersonalChatRepository_Create_Call) RunAndReturn(run func(chat *domain.PersonalChat) (*domain.PersonalChat, error)) *MockPersonalChatRepository_Create_Call {
+func (_c *MockPersonalChatRepository_Create_Call) RunAndReturn(run func(context1 context.Context, personalChat *domain.PersonalChat) (*domain.PersonalChat, error)) *MockPersonalChatRepository_Create_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // Delete provides a mock function for the type MockPersonalChatRepository
-func (_mock *MockPersonalChatRepository) Delete(d domain.ChatID) error {
-	ret := _mock.Called(d)
+func (_mock *MockPersonalChatRepository) Delete(context1 context.Context, chatID domain.ChatID) error {
+	ret := _mock.Called(context1, chatID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Delete")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(domain.ChatID) error); ok {
-		r0 = returnFunc(d)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.ChatID) error); ok {
+		r0 = returnFunc(context1, chatID)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -114,14 +117,15 @@ type MockPersonalChatRepository_Delete_Call struct {
 }
 
 // Delete is a helper method to define mock.On call
-//   - d
-func (_e *MockPersonalChatRepository_Expecter) Delete(d interface{}) *MockPersonalChatRepository_Delete_Call {
-	return &MockPersonalChatRepository_Delete_Call{Call: _e.mock.On("Delete", d)}
+//   - context1
+//   - chatID
+func (_e *MockPersonalChatRepository_Expecter) Delete(context1 interface{}, chatID interface{}) *MockPersonalChatRepository_Delete_Call {
+	return &MockPersonalChatRepository_Delete_Call{Call: _e.mock.On("Delete", context1, chatID)}
 }
 
-func (_c *MockPersonalChatRepository_Delete_Call) Run(run func(d domain.ChatID)) *MockPersonalChatRepository_Delete_Call {
+func (_c *MockPersonalChatRepository_Delete_Call) Run(run func(context1 context.Context, chatID domain.ChatID)) *MockPersonalChatRepository_Delete_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(domain.ChatID))
+		run(args[0].(context.Context), args[1].(domain.ChatID))
 	})
 	return _c
 }
@@ -131,14 +135,14 @@ func (_c *MockPersonalChatRepository_Delete_Call) Return(err error) *MockPersona
 	return _c
 }
 
-func (_c *MockPersonalChatRepository_Delete_Call) RunAndReturn(run func(d domain.ChatID) error) *MockPersonalChatRepository_Delete_Call {
+func (_c *MockPersonalChatRepository_Delete_Call) RunAndReturn(run func(context1 context.Context, chatID domain.ChatID) error) *MockPersonalChatRepository_Delete_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // FindById provides a mock function for the type MockPersonalChatRepository
-func (_mock *MockPersonalChatRepository) FindById(chatId domain.ChatID) (*domain.PersonalChat, error) {
-	ret := _mock.Called(chatId)
+func (_mock *MockPersonalChatRepository) FindById(context1 context.Context, chatID domain.ChatID) (*domain.PersonalChat, error) {
+	ret := _mock.Called(context1, chatID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for FindById")
@@ -146,18 +150,18 @@ func (_mock *MockPersonalChatRepository) FindById(chatId domain.ChatID) (*domain
 
 	var r0 *domain.PersonalChat
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(domain.ChatID) (*domain.PersonalChat, error)); ok {
-		return returnFunc(chatId)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.ChatID) (*domain.PersonalChat, error)); ok {
+		return returnFunc(context1, chatID)
 	}
-	if returnFunc, ok := ret.Get(0).(func(domain.ChatID) *domain.PersonalChat); ok {
-		r0 = returnFunc(chatId)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.ChatID) *domain.PersonalChat); ok {
+		r0 = returnFunc(context1, chatID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*domain.PersonalChat)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(domain.ChatID) error); ok {
-		r1 = returnFunc(chatId)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, domain.ChatID) error); ok {
+		r1 = returnFunc(context1, chatID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -170,14 +174,15 @@ type MockPersonalChatRepository_FindById_Call struct {
 }
 
 // FindById is a helper method to define mock.On call
-//   - chatId
-func (_e *MockPersonalChatRepository_Expecter) FindById(chatId interface{}) *MockPersonalChatRepository_FindById_Call {
-	return &MockPersonalChatRepository_FindById_Call{Call: _e.mock.On("FindById", chatId)}
+//   - context1
+//   - chatID
+func (_e *MockPersonalChatRepository_Expecter) FindById(context1 interface{}, chatID interface{}) *MockPersonalChatRepository_FindById_Call {
+	return &MockPersonalChatRepository_FindById_Call{Call: _e.mock.On("FindById", context1, chatID)}
 }
 
-func (_c *MockPersonalChatRepository_FindById_Call) Run(run func(chatId domain.ChatID)) *MockPersonalChatRepository_FindById_Call {
+func (_c *MockPersonalChatRepository_FindById_Call) Run(run func(context1 context.Context, chatID domain.ChatID)) *MockPersonalChatRepository_FindById_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(domain.ChatID))
+		run(args[0].(context.Context), args[1].(domain.ChatID))
 	})
 	return _c
 }
@@ -187,14 +192,14 @@ func (_c *MockPersonalChatRepository_FindById_Call) Return(personalChat *domain.
 	return _c
 }
 
-func (_c *MockPersonalChatRepository_FindById_Call) RunAndReturn(run func(chatId domain.ChatID) (*domain.PersonalChat, error)) *MockPersonalChatRepository_FindById_Call {
+func (_c *MockPersonalChatRepository_FindById_Call) RunAndReturn(run func(context1 context.Context, chatID domain.ChatID) (*domain.PersonalChat, error)) *MockPersonalChatRepository_FindById_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // FindByMembers provides a mock function for the type MockPersonalChatRepository
-func (_mock *MockPersonalChatRepository) FindByMembers(members [2]domain.UserID) (*domain.PersonalChat, error) {
-	ret := _mock.Called(members)
+func (_mock *MockPersonalChatRepository) FindByMembers(context1 context.Context, userIDs [2]domain.UserID) (*domain.PersonalChat, error) {
+	ret := _mock.Called(context1, userIDs)
 
 	if len(ret) == 0 {
 		panic("no return value specified for FindByMembers")
@@ -202,18 +207,18 @@ func (_mock *MockPersonalChatRepository) FindByMembers(members [2]domain.UserID)
 
 	var r0 *domain.PersonalChat
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func([2]domain.UserID) (*domain.PersonalChat, error)); ok {
-		return returnFunc(members)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, [2]domain.UserID) (*domain.PersonalChat, error)); ok {
+		return returnFunc(context1, userIDs)
 	}
-	if returnFunc, ok := ret.Get(0).(func([2]domain.UserID) *domain.PersonalChat); ok {
-		r0 = returnFunc(members)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, [2]domain.UserID) *domain.PersonalChat); ok {
+		r0 = returnFunc(context1, userIDs)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*domain.PersonalChat)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func([2]domain.UserID) error); ok {
-		r1 = returnFunc(members)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, [2]domain.UserID) error); ok {
+		r1 = returnFunc(context1, userIDs)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -226,14 +231,15 @@ type MockPersonalChatRepository_FindByMembers_Call struct {
 }
 
 // FindByMembers is a helper method to define mock.On call
-//   - members
-func (_e *MockPersonalChatRepository_Expecter) FindByMembers(members interface{}) *MockPersonalChatRepository_FindByMembers_Call {
-	return &MockPersonalChatRepository_FindByMembers_Call{Call: _e.mock.On("FindByMembers", members)}
+//   - context1
+//   - userIDs
+func (_e *MockPersonalChatRepository_Expecter) FindByMembers(context1 interface{}, userIDs interface{}) *MockPersonalChatRepository_FindByMembers_Call {
+	return &MockPersonalChatRepository_FindByMembers_Call{Call: _e.mock.On("FindByMembers", context1, userIDs)}
 }
 
-func (_c *MockPersonalChatRepository_FindByMembers_Call) Run(run func(members [2]domain.UserID)) *MockPersonalChatRepository_FindByMembers_Call {
+func (_c *MockPersonalChatRepository_FindByMembers_Call) Run(run func(context1 context.Context, userIDs [2]domain.UserID)) *MockPersonalChatRepository_FindByMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].([2]domain.UserID))
+		run(args[0].(context.Context), args[1].([2]domain.UserID))
 	})
 	return _c
 }
@@ -243,14 +249,14 @@ func (_c *MockPersonalChatRepository_FindByMembers_Call) Return(personalChat *do
 	return _c
 }
 
-func (_c *MockPersonalChatRepository_FindByMembers_Call) RunAndReturn(run func(members [2]domain.UserID) (*domain.PersonalChat, error)) *MockPersonalChatRepository_FindByMembers_Call {
+func (_c *MockPersonalChatRepository_FindByMembers_Call) RunAndReturn(run func(context1 context.Context, userIDs [2]domain.UserID) (*domain.PersonalChat, error)) *MockPersonalChatRepository_FindByMembers_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // Update provides a mock function for the type MockPersonalChatRepository
-func (_mock *MockPersonalChatRepository) Update(personalChat *domain.PersonalChat) (*domain.PersonalChat, error) {
-	ret := _mock.Called(personalChat)
+func (_mock *MockPersonalChatRepository) Update(context1 context.Context, personalChat *domain.PersonalChat) (*domain.PersonalChat, error) {
+	ret := _mock.Called(context1, personalChat)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Update")
@@ -258,18 +264,18 @@ func (_mock *MockPersonalChatRepository) Update(personalChat *domain.PersonalCha
 
 	var r0 *domain.PersonalChat
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(*domain.PersonalChat) (*domain.PersonalChat, error)); ok {
-		return returnFunc(personalChat)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *domain.PersonalChat) (*domain.PersonalChat, error)); ok {
+		return returnFunc(context1, personalChat)
 	}
-	if returnFunc, ok := ret.Get(0).(func(*domain.PersonalChat) *domain.PersonalChat); ok {
-		r0 = returnFunc(personalChat)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *domain.PersonalChat) *domain.PersonalChat); ok {
+		r0 = returnFunc(context1, personalChat)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*domain.PersonalChat)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(*domain.PersonalChat) error); ok {
-		r1 = returnFunc(personalChat)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, *domain.PersonalChat) error); ok {
+		r1 = returnFunc(context1, personalChat)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -282,14 +288,15 @@ type MockPersonalChatRepository_Update_Call struct {
 }
 
 // Update is a helper method to define mock.On call
+//   - context1
 //   - personalChat
-func (_e *MockPersonalChatRepository_Expecter) Update(personalChat interface{}) *MockPersonalChatRepository_Update_Call {
-	return &MockPersonalChatRepository_Update_Call{Call: _e.mock.On("Update", personalChat)}
+func (_e *MockPersonalChatRepository_Expecter) Update(context1 interface{}, personalChat interface{}) *MockPersonalChatRepository_Update_Call {
+	return &MockPersonalChatRepository_Update_Call{Call: _e.mock.On("Update", context1, personalChat)}
 }
 
-func (_c *MockPersonalChatRepository_Update_Call) Run(run func(personalChat *domain.PersonalChat)) *MockPersonalChatRepository_Update_Call {
+func (_c *MockPersonalChatRepository_Update_Call) Run(run func(context1 context.Context, personalChat *domain.PersonalChat)) *MockPersonalChatRepository_Update_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*domain.PersonalChat))
+		run(args[0].(context.Context), args[1].(*domain.PersonalChat))
 	})
 	return _c
 }
@@ -299,7 +306,7 @@ func (_c *MockPersonalChatRepository_Update_Call) Return(personalChat1 *domain.P
 	return _c
 }
 
-func (_c *MockPersonalChatRepository_Update_Call) RunAndReturn(run func(personalChat *domain.PersonalChat) (*domain.PersonalChat, error)) *MockPersonalChatRepository_Update_Call {
+func (_c *MockPersonalChatRepository_Update_Call) RunAndReturn(run func(context1 context.Context, personalChat *domain.PersonalChat) (*domain.PersonalChat, error)) *MockPersonalChatRepository_Update_Call {
 	_c.Call.Return(run)
 	return _c
 }

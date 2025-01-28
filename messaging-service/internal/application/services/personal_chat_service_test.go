@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"testing"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/repository"
@@ -18,18 +19,18 @@ func TestPersonalChat_CreateChat(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		repo := mocks.NewMockPersonalChatRepository(t)
 		repo.EXPECT().
-			FindByMembers(mock.Anything).
+			FindByMembers(mock.Anything, mock.Anything).
 			Return(nil, repository.ErrNotFound)
 
 		repo.EXPECT().
-			Create(mock.Anything).
-			RunAndReturn(func(chat *domain.PersonalChat) (*domain.PersonalChat, error) {
+			Create(mock.Anything, mock.Anything).
+			RunAndReturn(func(_ context.Context, chat *domain.PersonalChat) (*domain.PersonalChat, error) {
 				return chat, nil
 			})
 
 		service := NewPersonalChatService(repo)
 
-		chat, err := service.CreateChat([2]uuid.UUID{user1, user2})
+		chat, err := service.CreateChat(context.Background(), [2]uuid.UUID{user1, user2})
 
 		require.NoError(t, err)
 		require.Equal(t, [2]uuid.UUID{user1, user2}, chat.Members)
@@ -42,18 +43,18 @@ func TestPersonalChat_CreateChat(t *testing.T) {
 	t.Run("SecretSuccess", func(t *testing.T) {
 		repo := mocks.NewMockPersonalChatRepository(t)
 		repo.EXPECT().
-			FindByMembers(mock.Anything).
+			FindByMembers(mock.Anything, mock.Anything).
 			Return(nil, repository.ErrNotFound)
 
 		repo.EXPECT().
-			Create(mock.Anything).
-			RunAndReturn(func(chat *domain.PersonalChat) (*domain.PersonalChat, error) {
+			Create(mock.Anything, mock.Anything).
+			RunAndReturn(func(_ context.Context, chat *domain.PersonalChat) (*domain.PersonalChat, error) {
 				return chat, nil
 			})
 
 		service := NewPersonalChatService(repo)
 
-		chat, err := service.CreateSecretChat([2]uuid.UUID{user1, user2})
+		chat, err := service.CreateSecretChat(context.Background(), [2]uuid.UUID{user1, user2})
 
 		require.NoError(t, err)
 		require.Equal(t, [2]uuid.UUID{user1, user2}, chat.Members)
@@ -66,12 +67,12 @@ func TestPersonalChat_CreateChat(t *testing.T) {
 	t.Run("AlreadyExists", func(t *testing.T) {
 		repo := mocks.NewMockPersonalChatRepository(t)
 		repo.EXPECT().
-			FindByMembers(mock.Anything).
+			FindByMembers(mock.Anything, mock.Anything).
 			Return(&domain.PersonalChat{}, nil)
 
 		service := NewPersonalChatService(repo)
 
-		_, err := service.CreateChat([2]uuid.UUID{user1, user2})
+		_, err := service.CreateChat(context.Background(), [2]uuid.UUID{user1, user2})
 
 		require.ErrorIs(t, err, ErrChatAlreadyExists)
 
