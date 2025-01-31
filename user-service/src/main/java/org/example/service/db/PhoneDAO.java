@@ -1,5 +1,7 @@
 package org.example.service.db;
 
+import org.example.service.entity.User;
+import org.example.service.entity.UserPhoneVisibility;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -11,12 +13,12 @@ import java.util.List;
 public class PhoneDAO {
     SessionFactory factory = new Configuration().configure().addAnnotatedClass(User.class).buildSessionFactory();
 
-    public void AddUserVisible(String owner_id, String viewer_id) {
+    public void AddUserVisible(org.example.service.User.UUID owner_id, org.example.service.User.UUID viewer_id) {
         Session session = factory.openSession();
         Transaction tx = null;
         try {
             UserPhoneVisibility user = session.get(UserPhoneVisibility.class, owner_id);
-            List<String> viewers_ids = user.getViewerId();
+            List<org.example.service.User.UUID> viewers_ids = user.getViewerId();
             viewers_ids.add(viewer_id);
             user.setViewerId(viewers_ids);
             session.merge(user);
@@ -28,12 +30,12 @@ public class PhoneDAO {
         session.close();
     }
 
-    public void DeleteUserVisible(String owner_id, String viewer_id) {
+    public void DeleteUserVisible(org.example.service.User.UUID owner_id, org.example.service.User.UUID viewer_id) {
         Session session = factory.openSession();
         Transaction tx = null;
         try {
             UserPhoneVisibility user = session.get(UserPhoneVisibility.class, owner_id);
-            List<String> viewers_ids = user.getViewerId();
+            List<org.example.service.User.UUID> viewers_ids = user.getViewerId();
             viewers_ids.remove(viewer_id);
             user.setViewerId(viewers_ids);
             session.merge(user);
@@ -45,10 +47,10 @@ public class PhoneDAO {
         session.close();
     }
 
-    public List<String> getVisibleViewers(String owner_id) {
+    public List<org.example.service.User.UUID> getVisibleViewers(org.example.service.User.UUID owner_id) {
         Session session = factory.openSession();
         Transaction tx = null;
-        List<String> viewers_ids = null;
+        List<org.example.service.User.UUID> viewers_ids = null;
         try {
             viewers_ids = session.get(UserPhoneVisibility.class, owner_id).getViewerId();
             tx.commit();

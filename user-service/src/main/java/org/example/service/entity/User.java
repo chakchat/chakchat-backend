@@ -1,4 +1,4 @@
-package org.example.service.db;
+package org.example.service.entity;
 
 import jakarta.persistence.*;
 import jakarta.persistence.EnumType;
@@ -13,7 +13,7 @@ public class User {
     @Id
     @Column(name = "id")
     @GeneratedValue
-    private String id;
+    private org.example.service.User.UUID id;
 
     @Column(name = "username")
     private String username;
@@ -47,8 +47,7 @@ public class User {
         Some
     }
     public User() {}
-    public User(String id, String username, String name, String phone, String photo, Date dateOfBirth) {
-        this.id = id;
+    public User(String username, String name, String phone, String photo, Date dateOfBirth) {
         this.username = username;
         this.name = name;
         this.phone = phone;
@@ -56,11 +55,17 @@ public class User {
         this.dateOfBirth = dateOfBirth;
     }
 
-    public String getId() {
+    public User(String phone, String username, String name) {
+        this.username = username;
+        this.name = name;
+        this.phone = phone;
+    }
+
+    public org.example.service.User.UUID getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(org.example.service.User.UUID id) {
         this.id = id;
     }
 
