@@ -1,6 +1,7 @@
-package org.example.service.db;
+package org.example.service.entity;
 
 import jakarta.persistence.*;
+import org.example.service.User;
 
 import java.util.List;
 
@@ -11,30 +12,30 @@ public class UserPhoneVisibility {
     @Id
     @Column(name = "owner_id")
     @GeneratedValue
-    private String ownerId;
+    private User.UUID ownerId;
 
     @ElementCollection
-    private List<String> viewerId;
+    private List<User.UUID> viewerId;
 
     public UserPhoneVisibility() {}
-    public UserPhoneVisibility(String ownerId, List<String> viewerId) {
+    public UserPhoneVisibility(User.UUID ownerId, List<User.UUID> viewerId) {
         this.ownerId = ownerId;
         this.viewerId = viewerId;
     }
 
-    public String getOwnerId() {
+    public User.UUID getOwnerId() {
         return ownerId;
     }
 
-    public void setOwnerId(String ownerId) {
+    public void setOwnerId(User.UUID ownerId) {
         this.ownerId = ownerId;
     }
 
-    public List<String> getViewerId() {
+    public List<User.UUID> getViewerId() {
         return viewerId;
     }
 
-    public void setViewerId(List<String> viewerId) {
+    public void setViewerId(List<User.UUID> viewerId) {
         this.viewerId = viewerId;
     }
 }
