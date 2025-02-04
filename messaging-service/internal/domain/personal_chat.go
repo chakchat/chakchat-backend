@@ -3,9 +3,6 @@ package domain
 import (
 	"errors"
 	"slices"
-	"time"
-
-	"github.com/google/uuid"
 )
 
 var (
@@ -16,25 +13,13 @@ var (
 	ErrChatWithMyself = errors.New("chat with myself")
 )
 
-type (
-	ChatID    uuid.UUID
-	UserID    uuid.UUID
-	Timestamp int64
-	URL       string
-)
-
-var TimeFunc = func() time.Time {
-	return time.Now()
-}
-
 type PersonalChat struct {
-	ID      ChatID
+	Chat
 	Members [2]UserID
 
 	Secret    bool
 	Blocked   bool
 	BlockedBy []UserID
-	CreatedAt Timestamp
 }
 
 func NewPersonalChat(users [2]UserID) (*PersonalChat, error) {
@@ -43,29 +28,13 @@ func NewPersonalChat(users [2]UserID) (*PersonalChat, error) {
 	}
 
 	return &PersonalChat{
-		ID:        ChatID(uuid.New()),
+		Chat: Chat{
+			ChatID: NewChatID(),
+		},
 		Members:   users,
 		Secret:    false,
 		Blocked:   false,
 		BlockedBy: nil,
-		// TODO: idk maybe it should be set when creating in the database.
-		CreatedAt: Timestamp(TimeFunc().Unix()),
-	}, nil
-}
-
-func NewSecretPersonalChat(users [2]UserID) (*PersonalChat, error) {
-	if users[0] == users[1] {
-		return nil, ErrChatWithMyself
-	}
-
-	return &PersonalChat{
-		ID:        ChatID(uuid.New()),
-		Members:   users,
-		Secret:    true,
-		Blocked:   false,
-		BlockedBy: nil,
-		// TODO: idk maybe it should be set when creating in the database.
-		CreatedAt: Timestamp(TimeFunc().Unix()),
 	}, nil
 }
 
