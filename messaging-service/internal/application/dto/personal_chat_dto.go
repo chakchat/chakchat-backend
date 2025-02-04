@@ -26,7 +26,6 @@ func NewPersonalChatDTO(chat *personal.PersonalChat) PersonalChatDTO {
 			uuid.UUID(chat.Members[0]),
 			uuid.UUID(chat.Members[1]),
 		},
-		Blocked:   chat.Blocked,
 		BlockedBy: blockedBy,
 		CreatedAt: int64(chat.CreatedAt),
 	}

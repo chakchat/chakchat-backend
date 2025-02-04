@@ -21,14 +21,14 @@ const (
 	DeleteModeForAll
 )
 
-type UpdateDeletion struct {
+type UpdateDeleted struct {
 	Update
 	DeletedID UpdateID
 	Mode      DeleteMode
 }
 
-func NewUpdateDeletion(u *Update, mode DeleteMode) UpdateDeletion {
-	return UpdateDeletion{
+func NewUpdateDeleted(u *Update, mode DeleteMode) UpdateDeleted {
+	return UpdateDeleted{
 		DeletedID: u.UpdateID,
 		Mode:      mode,
 	}

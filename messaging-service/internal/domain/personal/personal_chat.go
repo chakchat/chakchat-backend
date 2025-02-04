@@ -19,7 +19,6 @@ type PersonalChat struct {
 	Members [2]domain.UserID
 
 	Secret    bool
-	Blocked   bool
 	BlockedBy []domain.UserID
 }
 
@@ -34,7 +33,6 @@ func NewPersonalChat(users [2]domain.UserID) (*PersonalChat, error) {
 		},
 		Members:   users,
 		Secret:    false,
-		Blocked:   false,
 		BlockedBy: nil,
 	}, nil
 }
@@ -50,10 +48,6 @@ func (c *PersonalChat) BlockBy(user domain.UserID) error {
 
 	c.BlockedBy = append(c.BlockedBy, user)
 
-	// This condition is only for producing an event in the future
-	if !c.Blocked {
-		c.Blocked = true
-	}
 	return nil
 }
 
@@ -70,10 +64,11 @@ func (c *PersonalChat) UnblockBy(user domain.UserID) error {
 		return member == user
 	})
 
-	if c.Blocked && len(c.BlockedBy) == 0 {
-		c.Blocked = false
-	}
 	return nil
+}
+
+func (c *PersonalChat) Blocked() bool {
+	return len(c.BlockedBy) > 0
 }
 
 func (c *PersonalChat) IsMember(user domain.UserID) bool {
