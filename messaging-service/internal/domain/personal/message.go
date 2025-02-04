@@ -14,6 +14,7 @@ const (
 var (
 	ErrTooMuchTextRunes = errors.New("too much runes in text")
 	ErrChatBlocked      = errors.New("chat is blocked")
+	ErrTextEmpty        = errors.New("the text is empty")
 )
 
 type TextMessage struct {
@@ -60,6 +61,10 @@ func (c *PersonalChat) EditTextMessage(sender domain.UserID, m *TextMessage, new
 		return domain.ErrUserNotSender
 	}
 
+	if m.DeletedFor(sender) {
+		return domain.ErrUpdateDeleted
+	}
+
 	if err := validateText(newText); err != nil {
 		return err
 	}
@@ -84,13 +89,11 @@ func (c *PersonalChat) DeleteTextMessage(sender domain.UserID, m *TextMessage, m
 		return domain.ErrUpdateNotFromChat
 	}
 
-	m.Deleted = &domain.UpdateDeleted{
-		Update: domain.Update{
-			ChatID:   c.ChatID,
-			SenderID: sender,
-		},
-		Mode: mode,
+	if m.DeletedFor(sender) {
+		return domain.ErrUpdateDeleted
 	}
+
+	m.AddDeletion(sender, mode)
 	return nil
 }
 
@@ -105,6 +108,9 @@ func (c *PersonalChat) validateCanSend(sender domain.UserID) error {
 }
 
 func validateText(text string) error {
+	if text == "" {
+		return ErrTextEmpty
+	}
 	if utf8.RuneCountInString(text) > MaxTextRunesCount {
 		return ErrTooMuchTextRunes
 	}

@@ -18,7 +18,6 @@ type PersonalChat struct {
 	domain.Chat
 	Members [2]domain.UserID
 
-	Secret    bool
 	BlockedBy []domain.UserID
 }
 
@@ -32,7 +31,6 @@ func NewPersonalChat(users [2]domain.UserID) (*PersonalChat, error) {
 			ChatID: domain.NewChatID(),
 		},
 		Members:   users,
-		Secret:    false,
 		BlockedBy: nil,
 	}, nil
 }
