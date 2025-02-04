@@ -1,8 +1,10 @@
-package domain
+package group
 
 import (
 	"errors"
 	"slices"
+
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 )
 
 const (
@@ -26,16 +28,16 @@ var (
 type URL string
 
 type GroupChat struct {
-	Chat
-	Admin   UserID
-	Members []UserID
+	domain.Chat
+	Admin   domain.UserID
+	Members []domain.UserID
 
 	Name        string
 	Description string
 	GroupPhoto  URL
 }
 
-func NewGroupChat(admin UserID, members []UserID, name string) (*GroupChat, error) {
+func NewGroupChat(admin domain.UserID, members []domain.UserID, name string) (*GroupChat, error) {
 	if err := validateGroupInfo(name, ""); err != nil {
 		return nil, err
 	}
@@ -47,8 +49,8 @@ func NewGroupChat(admin UserID, members []UserID, name string) (*GroupChat, erro
 	normMembers := normilizeMembers(members)
 
 	return &GroupChat{
-		Chat: Chat{
-			ChatID: NewChatID(),
+		Chat: domain.Chat{
+			ChatID: domain.NewChatID(),
 		},
 		Admin:       admin,
 		Members:     normMembers,
@@ -82,7 +84,7 @@ func (g *GroupChat) DeletePhoto() error {
 	return nil
 }
 
-func (g *GroupChat) AddMember(newMember UserID) error {
+func (g *GroupChat) AddMember(newMember domain.UserID) error {
 	if g.IsMember(newMember) {
 		return ErrUserAlreadyMember
 	}
@@ -91,27 +93,27 @@ func (g *GroupChat) AddMember(newMember UserID) error {
 	return nil
 }
 
-func (g *GroupChat) DeleteMember(member UserID) error {
+func (g *GroupChat) DeleteMember(member domain.UserID) error {
 	if g.Admin == member {
 		return ErrMemberIsAdmin
 	}
 
 	i := slices.Index(g.Members, member)
 	if i == -1 {
-		return ErrUserNotMember
+		return domain.ErrUserNotMember
 	}
 
 	g.Members = slices.Delete(g.Members, i, i+1)
 	return nil
 }
 
-func (g *GroupChat) IsMember(user UserID) bool {
+func (g *GroupChat) IsMember(user domain.UserID) bool {
 	return slices.Contains(g.Members, user)
 }
 
-func normilizeMembers(members []UserID) []UserID {
-	met := make(map[UserID]struct{}, len(members))
-	normMembers := make([]UserID, 0, len(members))
+func normilizeMembers(members []domain.UserID) []domain.UserID {
+	met := make(map[domain.UserID]struct{}, len(members))
+	normMembers := make([]domain.UserID, 0, len(members))
 
 	for _, member := range members {
 		if _, ok := met[member]; !ok {

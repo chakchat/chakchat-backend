@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/group"
 	"github.com/google/uuid"
 )
 
@@ -16,7 +16,7 @@ type GroupChatDTO struct {
 	CreatedAt   int64
 }
 
-func NewGroupChatDTO(g *domain.GroupChat) GroupChatDTO {
+func NewGroupChatDTO(g *group.GroupChat) GroupChatDTO {
 	members := make([]uuid.UUID, len(g.Members))
 	for i, u := range g.Members {
 		members[i] = uuid.UUID(u)

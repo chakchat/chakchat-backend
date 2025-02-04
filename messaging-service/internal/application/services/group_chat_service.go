@@ -7,6 +7,7 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/group"
 	"github.com/google/uuid"
 )
 
@@ -45,26 +46,26 @@ func (s *GroupChatService) CreateGroup(ctx context.Context, req CreateGroupReque
 		members[i] = domain.UserID(m)
 	}
 
-	group, err := domain.NewGroupChat(domain.UserID(req.Admin), members, req.Name)
+	g, err := group.NewGroupChat(domain.UserID(req.Admin), members, req.Name)
 
 	switch {
-	case errors.Is(err, domain.ErrAdminNotMember):
+	case errors.Is(err, group.ErrAdminNotMember):
 		return nil, ErrAdminNotMember
-	case errors.Is(err, domain.ErrGroupNameEmpty):
+	case errors.Is(err, group.ErrGroupNameEmpty):
 		return nil, ErrGroupNameEmpty
-	case errors.Is(err, domain.ErrGroupNameTooLong):
+	case errors.Is(err, group.ErrGroupNameTooLong):
 		return nil, ErrGroupNameTooLong
 	case err != nil:
 		return nil, errors.Join(ErrInternal, err)
 	}
 
-	group, err = s.repo.Create(ctx, group)
+	g, err = s.repo.Create(ctx, g)
 	if err != nil {
 		return nil, errors.Join(ErrInternal, err)
 	}
 
-	groupDto := dto.NewGroupChatDTO(group)
-	return &groupDto, nil
+	gDto := dto.NewGroupChatDTO(g)
+	return &gDto, nil
 }
 
 type UpdateGroupInfoRequest struct {
@@ -74,7 +75,7 @@ type UpdateGroupInfoRequest struct {
 }
 
 func (s *GroupChatService) UpdateGroupInfo(ctx context.Context, req UpdateGroupInfoRequest) (*dto.GroupChatDTO, error) {
-	group, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
+	g, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, ErrChatNotFound
@@ -82,26 +83,26 @@ func (s *GroupChatService) UpdateGroupInfo(ctx context.Context, req UpdateGroupI
 		return nil, errors.Join(ErrInternal, err)
 	}
 
-	err = group.UpdateInfo(req.Name, req.Description)
+	err = g.UpdateInfo(req.Name, req.Description)
 
 	switch {
-	case errors.Is(err, domain.ErrGroupNameEmpty):
+	case errors.Is(err, group.ErrGroupNameEmpty):
 		return nil, ErrGroupNameEmpty
-	case errors.Is(err, domain.ErrGroupNameTooLong):
+	case errors.Is(err, group.ErrGroupNameTooLong):
 		return nil, ErrGroupNameTooLong
-	case errors.Is(err, domain.ErrGroupDescTooLong):
+	case errors.Is(err, group.ErrGroupDescTooLong):
 		return nil, ErrGroupDescTooLong
 	case err != nil:
 		return nil, errors.Join(ErrInternal, err)
 	}
 
-	group, err = s.repo.Update(ctx, group)
+	g, err = s.repo.Update(ctx, g)
 	if err != nil {
 		return nil, errors.Join(ErrInternal, err)
 	}
 
-	groupDto := dto.NewGroupChatDTO(group)
-	return &groupDto, nil
+	gDto := dto.NewGroupChatDTO(g)
+	return &gDto, nil
 }
 
 func (s *GroupChatService) DeleteGroup(ctx context.Context, chatId uuid.UUID) error {

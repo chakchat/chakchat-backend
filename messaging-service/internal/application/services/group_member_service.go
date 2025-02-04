@@ -7,6 +7,7 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/group"
 	"github.com/google/uuid"
 )
 
@@ -21,43 +22,43 @@ func NewGroupMembersService(repo repository.GroupChatRepository) *GroupMemberSer
 }
 
 func (s *GroupMemberService) AddMember(ctx context.Context, chatId, userId uuid.UUID) (*dto.GroupChatDTO, error) {
-	group, err := s.repo.FindById(ctx, domain.ChatID(chatId))
+	g, err := s.repo.FindById(ctx, domain.ChatID(chatId))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, ErrChatNotFound
 		}
 	}
 
-	err = group.AddMember(domain.UserID(userId))
+	err = g.AddMember(domain.UserID(userId))
 
 	if err != nil {
-		if errors.Is(err, domain.ErrUserAlreadyMember) {
+		if errors.Is(err, group.ErrUserAlreadyMember) {
 			return nil, ErrUserAlreadyMember
 		}
 		return nil, errors.Join(ErrInternal, err)
 	}
 
-	group, err = s.repo.Update(ctx, group)
+	g, err = s.repo.Update(ctx, g)
 	if err != nil {
 		return nil, errors.Join(ErrInternal, err)
 	}
 
-	groupDto := dto.NewGroupChatDTO(group)
-	return &groupDto, nil
+	gDto := dto.NewGroupChatDTO(g)
+	return &gDto, nil
 }
 
 func (s *GroupMemberService) DeleteMember(ctx context.Context, chatId, memberId uuid.UUID) (*dto.GroupChatDTO, error) {
-	group, err := s.repo.FindById(ctx, domain.ChatID(chatId))
+	g, err := s.repo.FindById(ctx, domain.ChatID(chatId))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, ErrChatNotFound
 		}
 	}
 
-	err = group.DeleteMember(domain.UserID(memberId))
+	err = g.DeleteMember(domain.UserID(memberId))
 
 	switch {
-	case errors.Is(err, domain.ErrMemberIsAdmin):
+	case errors.Is(err, group.ErrMemberIsAdmin):
 		return nil, ErrMemberIsAdmin
 	case errors.Is(err, domain.ErrUserNotMember):
 		return nil, ErrUserNotMember
@@ -65,11 +66,11 @@ func (s *GroupMemberService) DeleteMember(ctx context.Context, chatId, memberId 
 		return nil, errors.Join(ErrInternal, err)
 	}
 
-	group, err = s.repo.Update(ctx, group)
+	g, err = s.repo.Update(ctx, g)
 	if err != nil {
 		return nil, errors.Join(ErrInternal, err)
 	}
 
-	groupDto := dto.NewGroupChatDTO(group)
-	return &groupDto, nil
+	gDto := dto.NewGroupChatDTO(g)
+	return &gDto, nil
 }

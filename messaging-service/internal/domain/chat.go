@@ -1,17 +1,30 @@
 package domain
 
-import "github.com/google/uuid"
+import (
+	"errors"
+
+	"github.com/google/uuid"
+)
 
 type (
 	ChatID uuid.UUID
 	UserID uuid.UUID
 )
 
-type Chat struct {
-	ChatID    ChatID
-	CreatedAt Timestamp
+func NewUserID(id string) (UserID, error) {
+	userId, err := uuid.Parse(id)
+	return UserID(userId), err
 }
 
 func NewChatID() ChatID {
 	return ChatID(uuid.New())
+}
+
+var (
+	ErrUserNotMember = errors.New("user is not member of a chat")
+)
+
+type Chat struct {
+	ChatID    ChatID
+	CreatedAt Timestamp
 }

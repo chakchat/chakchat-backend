@@ -1,8 +1,16 @@
 package domain
 
+import "errors"
+
 type (
 	UpdateID  uint64
 	Timestamp int64
+)
+
+var (
+	ErrUserNotSender     = errors.New("user is not update's sender")
+	ErrUpdateNotFromChat = errors.New("update is not from this chat")
+	ErrUpdateDeleted     = errors.New("update is deleted")
 )
 
 type Update struct {
@@ -11,7 +19,8 @@ type Update struct {
 	ChatID   ChatID
 	SenderID UserID
 
-	SentAt Timestamp
+	CreatedAt Timestamp
+	Deleted   []UpdateDeleted
 }
 
 type DeleteMode int
@@ -21,15 +30,39 @@ const (
 	DeleteModeForAll
 )
 
-type UpdateDeletion struct {
+// Caution: SenderID here is deletion update's sender but not a original update's sender
+type UpdateDeleted struct {
 	Update
 	DeletedID UpdateID
 	Mode      DeleteMode
 }
 
-func NewUpdateDeletion(u *Update, mode DeleteMode) UpdateDeletion {
-	return UpdateDeletion{
+func (u *Update) DeletedFor(user UserID) bool {
+	for _, d := range u.Deleted {
+		if d.Mode == DeleteModeForSender && d.SenderID == user {
+			return true
+		}
+		if d.Mode == DeleteModeForAll {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (u *Update) AddDeletion(sender UserID, mode DeleteMode) {
+	d := UpdateDeleted{
+		Update: Update{
+			ChatID:   u.ChatID,
+			SenderID: sender,
+		},
 		DeletedID: u.UpdateID,
 		Mode:      mode,
+	}
+
+	if mode == DeleteModeForAll {
+		u.Deleted = []UpdateDeleted{d}
+	} else {
+		u.Deleted = append(u.Deleted, d)
 	}
 }
