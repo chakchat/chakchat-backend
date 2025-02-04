@@ -23,6 +23,22 @@ func (c *PersonalChat) NewReactionOnText(
 	m *TextMessage,
 	reaction ReactionType,
 ) (Reaction, error) {
+	return c.newReaction(sender, &m.Update, reaction)
+}
+
+func (c *PersonalChat) NewReactionOnFile(
+	sender domain.UserID,
+	m *FileMessage,
+	reaction ReactionType,
+) (Reaction, error) {
+	return c.newReaction(sender, &m.Update, reaction)
+}
+
+func (c *PersonalChat) newReaction(
+	sender domain.UserID,
+	m *domain.Update,
+	reaction ReactionType,
+) (Reaction, error) {
 	if err := c.validateCanSend(sender); err != nil {
 		return Reaction{}, err
 	}
