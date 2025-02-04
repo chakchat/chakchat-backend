@@ -7,6 +7,7 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/personal"
 	"github.com/google/uuid"
 )
 
@@ -44,7 +45,7 @@ func (s *PersonalChatService) BlockChat(ctx context.Context, userId, chatId uuid
 	err = chat.BlockBy(domain.UserID(userId))
 
 	if err != nil {
-		if errors.Is(err, domain.ErrAlreadyBlocked) {
+		if errors.Is(err, personal.ErrAlreadyBlocked) {
 			return ErrChatAlreadyBlocked
 		}
 		if errors.Is(err, domain.ErrUserNotMember) {
@@ -72,7 +73,7 @@ func (s *PersonalChatService) UnblockChat(ctx context.Context, userId, chatId uu
 	err = chat.UnblockBy(domain.UserID(userId))
 
 	if err != nil {
-		if errors.Is(err, domain.ErrAlreadyUnblocked) {
+		if errors.Is(err, personal.ErrAlreadyUnblocked) {
 			return ErrChatAlreadyUnblocked
 		}
 		if errors.Is(err, domain.ErrUserNotMember) {
@@ -95,10 +96,10 @@ func (s *PersonalChatService) CreateChat(ctx context.Context, members [2]uuid.UU
 		return nil, err
 	}
 
-	chat, err := domain.NewPersonalChat(domainMembers)
+	chat, err := personal.NewPersonalChat(domainMembers)
 
 	if err != nil {
-		if errors.Is(err, domain.ErrChatWithMyself) {
+		if errors.Is(err, personal.ErrChatWithMyself) {
 			return nil, ErrChatWithMyself
 		}
 		return nil, errors.Join(ErrInternal, err)

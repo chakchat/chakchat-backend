@@ -1,35 +1,36 @@
-package domain
+package personal
 
 import (
 	"errors"
 	"slices"
+
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 )
 
 var (
 	ErrAlreadyBlocked   = errors.New("chat is already blocked")
 	ErrAlreadyUnblocked = errors.New("chat is already unblocked")
-	ErrUserNotMember    = errors.New("user is not member of a chat")
 
 	ErrChatWithMyself = errors.New("chat with myself")
 )
 
 type PersonalChat struct {
-	Chat
-	Members [2]UserID
+	domain.Chat
+	Members [2]domain.UserID
 
 	Secret    bool
 	Blocked   bool
-	BlockedBy []UserID
+	BlockedBy []domain.UserID
 }
 
-func NewPersonalChat(users [2]UserID) (*PersonalChat, error) {
+func NewPersonalChat(users [2]domain.UserID) (*PersonalChat, error) {
 	if users[0] == users[1] {
 		return nil, ErrChatWithMyself
 	}
 
 	return &PersonalChat{
-		Chat: Chat{
-			ChatID: NewChatID(),
+		Chat: domain.Chat{
+			ChatID: domain.NewChatID(),
 		},
 		Members:   users,
 		Secret:    false,
@@ -38,9 +39,9 @@ func NewPersonalChat(users [2]UserID) (*PersonalChat, error) {
 	}, nil
 }
 
-func (c *PersonalChat) BlockBy(user UserID) error {
+func (c *PersonalChat) BlockBy(user domain.UserID) error {
 	if !c.IsMember(user) {
-		return ErrUserNotMember
+		return domain.ErrUserNotMember
 	}
 
 	if slices.Contains(c.BlockedBy, user) {
@@ -56,16 +57,16 @@ func (c *PersonalChat) BlockBy(user UserID) error {
 	return nil
 }
 
-func (c *PersonalChat) UnblockBy(user UserID) error {
+func (c *PersonalChat) UnblockBy(user domain.UserID) error {
 	if !c.IsMember(user) {
-		return ErrUserNotMember
+		return domain.ErrUserNotMember
 	}
 
 	if !slices.Contains(c.BlockedBy, user) {
 		return ErrAlreadyUnblocked
 	}
 
-	c.BlockedBy = slices.DeleteFunc(c.BlockedBy, func(member UserID) bool {
+	c.BlockedBy = slices.DeleteFunc(c.BlockedBy, func(member domain.UserID) bool {
 		return member == user
 	})
 
@@ -75,6 +76,6 @@ func (c *PersonalChat) UnblockBy(user UserID) error {
 	return nil
 }
 
-func (c *PersonalChat) IsMember(user UserID) bool {
+func (c *PersonalChat) IsMember(user domain.UserID) bool {
 	return user == c.Members[0] || user == c.Members[1]
 }

@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/personal"
 	"github.com/google/uuid"
 )
 
@@ -14,7 +14,7 @@ type PersonalChatDTO struct {
 	CreatedAt int64
 }
 
-func NewPersonalChatDTO(chat *domain.PersonalChat) PersonalChatDTO {
+func NewPersonalChatDTO(chat *personal.PersonalChat) PersonalChatDTO {
 	blockedBy := make([]uuid.UUID, len(chat.BlockedBy))
 	for i, u := range chat.BlockedBy {
 		blockedBy[i] = uuid.UUID(u)

@@ -6,7 +6,7 @@ import (
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/repository/mocks"
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/personal"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -24,7 +24,7 @@ func TestPersonalChat_CreateChat(t *testing.T) {
 
 		repo.EXPECT().
 			Create(mock.Anything, mock.Anything).
-			RunAndReturn(func(_ context.Context, chat *domain.PersonalChat) (*domain.PersonalChat, error) {
+			RunAndReturn(func(_ context.Context, chat *personal.PersonalChat) (*personal.PersonalChat, error) {
 				return chat, nil
 			})
 
@@ -43,7 +43,7 @@ func TestPersonalChat_CreateChat(t *testing.T) {
 		repo := mocks.NewMockPersonalChatRepository(t)
 		repo.EXPECT().
 			FindByMembers(mock.Anything, mock.Anything).
-			Return(&domain.PersonalChat{}, nil)
+			Return(&personal.PersonalChat{}, nil)
 
 		service := NewPersonalChatService(repo)
 

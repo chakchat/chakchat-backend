@@ -8,6 +8,7 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/external"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/group"
 	"github.com/google/uuid"
 )
 
@@ -42,7 +43,7 @@ func NewGroupPhotoService(repo repository.GroupChatRepository, files external.Fi
 }
 
 func (s *GroupPhotoService) UpdatePhoto(ctx context.Context, groupId, fileId uuid.UUID) (*dto.GroupChatDTO, error) {
-	group, err := s.repo.FindById(ctx, domain.ChatID(groupId))
+	g, err := s.repo.FindById(ctx, domain.ChatID(groupId))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, ErrChatNotFound
@@ -62,19 +63,19 @@ func (s *GroupPhotoService) UpdatePhoto(ctx context.Context, groupId, fileId uui
 		return nil, err
 	}
 
-	err = group.UpdatePhoto(domain.URL(file.FileUrl))
+	err = g.UpdatePhoto(group.URL(file.FileUrl))
 
 	if err != nil {
 		return nil, errors.Join(ErrInternal, err)
 	}
 
-	group, err = s.repo.Update(ctx, group)
+	g, err = s.repo.Update(ctx, g)
 	if err != nil {
 		return nil, errors.Join(ErrInternal, err)
 	}
 
-	groupDto := dto.NewGroupChatDTO(group)
-	return &groupDto, nil
+	gDto := dto.NewGroupChatDTO(g)
+	return &gDto, nil
 }
 
 func (s *GroupPhotoService) validatePhoto(photo *external.FileMeta) error {
@@ -90,7 +91,7 @@ func (s *GroupPhotoService) validatePhoto(photo *external.FileMeta) error {
 }
 
 func (s *GroupPhotoService) DeletePhoto(ctx context.Context, groupId uuid.UUID) (*dto.GroupChatDTO, error) {
-	group, err := s.repo.FindById(ctx, domain.ChatID(groupId))
+	g, err := s.repo.FindById(ctx, domain.ChatID(groupId))
 	if err != nil {
 		if errors.Is(err, external.ErrFileNotFound) {
 			return nil, ErrFileNotFound
@@ -98,19 +99,19 @@ func (s *GroupPhotoService) DeletePhoto(ctx context.Context, groupId uuid.UUID) 
 		return nil, errors.Join(ErrInternal, err)
 	}
 
-	err = group.DeletePhoto()
+	err = g.DeletePhoto()
 
 	if err != nil {
-		if errors.Is(err, domain.ErrGroupPhotoEmpty) {
+		if errors.Is(err, group.ErrGroupPhotoEmpty) {
 			return nil, ErrGroupPhotoEmpty
 		}
 	}
 
-	group, err = s.repo.Update(ctx, group)
+	g, err = s.repo.Update(ctx, g)
 	if err != nil {
 		return nil, errors.Join(ErrInternal, err)
 	}
 
-	groupDto := dto.NewGroupChatDTO(group)
-	return &groupDto, nil
+	gDto := dto.NewGroupChatDTO(g)
+	return &gDto, nil
 }
