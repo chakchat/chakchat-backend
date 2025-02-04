@@ -1,8 +1,15 @@
 package domain
 
+import "errors"
+
 type (
 	UpdateID  uint64
 	Timestamp int64
+)
+
+var (
+	ErrUserNotSender     = errors.New("user is not update's sender")
+	ErrUpdateNotFromChat = errors.New("update is not from this chat")
 )
 
 type Update struct {
@@ -11,7 +18,8 @@ type Update struct {
 	ChatID   ChatID
 	SenderID UserID
 
-	SentAt Timestamp
+	CreatedAt Timestamp
+	Deleted   *UpdateDeleted
 }
 
 type DeleteMode int
@@ -25,11 +33,4 @@ type UpdateDeleted struct {
 	Update
 	DeletedID UpdateID
 	Mode      DeleteMode
-}
-
-func NewUpdateDeleted(u *Update, mode DeleteMode) UpdateDeleted {
-	return UpdateDeleted{
-		DeletedID: u.UpdateID,
-		Mode:      mode,
-	}
 }
