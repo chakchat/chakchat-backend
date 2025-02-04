@@ -9,7 +9,6 @@ type PersonalChatDTO struct {
 	ID      uuid.UUID
 	Members [2]uuid.UUID
 
-	Secret    bool
 	Blocked   bool
 	BlockedBy []uuid.UUID
 	CreatedAt int64
@@ -22,12 +21,11 @@ func NewPersonalChatDTO(chat *domain.PersonalChat) PersonalChatDTO {
 	}
 
 	return PersonalChatDTO{
-		ID: uuid.UUID(chat.ID),
+		ID: uuid.UUID(chat.ChatID),
 		Members: [2]uuid.UUID{
 			uuid.UUID(chat.Members[0]),
 			uuid.UUID(chat.Members[1]),
 		},
-		Secret:    chat.Secret,
 		Blocked:   chat.Blocked,
 		BlockedBy: blockedBy,
 		CreatedAt: int64(chat.CreatedAt),

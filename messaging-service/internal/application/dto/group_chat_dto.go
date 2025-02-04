@@ -10,7 +10,6 @@ type GroupChatDTO struct {
 	Admin   uuid.UUID
 	Members []uuid.UUID
 
-	Secret      bool
 	Name        string
 	Description string
 	GroupPhoto  string
@@ -24,10 +23,9 @@ func NewGroupChatDTO(g *domain.GroupChat) GroupChatDTO {
 	}
 
 	return GroupChatDTO{
-		ID:          uuid.UUID(g.ID),
+		ID:          uuid.UUID(g.ChatID),
 		Admin:       uuid.UUID(g.Admin),
 		Members:     members,
-		Secret:      g.Secret,
 		Name:        g.Name,
 		Description: g.Description,
 		GroupPhoto:  string(g.GroupPhoto),

@@ -113,32 +113,6 @@ func (s *PersonalChatService) CreateChat(ctx context.Context, members [2]uuid.UU
 	return &chatDto, nil
 }
 
-func (s *PersonalChatService) CreateSecretChat(ctx context.Context,
-	members [2]uuid.UUID) (*dto.PersonalChatDTO, error) {
-	domainMembers := [2]domain.UserID{domain.UserID(members[0]), domain.UserID(members[1])}
-
-	if err := s.validateChatNotExists(ctx, domainMembers); err != nil {
-		return nil, err
-	}
-
-	chat, err := domain.NewSecretPersonalChat(domainMembers)
-
-	if err != nil {
-		if errors.Is(err, domain.ErrChatWithMyself) {
-			return nil, ErrChatWithMyself
-		}
-		return nil, errors.Join(ErrInternal, err)
-	}
-
-	chat, err = s.repo.Create(ctx, chat)
-	if err != nil {
-		return nil, errors.Join(ErrInternal, err)
-	}
-
-	chatDto := dto.NewPersonalChatDTO(chat)
-	return &chatDto, nil
-}
-
 func (s *PersonalChatService) GetChatById(ctx context.Context,
 	chatId uuid.UUID) (*dto.PersonalChatDTO, error) {
 	chat, err := s.repo.FindById(ctx, domain.ChatID(chatId))
@@ -164,7 +138,7 @@ func (s *PersonalChatService) DeleteChat(ctx context.Context, chatId uuid.UUID, 
 
 	// TODO: put other logic here after you decide what to do with messages
 
-	if err := s.repo.Delete(ctx, chat.ID); err != nil {
+	if err := s.repo.Delete(ctx, chat.ChatID); err != nil {
 		return errors.Join(ErrInternal, err)
 	}
 	return nil

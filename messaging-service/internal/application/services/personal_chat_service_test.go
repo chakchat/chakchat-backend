@@ -35,31 +35,6 @@ func TestPersonalChat_CreateChat(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, [2]uuid.UUID{user1, user2}, chat.Members)
 		require.False(t, chat.Blocked)
-		require.False(t, chat.Secret)
-
-		repo.AssertNumberOfCalls(t, "Create", 1)
-	})
-
-	t.Run("SecretSuccess", func(t *testing.T) {
-		repo := mocks.NewMockPersonalChatRepository(t)
-		repo.EXPECT().
-			FindByMembers(mock.Anything, mock.Anything).
-			Return(nil, repository.ErrNotFound)
-
-		repo.EXPECT().
-			Create(mock.Anything, mock.Anything).
-			RunAndReturn(func(_ context.Context, chat *domain.PersonalChat) (*domain.PersonalChat, error) {
-				return chat, nil
-			})
-
-		service := NewPersonalChatService(repo)
-
-		chat, err := service.CreateSecretChat(context.Background(), [2]uuid.UUID{user1, user2})
-
-		require.NoError(t, err)
-		require.Equal(t, [2]uuid.UUID{user1, user2}, chat.Members)
-		require.False(t, chat.Blocked)
-		require.True(t, chat.Secret)
 
 		repo.AssertNumberOfCalls(t, "Create", 1)
 	})

@@ -67,40 +67,6 @@ func (s *GroupChatService) CreateGroup(ctx context.Context, req CreateGroupReque
 	return &groupDto, nil
 }
 
-type CreateSecretGroupRequest struct {
-	Admin   uuid.UUID
-	Members []uuid.UUID
-	Name    string
-}
-
-func (s *GroupChatService) CreateSecretGroup(ctx context.Context, req CreateSecretGroupRequest) (*dto.GroupChatDTO, error) {
-	members := make([]domain.UserID, len(req.Members))
-	for i, m := range req.Members {
-		members[i] = domain.UserID(m)
-	}
-
-	group, err := domain.NewSecretGroupChat(domain.UserID(req.Admin), members, req.Name)
-
-	switch {
-	case errors.Is(err, domain.ErrAdminNotMember):
-		return nil, ErrAdminNotMember
-	case errors.Is(err, domain.ErrGroupNameEmpty):
-		return nil, ErrGroupNameEmpty
-	case errors.Is(err, domain.ErrGroupNameTooLong):
-		return nil, ErrGroupNameTooLong
-	case err != nil:
-		return nil, errors.Join(ErrInternal, err)
-	}
-
-	group, err = s.repo.Create(ctx, group)
-	if err != nil {
-		return nil, errors.Join(ErrInternal, err)
-	}
-
-	groupDto := dto.NewGroupChatDTO(group)
-	return &groupDto, nil
-}
-
 type UpdateGroupInfoRequest struct {
 	ChatID      uuid.UUID
 	Name        string
@@ -136,4 +102,21 @@ func (s *GroupChatService) UpdateGroupInfo(ctx context.Context, req UpdateGroupI
 
 	groupDto := dto.NewGroupChatDTO(group)
 	return &groupDto, nil
+}
+
+func (s *GroupChatService) DeleteGroup(ctx context.Context, chatId uuid.UUID) error {
+	chat, err := s.repo.FindById(ctx, domain.ChatID(chatId))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return ErrChatNotFound
+		}
+		return errors.Join(ErrInternal, err)
+	}
+
+	// TODO: put other logic here after you decide what to do with messages
+
+	if err := s.repo.Delete(ctx, chat.ChatID); err != nil {
+		return errors.Join(ErrInternal, err)
+	}
+	return nil
 }

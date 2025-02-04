@@ -3,8 +3,6 @@ package domain
 import (
 	"errors"
 	"slices"
-
-	"github.com/google/uuid"
 )
 
 const (
@@ -25,27 +23,19 @@ var (
 	ErrGroupPhotoEmpty = errors.New("group photo is empty")
 )
 
+type URL string
+
 type GroupChat struct {
-	ID      ChatID
+	Chat
 	Admin   UserID
 	Members []UserID
 
-	Secret      bool
 	Name        string
 	Description string
 	GroupPhoto  URL
-	CreatedAt   Timestamp
 }
 
 func NewGroupChat(admin UserID, members []UserID, name string) (*GroupChat, error) {
-	return newGroup(admin, members, name, false)
-}
-
-func NewSecretGroupChat(admin UserID, members []UserID, name string) (*GroupChat, error) {
-	return newGroup(admin, members, name, true)
-}
-
-func newGroup(admin UserID, members []UserID, name string, secret bool) (*GroupChat, error) {
 	if err := validateGroupInfo(name, ""); err != nil {
 		return nil, err
 	}
@@ -57,15 +47,14 @@ func newGroup(admin UserID, members []UserID, name string, secret bool) (*GroupC
 	normMembers := normilizeMembers(members)
 
 	return &GroupChat{
-		ID:          ChatID(uuid.New()),
+		Chat: Chat{
+			ChatID: NewChatID(),
+		},
 		Admin:       admin,
 		Members:     normMembers,
-		Secret:      secret,
 		Name:        name,
 		Description: "",
 		GroupPhoto:  "",
-		// Maybe this should not be set here
-		CreatedAt: Timestamp(TimeFunc().Unix()),
 	}, nil
 }
 
@@ -94,7 +83,7 @@ func (g *GroupChat) DeletePhoto() error {
 }
 
 func (g *GroupChat) AddMember(newMember UserID) error {
-	if slices.Contains(g.Members, newMember) {
+	if g.IsMember(newMember) {
 		return ErrUserAlreadyMember
 	}
 
@@ -114,6 +103,10 @@ func (g *GroupChat) DeleteMember(member UserID) error {
 
 	g.Members = slices.Delete(g.Members, i, i+1)
 	return nil
+}
+
+func (g *GroupChat) IsMember(user UserID) bool {
+	return slices.Contains(g.Members, user)
 }
 
 func normilizeMembers(members []UserID) []UserID {
