@@ -53,7 +53,7 @@ func (c *PersonalChat) DeleteFileMessage(sender domain.UserID, m *FileMessage, m
 		return err
 	}
 
-	if c.ChatID == m.ChatID {
+	if c.ChatID != m.ChatID {
 		return domain.ErrUpdateNotFromChat
 	}
 
