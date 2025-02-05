@@ -6,6 +6,10 @@ import (
 	"github.com/google/uuid"
 )
 
+var (
+	ErrChatBlocked = errors.New("chat is blocked")
+)
+
 type (
 	ChatID uuid.UUID
 	UserID uuid.UUID
