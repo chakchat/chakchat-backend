@@ -5,6 +5,8 @@ import (
 	"errors"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish/events"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/secpersonal"
@@ -13,16 +15,19 @@ import (
 
 type SecretPersonalChatService struct {
 	repo repository.SecretPersonalChatRepository
+	pub  publish.Publisher
 }
 
-func NewSecretPersonalChatService(repo repository.SecretPersonalChatRepository) *SecretPersonalChatService {
+func NewSecretPersonalChatService(repo repository.SecretPersonalChatRepository,
+	pub publish.Publisher,
+) *SecretPersonalChatService {
 	return &SecretPersonalChatService{
 		repo: repo,
 	}
 }
 
-func (s *SecretPersonalChatService) CreateChat(ctx context.Context, members [2]uuid.UUID) (*dto.SecretPersonalChatDTO, error) {
-	domainMembers := [2]domain.UserID{domain.UserID(members[0]), domain.UserID(members[1])}
+func (s *SecretPersonalChatService) CreateChat(ctx context.Context, userId, withUserId uuid.UUID) (*dto.SecretPersonalChatDTO, error) {
+	domainMembers := [2]domain.UserID{domain.UserID(userId), domain.UserID(withUserId)}
 
 	if err := s.validateChatNotExists(ctx, domainMembers); err != nil {
 		return nil, err
@@ -43,6 +48,12 @@ func (s *SecretPersonalChatService) CreateChat(ctx context.Context, members [2]u
 	}
 
 	chatDto := dto.NewSecretPersonalChatDTO(chat)
+
+	s.pub.PublishForUsers([]uuid.UUID{withUserId}, events.ChatCreated{
+		ChatID:   chatDto.ID,
+		ChatType: events.ChatTypePersonal,
+	})
+
 	return &chatDto, nil
 }
 
@@ -75,6 +86,11 @@ func (s *SecretPersonalChatService) DeleteChat(ctx context.Context, chatId uuid.
 	if err := s.repo.Delete(ctx, chat.ID); err != nil {
 		return errors.Join(ErrInternal, err)
 	}
+
+	s.pub.PublishForUsers(dto.UUIDs(chat.Members[:]), events.ChatDeleted{
+		ChatID: chatId,
+	})
+
 	return nil
 }
 

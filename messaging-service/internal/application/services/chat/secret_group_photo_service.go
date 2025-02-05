@@ -6,6 +6,8 @@ import (
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/external"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish/events"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 	"github.com/google/uuid"
@@ -14,11 +16,17 @@ import (
 type SecretGroupPhotoService struct {
 	repo  repository.SecretGroupChatRepository
 	files external.FileStorage
+	pub   publish.Publisher
 }
 
-func NewSecretGroupPhotoService(repo repository.SecretGroupChatRepository) SecretGroupPhotoService {
+func NewSecretGroupPhotoService(repo repository.SecretGroupChatRepository,
+	files external.FileStorage,
+	pub publish.Publisher,
+) SecretGroupPhotoService {
 	return SecretGroupPhotoService{
-		repo: repo,
+		repo:  repo,
+		files: files,
+		pub:   pub,
 	}
 }
 
@@ -55,6 +63,14 @@ func (s *SecretGroupPhotoService) UpdatePhoto(ctx context.Context, groupId, file
 	}
 
 	gDto := dto.NewSecretGroupChatDTO(g)
+
+	s.pub.PublishForUsers(gDto.Members, events.GroupInfoUpdated{
+		ChatID:        gDto.ID,
+		Name:          gDto.Name,
+		Description:   gDto.Description,
+		GroupPhotoURL: string(g.GroupPhoto),
+	})
+
 	return &gDto, nil
 }
 
@@ -81,5 +97,13 @@ func (s *SecretGroupPhotoService) DeletePhoto(ctx context.Context, groupId uuid.
 	}
 
 	gDto := dto.NewSecretGroupChatDTO(g)
+
+	s.pub.PublishForUsers(gDto.Members, events.GroupInfoUpdated{
+		ChatID:        gDto.ID,
+		Name:          gDto.Name,
+		Description:   gDto.Description,
+		GroupPhotoURL: string(g.GroupPhoto),
+	})
+
 	return &gDto, nil
 }
