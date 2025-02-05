@@ -1,3 +1,5 @@
+[![Deploy to VPS](https://github.com/chakchat/chakchat-backend/actions/workflows/deploy.yaml/badge.svg)](https://github.com/chakchat/chakchat-backend/actions/workflows/deploy.yaml)
+
 # About 
 This is a messenger with secret mode where synchoronous e2e encryption is used.
 
