@@ -1,10 +1,8 @@
-package personal
+package domain
 
 import (
 	"errors"
 	"unicode/utf8"
-
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 )
 
 const (
@@ -13,7 +11,6 @@ const (
 
 var (
 	ErrTooMuchTextRunes = errors.New("too much runes in text")
-	ErrChatBlocked      = errors.New("chat is blocked")
 	ErrTextEmpty        = errors.New("the text is empty")
 )
 
@@ -25,18 +22,18 @@ type TextMessage struct {
 }
 
 type TextMessageEdited struct {
-	domain.Update
+	Update
 
-	MessageID domain.UpdateID
+	MessageID UpdateID
 }
 
-func (c *PersonalChat) NewTextMessage(sender domain.UserID, text string, replyTo *Message) (TextMessage, error) {
-	if err := c.validateCanSend(sender); err != nil {
+func NewTextMessage(chat Chatter, sender UserID, text string, replyTo *Message) (TextMessage, error) {
+	if err := chat.ValidateCanSend(sender); err != nil {
 		return TextMessage{}, err
 	}
 
 	if replyTo != nil {
-		if err := c.validateCanReply(sender, replyTo); err != nil {
+		if err := validateCanReply(chat, sender, replyTo); err != nil {
 			return TextMessage{}, err
 		}
 	}
@@ -47,8 +44,8 @@ func (c *PersonalChat) NewTextMessage(sender domain.UserID, text string, replyTo
 
 	return TextMessage{
 		Message: Message{
-			Update: domain.Update{
-				ChatID:   c.ChatID,
+			Update: Update{
+				ChatID:   chat.ChatID(),
 				SenderID: sender,
 			},
 			ReplyTo: replyTo,
@@ -57,21 +54,21 @@ func (c *PersonalChat) NewTextMessage(sender domain.UserID, text string, replyTo
 	}, nil
 }
 
-func (c *PersonalChat) EditTextMessage(sender domain.UserID, m *TextMessage, newText string) error {
-	if err := c.validateCanSend(sender); err != nil {
+func (m *TextMessage) Edit(chat Chatter, sender UserID, newText string) error {
+	if err := chat.ValidateCanSend(sender); err != nil {
 		return err
 	}
 
-	if c.ChatID != m.ChatID {
-		return domain.ErrUpdateNotFromChat
+	if chat.ChatID() != m.ChatID {
+		return ErrUpdateNotFromChat
 	}
 
 	if m.SenderID != sender {
-		return domain.ErrUserNotSender
+		return ErrUserNotSender
 	}
 
 	if m.DeletedFor(sender) {
-		return domain.ErrUpdateDeleted
+		return ErrUpdateDeleted
 	}
 
 	if err := validateText(newText); err != nil {
@@ -80,17 +77,13 @@ func (c *PersonalChat) EditTextMessage(sender domain.UserID, m *TextMessage, new
 
 	m.Text = newText
 	m.Edited = &TextMessageEdited{
-		Update: domain.Update{
-			ChatID:   c.ChatID,
+		Update: Update{
+			ChatID:   chat.ChatID(),
 			SenderID: sender,
 		},
 		MessageID: m.UpdateID,
 	}
 	return nil
-}
-
-func (c *PersonalChat) DeleteTextMessage(sender domain.UserID, m *TextMessage, mode domain.DeleteMode) error {
-	return c.deleteMessage(sender, &m.Update, mode)
 }
 
 func validateText(text string) error {

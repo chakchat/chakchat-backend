@@ -50,7 +50,7 @@ func NewGroupChat(admin domain.UserID, members []domain.UserID, name string) (*G
 
 	return &GroupChat{
 		Chat: domain.Chat{
-			ChatID: domain.NewChatID(),
+			ID: domain.NewChatID(),
 		},
 		Admin:       admin,
 		Members:     normMembers,
