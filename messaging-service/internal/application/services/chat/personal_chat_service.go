@@ -99,7 +99,7 @@ func (s *PersonalChatService) CreateChat(ctx context.Context, members [2]uuid.UU
 	chat, err := personal.NewPersonalChat(domainMembers)
 
 	if err != nil {
-		if errors.Is(err, personal.ErrChatWithMyself) {
+		if errors.Is(err, domain.ErrChatWithMyself) {
 			return nil, ErrChatWithMyself
 		}
 		return nil, errors.Join(ErrInternal, err)
