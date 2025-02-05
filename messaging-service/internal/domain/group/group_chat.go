@@ -111,6 +111,13 @@ func (g *GroupChat) IsMember(user domain.UserID) bool {
 	return slices.Contains(g.Members, user)
 }
 
+func (g *GroupChat) ValidateCanSend(sender domain.UserID) error {
+	if !g.IsMember(sender) {
+		return domain.ErrUserNotMember
+	}
+	return nil
+}
+
 func normilizeMembers(members []domain.UserID) []domain.UserID {
 	met := make(map[domain.UserID]struct{}, len(members))
 	normMembers := make([]domain.UserID, 0, len(members))

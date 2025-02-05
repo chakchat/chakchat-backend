@@ -33,6 +33,10 @@ type Chat struct {
 	CreatedAt Timestamp
 }
 
+func (c *Chat) ChatID() ChatID {
+	return c.ID
+}
+
 type Chatter interface {
 	ChatID() ChatID
 	ValidateCanSend(UserID) error
