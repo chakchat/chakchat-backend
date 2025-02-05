@@ -11,37 +11,18 @@ import (
 	"github.com/google/uuid"
 )
 
-const (
-	MaxGroupPhotoSize = 2 << 20
-)
-
-var (
-	ErrFileNotFound = errors.New("service: file not found")
-	ErrInvalidPhoto = errors.New("service: invalid photo")
-)
-
-var groupPhotoMimes = map[string]bool{
-	"image/jpeg": true,
-	"image/png":  true,
-	"image/webp": true,
-	"image/gif":  true,
-	"image/heif": true,
-	"image/heic": true,
-}
-
-type GroupPhotoService struct {
-	repo  repository.GroupChatRepository
+type SecretGroupPhotoService struct {
+	repo  repository.SecretGroupChatRepository
 	files external.FileStorage
 }
 
-func NewGroupPhotoService(repo repository.GroupChatRepository, files external.FileStorage) *GroupPhotoService {
-	return &GroupPhotoService{
-		repo:  repo,
-		files: files,
+func NewSecretGroupPhotoService(repo repository.SecretGroupChatRepository) SecretGroupPhotoService {
+	return SecretGroupPhotoService{
+		repo: repo,
 	}
 }
 
-func (s *GroupPhotoService) UpdatePhoto(ctx context.Context, groupId, fileId uuid.UUID) (*dto.GroupChatDTO, error) {
+func (s *SecretGroupPhotoService) UpdatePhoto(ctx context.Context, groupId, fileId uuid.UUID) (*dto.SecretGroupChatDTO, error) {
 	g, err := s.repo.FindById(ctx, domain.ChatID(groupId))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
@@ -73,23 +54,11 @@ func (s *GroupPhotoService) UpdatePhoto(ctx context.Context, groupId, fileId uui
 		return nil, errors.Join(ErrInternal, err)
 	}
 
-	gDto := dto.NewGroupChatDTO(g)
+	gDto := dto.NewSecretGroupChatDTO(g)
 	return &gDto, nil
 }
 
-func validatePhoto(photo *external.FileMeta) error {
-	if photo.FileSize > MaxGroupPhotoSize {
-		return ErrInvalidPhoto
-	}
-
-	if !groupPhotoMimes[photo.MimeType] {
-		return ErrInvalidPhoto
-	}
-
-	return nil
-}
-
-func (s *GroupPhotoService) DeletePhoto(ctx context.Context, groupId uuid.UUID) (*dto.GroupChatDTO, error) {
+func (s *SecretGroupPhotoService) DeletePhoto(ctx context.Context, groupId uuid.UUID) (*dto.SecretGroupChatDTO, error) {
 	g, err := s.repo.FindById(ctx, domain.ChatID(groupId))
 	if err != nil {
 		if errors.Is(err, external.ErrFileNotFound) {
@@ -111,6 +80,6 @@ func (s *GroupPhotoService) DeletePhoto(ctx context.Context, groupId uuid.UUID) 
 		return nil, errors.Join(ErrInternal, err)
 	}
 
-	gDto := dto.NewGroupChatDTO(g)
+	gDto := dto.NewSecretGroupChatDTO(g)
 	return &gDto, nil
 }
