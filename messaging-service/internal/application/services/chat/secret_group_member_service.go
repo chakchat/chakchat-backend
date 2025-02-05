@@ -5,6 +5,8 @@ import (
 	"errors"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish/events"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 	"github.com/google/uuid"
@@ -12,11 +14,13 @@ import (
 
 type SecretGroupMemberService struct {
 	repo repository.SecretGroupChatRepository
+	pub  publish.Publisher
 }
 
-func NewSecretGroupMemberService(repo repository.SecretGroupChatRepository) *SecretGroupMemberService {
+func NewSecretGroupMemberService(repo repository.SecretGroupChatRepository, pub publish.Publisher) *SecretGroupMemberService {
 	return &SecretGroupMemberService{
 		repo: repo,
+		pub:  pub,
 	}
 }
 
@@ -43,6 +47,12 @@ func (s *SecretGroupMemberService) AddMember(ctx context.Context, chatId, userId
 	}
 
 	gDto := dto.NewSecretGroupChatDTO(g)
+
+	s.pub.PublishForUsers(gDto.Members, events.GroupMemberAdded{
+		ChatID:   chatId,
+		MemberID: userId,
+	})
+
 	return &gDto, nil
 }
 
@@ -71,5 +81,11 @@ func (s *SecretGroupMemberService) DeleteMember(ctx context.Context, chatId, mem
 	}
 
 	gDto := dto.NewSecretGroupChatDTO(g)
+
+	s.pub.PublishForUsers(gDto.Members, events.GroupMemberAdded{
+		ChatID:   chatId,
+		MemberID: memberId,
+	})
+
 	return &gDto, nil
 }

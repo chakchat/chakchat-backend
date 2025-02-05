@@ -8,7 +8,7 @@ import (
 )
 
 type SecretPersonalChatDTO struct {
-	ChatID     uuid.UUID
+	ID         uuid.UUID
 	CreatedAt  int64
 	Expiration *time.Duration
 	Members    [2]uuid.UUID
@@ -16,7 +16,7 @@ type SecretPersonalChatDTO struct {
 
 func NewSecretPersonalChatDTO(c *secpersonal.SecretPersonalChat) SecretPersonalChatDTO {
 	return SecretPersonalChatDTO{
-		ChatID:     uuid.UUID(c.ID),
+		ID:         uuid.UUID(c.ID),
 		CreatedAt:  int64(c.CreatedAt),
 		Expiration: c.Expiration,
 		Members: [2]uuid.UUID{

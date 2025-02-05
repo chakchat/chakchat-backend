@@ -5,6 +5,8 @@ import (
 	"errors"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish/events"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/secgroup"
@@ -13,11 +15,13 @@ import (
 
 type SecretGroupChatService struct {
 	repo repository.SecretGroupChatRepository
+	pub  publish.Publisher
 }
 
-func NewSecretGroupChatService(repo repository.SecretGroupChatRepository) *SecretGroupChatService {
+func NewSecretGroupChatService(repo repository.SecretGroupChatRepository, pub publish.Publisher) *SecretGroupChatService {
 	return &SecretGroupChatService{
 		repo: repo,
+		pub:  pub,
 	}
 }
 
@@ -52,6 +56,12 @@ func (s *SecretGroupChatService) CreateGroup(ctx context.Context, req CreateGrou
 	}
 
 	gDto := dto.NewSecretGroupChatDTO(g)
+
+	s.pub.PublishForUsers(gDto.Members, events.ChatCreated{
+		ChatID:   uuid.UUID(gDto.ID),
+		ChatType: events.ChatTypeSecretGroup,
+	})
+
 	return &gDto, nil
 }
 
@@ -89,11 +99,19 @@ func (s *SecretGroupChatService) UpdateGroupInfo(ctx context.Context, req Update
 	}
 
 	gDto := dto.NewSecretGroupChatDTO(g)
+
+	s.pub.PublishForUsers(gDto.Members, events.GroupInfoUpdated{
+		ChatID:        gDto.ID,
+		Name:          gDto.Name,
+		Description:   gDto.Description,
+		GroupPhotoURL: string(g.GroupPhoto),
+	})
+
 	return &gDto, nil
 }
 
 func (s *SecretGroupChatService) DeleteGroup(ctx context.Context, chatId uuid.UUID) error {
-	chat, err := s.repo.FindById(ctx, domain.ChatID(chatId))
+	g, err := s.repo.FindById(ctx, domain.ChatID(chatId))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return ErrChatNotFound
@@ -103,8 +121,13 @@ func (s *SecretGroupChatService) DeleteGroup(ctx context.Context, chatId uuid.UU
 
 	// TODO: put other logic here after you decide what to do with messages
 
-	if err := s.repo.Delete(ctx, chat.ID); err != nil {
+	if err := s.repo.Delete(ctx, g.ID); err != nil {
 		return errors.Join(ErrInternal, err)
 	}
+
+	s.pub.PublishForUsers(dto.UUIDs(g.Members), events.ChatDeleted{
+		ChatID: chatId,
+	})
+
 	return nil
 }
