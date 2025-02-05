@@ -17,36 +17,23 @@ var (
 	ErrTextEmpty        = errors.New("the text is empty")
 )
 
-type TextMessage struct {
-	Message
-
-	Text   string
-	Edited *TextMessageEdited
-}
-
-type TextMessageEdited struct {
-	domain.Update
-
-	MessageID domain.UpdateID
-}
-
-func (c *PersonalChat) NewTextMessage(sender domain.UserID, text string, replyTo *Message) (TextMessage, error) {
+func (c *PersonalChat) NewTextMessage(sender domain.UserID, text string, replyTo *domain.Message) (domain.TextMessage, error) {
 	if err := c.validateCanSend(sender); err != nil {
-		return TextMessage{}, err
+		return domain.TextMessage{}, err
 	}
 
 	if replyTo != nil {
 		if err := c.validateCanReply(sender, replyTo); err != nil {
-			return TextMessage{}, err
+			return domain.TextMessage{}, err
 		}
 	}
 
 	if err := validateText(text); err != nil {
-		return TextMessage{}, err
+		return domain.TextMessage{}, err
 	}
 
-	return TextMessage{
-		Message: Message{
+	return domain.TextMessage{
+		Message: domain.Message{
 			Update: domain.Update{
 				ChatID:   c.ChatID,
 				SenderID: sender,
@@ -57,7 +44,7 @@ func (c *PersonalChat) NewTextMessage(sender domain.UserID, text string, replyTo
 	}, nil
 }
 
-func (c *PersonalChat) EditTextMessage(sender domain.UserID, m *TextMessage, newText string) error {
+func (c *PersonalChat) EditTextMessage(sender domain.UserID, m *domain.TextMessage, newText string) error {
 	if err := c.validateCanSend(sender); err != nil {
 		return err
 	}
@@ -79,7 +66,7 @@ func (c *PersonalChat) EditTextMessage(sender domain.UserID, m *TextMessage, new
 	}
 
 	m.Text = newText
-	m.Edited = &TextMessageEdited{
+	m.Edited = &domain.TextMessageEdited{
 		Update: domain.Update{
 			ChatID:   c.ChatID,
 			SenderID: sender,
@@ -89,7 +76,7 @@ func (c *PersonalChat) EditTextMessage(sender domain.UserID, m *TextMessage, new
 	return nil
 }
 
-func (c *PersonalChat) DeleteTextMessage(sender domain.UserID, m *TextMessage, mode domain.DeleteMode) error {
+func (c *PersonalChat) DeleteTextMessage(sender domain.UserID, m *domain.TextMessage, mode domain.DeleteMode) error {
 	return c.deleteMessage(sender, &m.Update, mode)
 }
 

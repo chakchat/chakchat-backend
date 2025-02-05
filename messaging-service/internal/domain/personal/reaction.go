@@ -18,25 +18,9 @@ type Reaction struct {
 	Type ReactionType
 }
 
-func (c *PersonalChat) NewReactionOnText(
+func (c *PersonalChat) NewReaction(
 	sender domain.UserID,
-	m *TextMessage,
-	reaction ReactionType,
-) (Reaction, error) {
-	return c.newReaction(sender, &m.Update, reaction)
-}
-
-func (c *PersonalChat) NewReactionOnFile(
-	sender domain.UserID,
-	m *FileMessage,
-	reaction ReactionType,
-) (Reaction, error) {
-	return c.newReaction(sender, &m.Update, reaction)
-}
-
-func (c *PersonalChat) newReaction(
-	sender domain.UserID,
-	m *domain.Update,
+	m *domain.Message,
 	reaction ReactionType,
 ) (Reaction, error) {
 	if err := c.validateCanSend(sender); err != nil {

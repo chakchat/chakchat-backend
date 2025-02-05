@@ -2,11 +2,6 @@ package personal
 
 import "github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 
-type Message struct {
-	domain.Update
-	ReplyTo *Message
-}
-
 func (c *PersonalChat) validateCanSend(sender domain.UserID) error {
 	if !c.IsMember(sender) {
 		return domain.ErrUserNotMember
@@ -17,7 +12,7 @@ func (c *PersonalChat) validateCanSend(sender domain.UserID) error {
 	return nil
 }
 
-func (c *PersonalChat) validateCanReply(sender domain.UserID, replyTo *Message) error {
+func (c *PersonalChat) validateCanReply(sender domain.UserID, replyTo *domain.Message) error {
 	if replyTo.DeletedFor(sender) {
 		return domain.ErrUpdateDeleted
 	}

@@ -18,21 +18,20 @@ func TestReaction(t *testing.T) {
 		Members: [2]domain.UserID{user1, user2},
 	}
 
-	txtMsg := TextMessage{
-		Message: Message{
+	txtMsg := domain.TextMessage{
+		Message: domain.Message{
 			Update: domain.Update{
 				UpdateID: 12,
 				ChatID:   chat.ChatID,
 				SenderID: user1,
 			},
 		},
-		Text: "previous text",
 	}
 
-	_, err := chat.NewReactionOnText(user3, &txtMsg, "some_reaction_idk")
+	_, err := chat.NewReaction(user3, &txtMsg.Message, "some_reaction_idk")
 	require.ErrorIs(t, err, domain.ErrUserNotMember)
 
-	reaction, err := chat.NewReactionOnText(user1, &txtMsg, "some_reaction_idk")
+	reaction, err := chat.NewReaction(user1, &txtMsg.Message, "some_reaction_idk")
 	require.NoError(t, err)
 	require.Equal(t, chat.ChatID, reaction.ChatID)
 	require.Equal(t, user1, reaction.SenderID)

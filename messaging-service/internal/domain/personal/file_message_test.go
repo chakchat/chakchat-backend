@@ -18,7 +18,7 @@ func TestFileMessage(t *testing.T) {
 		Members: [2]domain.UserID{user1, user2},
 	}
 
-	file := &FileMeta{
+	file := &domain.FileMeta{
 		FileId:   [16]byte{},
 		FileName: "text.txt",
 		MimeType: "plain/txt",
@@ -37,8 +37,8 @@ func TestFileMessage(t *testing.T) {
 	})
 
 	t.Run("Delete", func(t *testing.T) {
-		msg := FileMessage{
-			Message: Message{
+		msg := domain.FileMessage{
+			Message: domain.Message{
 				Update: domain.Update{
 					UpdateID: 12,
 					ChatID:   chat.ChatID,

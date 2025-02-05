@@ -34,8 +34,8 @@ func TestTextMessage(t *testing.T) {
 		require.Equal(t, user1, msg1.SenderID)
 	})
 
-	msgBase := TextMessage{
-		Message: Message{
+	msgBase := domain.TextMessage{
+		Message: domain.Message{
 			Update: domain.Update{
 				UpdateID: 12,
 				ChatID:   chat.ChatID,
