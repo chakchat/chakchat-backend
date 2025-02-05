@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/repository/mocks"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/personal"
@@ -28,9 +29,9 @@ func TestPersonalChat_CreateChat(t *testing.T) {
 				return chat, nil
 			})
 
-		service := NewPersonalChatService(repo)
+		service := NewPersonalChatService(repo, FakePublisher{})
 
-		chat, err := service.CreateChat(context.Background(), [2]uuid.UUID{user1, user2})
+		chat, err := service.CreateChat(context.Background(), user1, user2)
 
 		require.NoError(t, err)
 		require.Equal(t, [2]uuid.UUID{user1, user2}, chat.Members)
@@ -45,12 +46,16 @@ func TestPersonalChat_CreateChat(t *testing.T) {
 			FindByMembers(mock.Anything, mock.Anything).
 			Return(&personal.PersonalChat{}, nil)
 
-		service := NewPersonalChatService(repo)
+		service := NewPersonalChatService(repo, FakePublisher{})
 
-		_, err := service.CreateChat(context.Background(), [2]uuid.UUID{user1, user2})
+		_, err := service.CreateChat(context.Background(), user1, user2)
 
 		require.ErrorIs(t, err, ErrChatAlreadyExists)
 
 		repo.AssertNotCalled(t, "Create")
 	})
 }
+
+type FakePublisher struct{}
+
+func (FakePublisher) PublishForUsers([]uuid.UUID, publish.Event) {}

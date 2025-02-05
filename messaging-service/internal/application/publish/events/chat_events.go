@@ -34,3 +34,11 @@ type GroupMemberRemoved struct {
 	ChatID   uuid.UUID `json:"chat_id"`
 	MemberID uuid.UUID `json:"member_id"`
 }
+
+type ChatBlocked struct {
+	ChatID uuid.UUID `json:"chat_id"`
+}
+
+type ChatUnblocked struct {
+	ChatID uuid.UUID `json:"chat_id"`
+}

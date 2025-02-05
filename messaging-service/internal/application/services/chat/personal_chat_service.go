@@ -5,6 +5,8 @@ import (
 	"errors"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish/events"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/personal"
@@ -25,11 +27,13 @@ var (
 
 type PersonalChatService struct {
 	repo repository.PersonalChatRepository
+	pub  publish.Publisher
 }
 
-func NewPersonalChatService(repo repository.PersonalChatRepository) *PersonalChatService {
+func NewPersonalChatService(repo repository.PersonalChatRepository, pub publish.Publisher) *PersonalChatService {
 	return &PersonalChatService{
 		repo: repo,
+		pub:  pub,
 	}
 }
 
@@ -57,6 +61,10 @@ func (s *PersonalChatService) BlockChat(ctx context.Context, userId, chatId uuid
 	if _, err := s.repo.Update(ctx, chat); err != nil {
 		return errors.Join(ErrInternal, err)
 	}
+
+	s.pub.PublishForUsers(getSecondUserSlice(chat.Members, domain.UserID(userId)), events.ChatBlocked{
+		ChatID: chatId,
+	})
 
 	return nil
 }
@@ -86,11 +94,15 @@ func (s *PersonalChatService) UnblockChat(ctx context.Context, userId, chatId uu
 		return errors.Join(ErrInternal, err)
 	}
 
+	s.pub.PublishForUsers(getSecondUserSlice(chat.Members, domain.UserID(userId)), events.ChatUnblocked{
+		ChatID: chatId,
+	})
+
 	return nil
 }
 
-func (s *PersonalChatService) CreateChat(ctx context.Context, members [2]uuid.UUID) (*dto.PersonalChatDTO, error) {
-	domainMembers := [2]domain.UserID{domain.UserID(members[0]), domain.UserID(members[1])}
+func (s *PersonalChatService) CreateChat(ctx context.Context, userId, withUserId uuid.UUID) (*dto.PersonalChatDTO, error) {
+	domainMembers := [2]domain.UserID{domain.UserID(userId), domain.UserID(withUserId)}
 
 	if err := s.validateChatNotExists(ctx, domainMembers); err != nil {
 		return nil, err
@@ -111,6 +123,12 @@ func (s *PersonalChatService) CreateChat(ctx context.Context, members [2]uuid.UU
 	}
 
 	chatDto := dto.NewPersonalChatDTO(chat)
+
+	s.pub.PublishForUsers([]uuid.UUID{withUserId}, events.ChatCreated{
+		ChatID:   chatDto.ID,
+		ChatType: events.ChatTypePersonal,
+	})
+
 	return &chatDto, nil
 }
 
@@ -143,6 +161,11 @@ func (s *PersonalChatService) DeleteChat(ctx context.Context, chatId uuid.UUID, 
 	if err := s.repo.Delete(ctx, chat.ID); err != nil {
 		return errors.Join(ErrInternal, err)
 	}
+
+	s.pub.PublishForUsers(dto.UUIDs(chat.Members[:]), events.ChatDeleted{
+		ChatID: chatId,
+	})
+
 	return nil
 }
 
@@ -158,4 +181,14 @@ func (s *PersonalChatService) validateChatNotExists(ctx context.Context, members
 	}
 
 	return nil
+}
+
+func getSecondUserSlice(users [2]domain.UserID, first domain.UserID) []uuid.UUID {
+	var second domain.UserID
+	if users[0] == first {
+		second = users[1]
+	} else {
+		second = users[0]
+	}
+	return []uuid.UUID{uuid.UUID(second)}
 }
