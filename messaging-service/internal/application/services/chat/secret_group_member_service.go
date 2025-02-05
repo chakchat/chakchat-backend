@@ -10,17 +10,17 @@ import (
 	"github.com/google/uuid"
 )
 
-type GroupMemberService struct {
-	repo repository.GroupChatRepository
+type SecretGroupMemberService struct {
+	repo repository.SecretGroupChatRepository
 }
 
-func NewGroupMemberService(repo repository.GroupChatRepository) *GroupMemberService {
-	return &GroupMemberService{
+func NewSecretGroupMemberService(repo repository.SecretGroupChatRepository) *SecretGroupMemberService {
+	return &SecretGroupMemberService{
 		repo: repo,
 	}
 }
 
-func (s *GroupMemberService) AddMember(ctx context.Context, chatId, userId uuid.UUID) (*dto.GroupChatDTO, error) {
+func (s *SecretGroupMemberService) AddMember(ctx context.Context, chatId, userId uuid.UUID) (*dto.SecretGroupChatDTO, error) {
 	g, err := s.repo.FindById(ctx, domain.ChatID(chatId))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
@@ -42,11 +42,11 @@ func (s *GroupMemberService) AddMember(ctx context.Context, chatId, userId uuid.
 		return nil, errors.Join(ErrInternal, err)
 	}
 
-	gDto := dto.NewGroupChatDTO(g)
+	gDto := dto.NewSecretGroupChatDTO(g)
 	return &gDto, nil
 }
 
-func (s *GroupMemberService) DeleteMember(ctx context.Context, chatId, memberId uuid.UUID) (*dto.GroupChatDTO, error) {
+func (s *SecretGroupMemberService) DeleteMember(ctx context.Context, chatId, memberId uuid.UUID) (*dto.SecretGroupChatDTO, error) {
 	g, err := s.repo.FindById(ctx, domain.ChatID(chatId))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
@@ -70,6 +70,6 @@ func (s *GroupMemberService) DeleteMember(ctx context.Context, chatId, memberId 
 		return nil, errors.Join(ErrInternal, err)
 	}
 
-	gDto := dto.NewGroupChatDTO(g)
+	gDto := dto.NewSecretGroupChatDTO(g)
 	return &gDto, nil
 }
