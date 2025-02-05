@@ -1,4 +1,4 @@
-package services
+package chat
 
 import (
 	"context"
@@ -99,7 +99,7 @@ func (s *PersonalChatService) CreateChat(ctx context.Context, members [2]uuid.UU
 	chat, err := personal.NewPersonalChat(domainMembers)
 
 	if err != nil {
-		if errors.Is(err, personal.ErrChatWithMyself) {
+		if errors.Is(err, domain.ErrChatWithMyself) {
 			return nil, ErrChatWithMyself
 		}
 		return nil, errors.Join(ErrInternal, err)
@@ -138,6 +138,7 @@ func (s *PersonalChatService) DeleteChat(ctx context.Context, chatId uuid.UUID, 
 	}
 
 	// TODO: put other logic here after you decide what to do with messages
+	// For now I think that messages with in deleted chat should be deleted by background task
 
 	if err := s.repo.Delete(ctx, chat.ID); err != nil {
 		return errors.Join(ErrInternal, err)

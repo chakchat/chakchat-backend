@@ -22,6 +22,8 @@ var (
 	ErrMemberIsAdmin     = errors.New("group member is admin")
 
 	ErrGroupPhotoEmpty = errors.New("group photo is empty")
+
+	ErrChatWithMyself = errors.New("chat with myself")
 )
 
 var (
