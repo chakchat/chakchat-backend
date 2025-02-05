@@ -19,26 +19,28 @@ func TestTextMessage(t *testing.T) {
 	}
 
 	t.Run("New", func(t *testing.T) {
-		_, err := chat.NewTextMessage(user1, "")
+		_, err := chat.NewTextMessage(user1, "", nil)
 		require.ErrorIs(t, err, ErrTextEmpty)
 
-		_, err = chat.NewTextMessage(user3, "valid but not a member")
+		_, err = chat.NewTextMessage(user3, "valid but not a member", nil)
 		require.ErrorIs(t, err, domain.ErrUserNotMember)
 
-		_, err = chat.NewTextMessage(user1, string(make([]byte, 3000)))
+		_, err = chat.NewTextMessage(user1, string(make([]byte, 3000)), nil)
 		require.ErrorIs(t, err, ErrTooMuchTextRunes)
 
-		msg1, err := chat.NewTextMessage(user1, "valid text message")
+		msg1, err := chat.NewTextMessage(user1, "valid text message", nil)
 		require.NoError(t, err)
 		require.Equal(t, chat.ChatID, msg1.ChatID)
 		require.Equal(t, user1, msg1.SenderID)
 	})
 
 	msgBase := TextMessage{
-		Update: domain.Update{
-			UpdateID: 12,
-			ChatID:   chat.ChatID,
-			SenderID: user1,
+		Message: Message{
+			Update: domain.Update{
+				UpdateID: 12,
+				ChatID:   chat.ChatID,
+				SenderID: user1,
+			},
 		},
 		Text: "previous text",
 	}

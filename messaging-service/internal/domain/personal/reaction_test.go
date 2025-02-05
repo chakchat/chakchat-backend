@@ -19,10 +19,12 @@ func TestReaction(t *testing.T) {
 	}
 
 	txtMsg := TextMessage{
-		Update: domain.Update{
-			UpdateID: 12,
-			ChatID:   chat.ChatID,
-			SenderID: user1,
+		Message: Message{
+			Update: domain.Update{
+				UpdateID: 12,
+				ChatID:   chat.ChatID,
+				SenderID: user1,
+			},
 		},
 		Text: "previous text",
 	}

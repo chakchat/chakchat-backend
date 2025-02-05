@@ -27,10 +27,10 @@ func TestFileMessage(t *testing.T) {
 	}
 
 	t.Run("New", func(t *testing.T) {
-		_, err := chat.NewFileMessage(user3, file)
+		_, err := chat.NewFileMessage(user3, file, nil)
 		require.ErrorIs(t, err, domain.ErrUserNotMember)
 
-		msg1, err := chat.NewFileMessage(user1, file)
+		msg1, err := chat.NewFileMessage(user1, file, nil)
 		require.NoError(t, err)
 		require.Equal(t, chat.ChatID, msg1.ChatID)
 		require.Equal(t, user1, msg1.SenderID)
@@ -38,10 +38,12 @@ func TestFileMessage(t *testing.T) {
 
 	t.Run("Delete", func(t *testing.T) {
 		msg := FileMessage{
-			Update: domain.Update{
-				UpdateID: 12,
-				ChatID:   chat.ChatID,
-				SenderID: user1,
+			Message: Message{
+				Update: domain.Update{
+					UpdateID: 12,
+					ChatID:   chat.ChatID,
+					SenderID: user1,
+				},
 			},
 			File: *file,
 		}
