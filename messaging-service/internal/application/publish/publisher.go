@@ -22,10 +22,15 @@ func NewPublisher(mq external.MqPublisher) Publisher {
 	}
 }
 
-func (p Publisher) PublishForUsers(users []uuid.UUID, ev Event) error {
+func (p Publisher) PublishForUsers(users []uuid.UUID, ev Event) {
+	if len(users) == 0 {
+		return
+	}
+
 	userEvent := UserEvent{
 		Users: users,
 		Data:  ev,
 	}
-	return p.mq.Publish(userEvent)
+
+	p.mq.Publish(userEvent)
 }
