@@ -1,4 +1,4 @@
-package group
+package secgroup
 
 import (
 	"slices"
@@ -6,8 +6,8 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 )
 
-type GroupChat struct {
-	domain.Chat
+type SecretGroupChat struct {
+	domain.SecretChat
 	Admin   domain.UserID
 	Members []domain.UserID
 
@@ -16,7 +16,7 @@ type GroupChat struct {
 	GroupPhoto  domain.URL
 }
 
-func NewGroupChat(admin domain.UserID, members []domain.UserID, name string) (*GroupChat, error) {
+func NewSecretGroupChat(admin domain.UserID, members []domain.UserID, name string) (*SecretGroupChat, error) {
 	if err := domain.ValidateGroupInfo(name, ""); err != nil {
 		return nil, err
 	}
@@ -27,9 +27,11 @@ func NewGroupChat(admin domain.UserID, members []domain.UserID, name string) (*G
 
 	normMembers := domain.NormilizeMembers(members)
 
-	return &GroupChat{
-		Chat: domain.Chat{
-			ID: domain.NewChatID(),
+	return &SecretGroupChat{
+		SecretChat: domain.SecretChat{
+			Chat: domain.Chat{
+				ID: domain.NewChatID(),
+			},
 		},
 		Admin:       admin,
 		Members:     normMembers,
@@ -39,7 +41,7 @@ func NewGroupChat(admin domain.UserID, members []domain.UserID, name string) (*G
 	}, nil
 }
 
-func (g *GroupChat) UpdateInfo(name, description string) error {
+func (g *SecretGroupChat) UpdateInfo(name, description string) error {
 	if err := domain.ValidateGroupInfo(name, description); err != nil {
 		return err
 	}
@@ -49,12 +51,12 @@ func (g *GroupChat) UpdateInfo(name, description string) error {
 	return nil
 }
 
-func (g *GroupChat) UpdatePhoto(photo domain.URL) error {
+func (g *SecretGroupChat) UpdatePhoto(photo domain.URL) error {
 	g.GroupPhoto = photo
 	return nil
 }
 
-func (g *GroupChat) DeletePhoto() error {
+func (g *SecretGroupChat) DeletePhoto() error {
 	if g.GroupPhoto == "" {
 		return domain.ErrGroupPhotoEmpty
 	}
@@ -63,7 +65,7 @@ func (g *GroupChat) DeletePhoto() error {
 	return nil
 }
 
-func (g *GroupChat) AddMember(newMember domain.UserID) error {
+func (g *SecretGroupChat) AddMember(newMember domain.UserID) error {
 	if g.IsMember(newMember) {
 		return domain.ErrUserAlreadyMember
 	}
@@ -72,7 +74,7 @@ func (g *GroupChat) AddMember(newMember domain.UserID) error {
 	return nil
 }
 
-func (g *GroupChat) DeleteMember(member domain.UserID) error {
+func (g *SecretGroupChat) DeleteMember(member domain.UserID) error {
 	if g.Admin == member {
 		return domain.ErrMemberIsAdmin
 	}
@@ -86,11 +88,11 @@ func (g *GroupChat) DeleteMember(member domain.UserID) error {
 	return nil
 }
 
-func (g *GroupChat) IsMember(user domain.UserID) bool {
+func (g *SecretGroupChat) IsMember(user domain.UserID) bool {
 	return slices.Contains(g.Members, user)
 }
 
-func (g *GroupChat) ValidateCanSend(sender domain.UserID) error {
+func (g *SecretGroupChat) ValidateCanSend(sender domain.UserID) error {
 	if !g.IsMember(sender) {
 		return domain.ErrUserNotMember
 	}

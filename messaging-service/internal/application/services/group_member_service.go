@@ -7,7 +7,6 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/group"
 	"github.com/google/uuid"
 )
 
@@ -32,7 +31,7 @@ func (s *GroupMemberService) AddMember(ctx context.Context, chatId, userId uuid.
 	err = g.AddMember(domain.UserID(userId))
 
 	if err != nil {
-		if errors.Is(err, group.ErrUserAlreadyMember) {
+		if errors.Is(err, domain.ErrUserAlreadyMember) {
 			return nil, ErrUserAlreadyMember
 		}
 		return nil, errors.Join(ErrInternal, err)
@@ -58,7 +57,7 @@ func (s *GroupMemberService) DeleteMember(ctx context.Context, chatId, memberId 
 	err = g.DeleteMember(domain.UserID(memberId))
 
 	switch {
-	case errors.Is(err, group.ErrMemberIsAdmin):
+	case errors.Is(err, domain.ErrMemberIsAdmin):
 		return nil, ErrMemberIsAdmin
 	case errors.Is(err, domain.ErrUserNotMember):
 		return nil, ErrUserNotMember

@@ -1,11 +1,19 @@
 package domain
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 type (
-	UpdateID  uint64
-	Timestamp int64
+	UpdateID uint64
 )
+
+type Timestamp int64
+
+func (t Timestamp) Time() time.Time {
+	return time.Unix(int64(t), 0)
+}
 
 var (
 	ErrUserNotSender     = errors.New("user is not update's sender")

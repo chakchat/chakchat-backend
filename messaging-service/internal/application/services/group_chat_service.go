@@ -49,11 +49,11 @@ func (s *GroupChatService) CreateGroup(ctx context.Context, req CreateGroupReque
 	g, err := group.NewGroupChat(domain.UserID(req.Admin), members, req.Name)
 
 	switch {
-	case errors.Is(err, group.ErrAdminNotMember):
+	case errors.Is(err, domain.ErrAdminNotMember):
 		return nil, ErrAdminNotMember
-	case errors.Is(err, group.ErrGroupNameEmpty):
+	case errors.Is(err, domain.ErrGroupNameEmpty):
 		return nil, ErrGroupNameEmpty
-	case errors.Is(err, group.ErrGroupNameTooLong):
+	case errors.Is(err, domain.ErrGroupNameTooLong):
 		return nil, ErrGroupNameTooLong
 	case err != nil:
 		return nil, errors.Join(ErrInternal, err)
@@ -86,11 +86,11 @@ func (s *GroupChatService) UpdateGroupInfo(ctx context.Context, req UpdateGroupI
 	err = g.UpdateInfo(req.Name, req.Description)
 
 	switch {
-	case errors.Is(err, group.ErrGroupNameEmpty):
+	case errors.Is(err, domain.ErrGroupNameEmpty):
 		return nil, ErrGroupNameEmpty
-	case errors.Is(err, group.ErrGroupNameTooLong):
+	case errors.Is(err, domain.ErrGroupNameTooLong):
 		return nil, ErrGroupNameTooLong
-	case errors.Is(err, group.ErrGroupDescTooLong):
+	case errors.Is(err, domain.ErrGroupDescTooLong):
 		return nil, ErrGroupDescTooLong
 	case err != nil:
 		return nil, errors.Join(ErrInternal, err)
