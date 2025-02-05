@@ -6,6 +6,10 @@ import (
 	"github.com/google/uuid"
 )
 
+var TimeFunc = func() time.Time {
+	return time.Now()
+}
+
 type (
 	SecretKeyID          uuid.UUID
 	Encrypted            []byte
@@ -23,9 +27,12 @@ type SecretUpdate struct {
 	Data SecretData
 }
 
-func (u *SecretUpdate) Expired(exp time.Duration) bool {
+func (u *SecretUpdate) Expired(exp *time.Duration) bool {
+	if exp == nil {
+		return false
+	}
 	now := TimeFunc()
-	expTime := u.CreatedAt.Time().Add(exp)
+	expTime := u.CreatedAt.Time().Add(*exp)
 	return expTime.Before(now)
 }
 

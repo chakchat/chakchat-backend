@@ -8,7 +8,6 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/external"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/group"
 	"github.com/google/uuid"
 )
 
@@ -63,7 +62,7 @@ func (s *GroupPhotoService) UpdatePhoto(ctx context.Context, groupId, fileId uui
 		return nil, err
 	}
 
-	err = g.UpdatePhoto(group.URL(file.FileUrl))
+	err = g.UpdatePhoto(domain.URL(file.FileUrl))
 
 	if err != nil {
 		return nil, errors.Join(ErrInternal, err)
@@ -102,7 +101,7 @@ func (s *GroupPhotoService) DeletePhoto(ctx context.Context, groupId uuid.UUID) 
 	err = g.DeletePhoto()
 
 	if err != nil {
-		if errors.Is(err, group.ErrGroupPhotoEmpty) {
+		if errors.Is(err, domain.ErrGroupPhotoEmpty) {
 			return nil, ErrGroupPhotoEmpty
 		}
 	}

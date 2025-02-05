@@ -1,31 +1,10 @@
 package group
 
 import (
-	"errors"
 	"slices"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 )
-
-const (
-	maxGroupNameLen   = 50
-	maxDescriptionLen = 300
-)
-
-var (
-	ErrAdminNotMember = errors.New("group members doesn't include admin")
-
-	ErrGroupNameEmpty   = errors.New("group name is empty")
-	ErrGroupNameTooLong = errors.New("group name is too long")
-	ErrGroupDescTooLong = errors.New("group description is too long")
-
-	ErrUserAlreadyMember = errors.New("user is already a member of a chat")
-	ErrMemberIsAdmin     = errors.New("group member is admin")
-
-	ErrGroupPhotoEmpty = errors.New("group photo is empty")
-)
-
-type URL string
 
 type GroupChat struct {
 	domain.Chat
@@ -34,19 +13,19 @@ type GroupChat struct {
 
 	Name        string
 	Description string
-	GroupPhoto  URL
+	GroupPhoto  domain.URL
 }
 
 func NewGroupChat(admin domain.UserID, members []domain.UserID, name string) (*GroupChat, error) {
-	if err := validateGroupInfo(name, ""); err != nil {
+	if err := domain.ValidateGroupInfo(name, ""); err != nil {
 		return nil, err
 	}
 
 	if !slices.Contains(members, admin) {
-		return nil, ErrAdminNotMember
+		return nil, domain.ErrAdminNotMember
 	}
 
-	normMembers := normilizeMembers(members)
+	normMembers := domain.NormilizeMembers(members)
 
 	return &GroupChat{
 		Chat: domain.Chat{
@@ -61,7 +40,7 @@ func NewGroupChat(admin domain.UserID, members []domain.UserID, name string) (*G
 }
 
 func (g *GroupChat) UpdateInfo(name, description string) error {
-	if err := validateGroupInfo(name, description); err != nil {
+	if err := domain.ValidateGroupInfo(name, description); err != nil {
 		return err
 	}
 
@@ -70,14 +49,14 @@ func (g *GroupChat) UpdateInfo(name, description string) error {
 	return nil
 }
 
-func (g *GroupChat) UpdatePhoto(photo URL) error {
+func (g *GroupChat) UpdatePhoto(photo domain.URL) error {
 	g.GroupPhoto = photo
 	return nil
 }
 
 func (g *GroupChat) DeletePhoto() error {
 	if g.GroupPhoto == "" {
-		return ErrGroupPhotoEmpty
+		return domain.ErrGroupPhotoEmpty
 	}
 
 	g.GroupPhoto = ""
@@ -86,7 +65,7 @@ func (g *GroupChat) DeletePhoto() error {
 
 func (g *GroupChat) AddMember(newMember domain.UserID) error {
 	if g.IsMember(newMember) {
-		return ErrUserAlreadyMember
+		return domain.ErrUserAlreadyMember
 	}
 
 	g.Members = append(g.Members, newMember)
@@ -95,7 +74,7 @@ func (g *GroupChat) AddMember(newMember domain.UserID) error {
 
 func (g *GroupChat) DeleteMember(member domain.UserID) error {
 	if g.Admin == member {
-		return ErrMemberIsAdmin
+		return domain.ErrMemberIsAdmin
 	}
 
 	i := slices.Index(g.Members, member)
@@ -116,32 +95,4 @@ func (g *GroupChat) ValidateCanSend(sender domain.UserID) error {
 		return domain.ErrUserNotMember
 	}
 	return nil
-}
-
-func normilizeMembers(members []domain.UserID) []domain.UserID {
-	met := make(map[domain.UserID]struct{}, len(members))
-	normMembers := make([]domain.UserID, 0, len(members))
-
-	for _, member := range members {
-		if _, ok := met[member]; !ok {
-			normMembers = append(normMembers, member)
-			met[member] = struct{}{}
-		}
-	}
-
-	return normMembers
-}
-
-func validateGroupInfo(name, description string) error {
-	var errs []error
-	if name == "" {
-		errs = append(errs, ErrGroupNameEmpty)
-	}
-	if len(name) > maxGroupNameLen {
-		errs = append(errs, ErrGroupNameTooLong)
-	}
-	if len(description) > maxDescriptionLen {
-		errs = append(errs, ErrGroupDescTooLong)
-	}
-	return errors.Join(errs...)
 }
