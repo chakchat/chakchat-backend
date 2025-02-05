@@ -12,17 +12,21 @@ type UserEvent struct {
 	Data  Event       `json:"data"`
 }
 
-type Publisher struct {
+type Publisher interface {
+	PublishForUsers(users []uuid.UUID, ev Event)
+}
+
+type UserEventPublisher struct {
 	mq external.MqPublisher
 }
 
-func NewPublisher(mq external.MqPublisher) Publisher {
-	return Publisher{
+func NewUserEventPublisher(mq external.MqPublisher) UserEventPublisher {
+	return UserEventPublisher{
 		mq: mq,
 	}
 }
 
-func (p Publisher) PublishForUsers(users []uuid.UUID, ev Event) {
+func (p UserEventPublisher) PublishForUsers(users []uuid.UUID, ev Event) {
 	if len(users) == 0 {
 		return
 	}

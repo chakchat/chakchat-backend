@@ -24,3 +24,13 @@ type GroupInfoUpdated struct {
 	Description   string    `json:"description"`
 	GroupPhotoURL string    `json:"group_photo_url"`
 }
+
+type GroupMemberAdded struct {
+	ChatID   uuid.UUID `json:"chat_id"`
+	MemberID uuid.UUID `json:"member_id"`
+}
+
+type GroupMemberRemoved struct {
+	ChatID   uuid.UUID `json:"chat_id"`
+	MemberID uuid.UUID `json:"member_id"`
+}

@@ -6,6 +6,8 @@ import (
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/external"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish/events"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 	"github.com/google/uuid"
@@ -32,12 +34,17 @@ var groupPhotoMimes = map[string]bool{
 type GroupPhotoService struct {
 	repo  repository.GroupChatRepository
 	files external.FileStorage
+	pub   publish.Publisher
 }
 
-func NewGroupPhotoService(repo repository.GroupChatRepository, files external.FileStorage) *GroupPhotoService {
+func NewGroupPhotoService(repo repository.GroupChatRepository,
+	files external.FileStorage,
+	pub publish.Publisher,
+) *GroupPhotoService {
 	return &GroupPhotoService{
 		repo:  repo,
 		files: files,
+		pub:   pub,
 	}
 }
 
@@ -74,6 +81,14 @@ func (s *GroupPhotoService) UpdatePhoto(ctx context.Context, groupId, fileId uui
 	}
 
 	gDto := dto.NewGroupChatDTO(g)
+
+	s.pub.PublishForUsers(gDto.Members, events.GroupInfoUpdated{
+		ChatID:        gDto.ID,
+		Name:          gDto.Name,
+		Description:   gDto.Description,
+		GroupPhotoURL: string(g.GroupPhoto),
+	})
+
 	return &gDto, nil
 }
 
@@ -112,5 +127,13 @@ func (s *GroupPhotoService) DeletePhoto(ctx context.Context, groupId uuid.UUID) 
 	}
 
 	gDto := dto.NewGroupChatDTO(g)
+
+	s.pub.PublishForUsers(gDto.Members, events.GroupInfoUpdated{
+		ChatID:        gDto.ID,
+		Name:          gDto.Name,
+		Description:   gDto.Description,
+		GroupPhotoURL: string(g.GroupPhoto),
+	})
+
 	return &gDto, nil
 }
