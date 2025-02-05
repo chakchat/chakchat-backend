@@ -26,11 +26,11 @@ type FileMeta struct {
 }
 
 type FileMessage struct {
-	domain.Update
+	Message
 	File FileMeta
 }
 
-func (c *PersonalChat) NewFileMessage(sender domain.UserID, file *FileMeta) (FileMessage, error) {
+func (c *PersonalChat) NewFileMessage(sender domain.UserID, file *FileMeta, replyTo *Message) (FileMessage, error) {
 	if err := c.validateCanSend(sender); err != nil {
 		return FileMessage{}, err
 	}
@@ -39,30 +39,26 @@ func (c *PersonalChat) NewFileMessage(sender domain.UserID, file *FileMeta) (Fil
 		return FileMessage{}, err
 	}
 
+	if replyTo != nil {
+		if err := c.validateCanReply(sender, replyTo); err != nil {
+			return FileMessage{}, err
+		}
+	}
+
 	return FileMessage{
-		Update: domain.Update{
-			ChatID:   c.ChatID,
-			SenderID: sender,
+		Message: Message{
+			Update: domain.Update{
+				ChatID:   c.ChatID,
+				SenderID: sender,
+			},
+			ReplyTo: replyTo,
 		},
 		File: *file,
 	}, nil
 }
 
 func (c *PersonalChat) DeleteFileMessage(sender domain.UserID, m *FileMessage, mode domain.DeleteMode) error {
-	if err := c.validateCanSend(sender); err != nil {
-		return err
-	}
-
-	if c.ChatID != m.ChatID {
-		return domain.ErrUpdateNotFromChat
-	}
-
-	if m.DeletedFor(sender) {
-		return domain.ErrUpdateDeleted
-	}
-
-	m.AddDeletion(sender, mode)
-	return nil
+	return c.deleteMessage(sender, &m.Update, mode)
 }
 
 func validateFile(file *FileMeta) error {

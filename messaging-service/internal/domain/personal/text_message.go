@@ -18,7 +18,7 @@ var (
 )
 
 type TextMessage struct {
-	domain.Update
+	Message
 
 	Text   string
 	Edited *TextMessageEdited
@@ -30,9 +30,15 @@ type TextMessageEdited struct {
 	MessageID domain.UpdateID
 }
 
-func (c *PersonalChat) NewTextMessage(sender domain.UserID, text string) (TextMessage, error) {
+func (c *PersonalChat) NewTextMessage(sender domain.UserID, text string, replyTo *Message) (TextMessage, error) {
 	if err := c.validateCanSend(sender); err != nil {
 		return TextMessage{}, err
+	}
+
+	if replyTo != nil {
+		if err := c.validateCanReply(sender, replyTo); err != nil {
+			return TextMessage{}, err
+		}
 	}
 
 	if err := validateText(text); err != nil {
@@ -40,9 +46,12 @@ func (c *PersonalChat) NewTextMessage(sender domain.UserID, text string) (TextMe
 	}
 
 	return TextMessage{
-		Update: domain.Update{
-			ChatID:   c.ChatID,
-			SenderID: sender,
+		Message: Message{
+			Update: domain.Update{
+				ChatID:   c.ChatID,
+				SenderID: sender,
+			},
+			ReplyTo: replyTo,
 		},
 		Text: text,
 	}, nil
@@ -81,30 +90,7 @@ func (c *PersonalChat) EditTextMessage(sender domain.UserID, m *TextMessage, new
 }
 
 func (c *PersonalChat) DeleteTextMessage(sender domain.UserID, m *TextMessage, mode domain.DeleteMode) error {
-	if err := c.validateCanSend(sender); err != nil {
-		return err
-	}
-
-	if c.ChatID != m.ChatID {
-		return domain.ErrUpdateNotFromChat
-	}
-
-	if m.DeletedFor(sender) {
-		return domain.ErrUpdateDeleted
-	}
-
-	m.AddDeletion(sender, mode)
-	return nil
-}
-
-func (c *PersonalChat) validateCanSend(sender domain.UserID) error {
-	if !c.IsMember(sender) {
-		return domain.ErrUserNotMember
-	}
-	if c.Blocked() {
-		return ErrChatBlocked
-	}
-	return nil
+	return c.deleteMessage(sender, &m.Update, mode)
 }
 
 func validateText(text string) error {
