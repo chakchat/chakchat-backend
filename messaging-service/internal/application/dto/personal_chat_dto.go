@@ -15,18 +15,13 @@ type PersonalChatDTO struct {
 }
 
 func NewPersonalChatDTO(chat *personal.PersonalChat) PersonalChatDTO {
-	blockedBy := make([]uuid.UUID, len(chat.BlockedBy))
-	for i, u := range chat.BlockedBy {
-		blockedBy[i] = uuid.UUID(u)
-	}
-
 	return PersonalChatDTO{
 		ID: uuid.UUID(chat.ID),
 		Members: [2]uuid.UUID{
 			uuid.UUID(chat.Members[0]),
 			uuid.UUID(chat.Members[1]),
 		},
-		BlockedBy: blockedBy,
+		BlockedBy: UUIDs(chat.BlockedBy),
 		CreatedAt: int64(chat.CreatedAt),
 	}
 }

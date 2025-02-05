@@ -22,16 +22,11 @@ type SecretGroupChatDTO struct {
 }
 
 func NewSecretGroupChatDTO(g *secgroup.SecretGroupChat) SecretGroupChatDTO {
-	members := make([]uuid.UUID, len(g.Members))
-	for i, u := range g.Members {
-		members[i] = uuid.UUID(u)
-	}
-
 	return SecretGroupChatDTO{
 		ID:            uuid.UUID(g.ID),
 		CreatedAt:     int64(g.CreatedAt),
 		Admin:         uuid.UUID(g.Admin),
-		Members:       members,
+		Members:       UUIDs(g.Members),
 		Name:          g.Name,
 		Description:   g.Description,
 		GroupPhotoURL: string(g.GroupPhoto),
