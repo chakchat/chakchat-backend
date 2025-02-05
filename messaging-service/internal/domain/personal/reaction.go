@@ -23,11 +23,11 @@ func (c *PersonalChat) NewReaction(
 	m *domain.Message,
 	reaction ReactionType,
 ) (Reaction, error) {
-	if err := c.validateCanSend(sender); err != nil {
+	if err := c.ValidateCanSend(sender); err != nil {
 		return Reaction{}, err
 	}
 
-	if c.ChatID != m.ChatID {
+	if c.ID != m.ChatID {
 		return Reaction{}, domain.ErrUpdateNotFromChat
 	}
 
@@ -37,7 +37,7 @@ func (c *PersonalChat) NewReaction(
 
 	return Reaction{
 		Update: domain.Update{
-			ChatID:   c.ChatID,
+			ChatID:   c.ID,
 			SenderID: sender,
 		},
 		Type: reaction,
@@ -45,11 +45,11 @@ func (c *PersonalChat) NewReaction(
 }
 
 func (c *PersonalChat) DeleteReaction(sender domain.UserID, r *Reaction) error {
-	if err := c.validateCanSend(sender); err != nil {
+	if err := c.ValidateCanSend(sender); err != nil {
 		return err
 	}
 
-	if c.ChatID != r.ChatID {
+	if c.ID != r.ChatID {
 		return domain.ErrUpdateNotFromChat
 	}
 

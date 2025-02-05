@@ -28,7 +28,7 @@ func NewPersonalChat(users [2]domain.UserID) (*PersonalChat, error) {
 
 	return &PersonalChat{
 		Chat: domain.Chat{
-			ChatID: domain.NewChatID(),
+			ID: domain.NewChatID(),
 		},
 		Members:   users,
 		BlockedBy: nil,
@@ -71,4 +71,14 @@ func (c *PersonalChat) Blocked() bool {
 
 func (c *PersonalChat) IsMember(user domain.UserID) bool {
 	return user == c.Members[0] || user == c.Members[1]
+}
+
+func (c *PersonalChat) ValidateCanSend(sender domain.UserID) error {
+	if !c.IsMember(sender) {
+		return domain.ErrUserNotMember
+	}
+	if c.Blocked() {
+		return domain.ErrChatBlocked
+	}
+	return nil
 }

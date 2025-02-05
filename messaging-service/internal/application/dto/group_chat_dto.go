@@ -23,7 +23,7 @@ func NewGroupChatDTO(g *group.GroupChat) GroupChatDTO {
 	}
 
 	return GroupChatDTO{
-		ID:          uuid.UUID(g.ChatID),
+		ID:          uuid.UUID(g.ID),
 		Admin:       uuid.UUID(g.Admin),
 		Members:     members,
 		Name:        g.Name,

@@ -139,7 +139,7 @@ func (s *PersonalChatService) DeleteChat(ctx context.Context, chatId uuid.UUID, 
 
 	// TODO: put other logic here after you decide what to do with messages
 
-	if err := s.repo.Delete(ctx, chat.ChatID); err != nil {
+	if err := s.repo.Delete(ctx, chat.ID); err != nil {
 		return errors.Join(ErrInternal, err)
 	}
 	return nil

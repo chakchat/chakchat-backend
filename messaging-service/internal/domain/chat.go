@@ -25,6 +25,11 @@ var (
 )
 
 type Chat struct {
-	ChatID    ChatID
+	ID        ChatID
 	CreatedAt Timestamp
+}
+
+type Chatter interface {
+	ChatID() ChatID
+	ValidateCanSend(UserID) error
 }

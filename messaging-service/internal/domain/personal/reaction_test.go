@@ -13,7 +13,7 @@ func TestReaction(t *testing.T) {
 	user3, _ := domain.NewUserID("fb048277-ad4f-4730-88eb-5e453c9ca5ce")
 	chat := PersonalChat{
 		Chat: domain.Chat{
-			ChatID: domain.NewChatID(),
+			ID: domain.NewChatID(),
 		},
 		Members: [2]domain.UserID{user1, user2},
 	}
@@ -22,7 +22,7 @@ func TestReaction(t *testing.T) {
 		Message: domain.Message{
 			Update: domain.Update{
 				UpdateID: 12,
-				ChatID:   chat.ChatID,
+				ChatID:   chat.ID,
 				SenderID: user1,
 			},
 		},
@@ -33,7 +33,7 @@ func TestReaction(t *testing.T) {
 
 	reaction, err := chat.NewReaction(user1, &txtMsg.Message, "some_reaction_idk")
 	require.NoError(t, err)
-	require.Equal(t, chat.ChatID, reaction.ChatID)
+	require.Equal(t, chat.ID, reaction.ChatID)
 	require.Equal(t, user1, reaction.SenderID)
 
 	err = chat.DeleteReaction(user3, &reaction)

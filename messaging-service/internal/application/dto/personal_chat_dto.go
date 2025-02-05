@@ -21,7 +21,7 @@ func NewPersonalChatDTO(chat *personal.PersonalChat) PersonalChatDTO {
 	}
 
 	return PersonalChatDTO{
-		ID: uuid.UUID(chat.ChatID),
+		ID: uuid.UUID(chat.ID),
 		Members: [2]uuid.UUID{
 			uuid.UUID(chat.Members[0]),
 			uuid.UUID(chat.Members[1]),
