@@ -14,7 +14,10 @@ keys-sym:
 gen: gen-ssl-cert keys-rsa keys-sym
 
 run: 
-	docker-compose up --build --abort-on-container-exit
+	docker-compose up -d --build
+
+down:
+	docker-compose down
 
 clean:
 	docker-compose down --volumes
