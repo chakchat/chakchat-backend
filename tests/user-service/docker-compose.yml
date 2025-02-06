@@ -2,6 +2,8 @@ services:
   test:
     build:
       context: ./service-test
+    environment:
+      - USER_SERVICE_ADDR=user-service:50051 # TODO: Pass your user-service address here
     depends_on:
       - user-service
   
