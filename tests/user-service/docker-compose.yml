@@ -1,0 +1,25 @@
+services:
+  test:
+    build:
+      context: ./service-test
+    environment:
+      - USER_SERVICE_ADDR=user-service:50051 # TODO: Pass your user-service address here
+    depends_on:
+      - user-service
+  
+  #TODO: configure user-service lower:
+  user-service:
+    build:
+      context: ../../user-service # It is built using ../../user-service/Dockerfile
+    environment:
+      - SOME_ENV_VAR=DELETE_ME
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:15.3
+    environment:
+      POSTGRES_USER: #TODO: Pass your postgres user here
+      POSTGRES_PASSWORD: #TODO: Pass your postgres password here
+      POSTGRES_DB: #TODO: Pass your postgres database name here
+    # Do not persist data in the container. (Don't add a volume)
