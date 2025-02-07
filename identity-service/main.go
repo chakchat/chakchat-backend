@@ -15,6 +15,7 @@ import (
 	"github.com/chakchat/chakchat-backend/shared/go/idempotency"
 	"github.com/chakchat/chakchat-backend/shared/go/jwt"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/extra/redisotel/v9"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -47,8 +48,12 @@ func main() {
 		}
 	}()
 
-	redisClient := connectRedis()
-	defer redisClient.Close()
+	rdb := connectRedis()
+	defer rdb.Close()
+	if err := redisotel.InstrumentTracing(rdb); err != nil {
+		log.Fatalf("Add instrument tracing to redis failed: %s", err)
+	}
+
 	sms := createSmsSender()
 	usersClient, closeGrpc := createUsersClient()
 	defer closeGrpc()
@@ -57,10 +62,10 @@ func main() {
 	refreshTokenConfig := loadRefreshTokenConfig()
 	internalTokenConfig := loadInternalTokenConfig()
 
-	idempotencyStorage := createIdempotencyStorage(redisClient)
-	signInMetaStorage := createSignInMetaStorage(redisClient)
-	invalidatedTokenStorage := createInvalidatedTokenStorage(redisClient)
-	signUpMetaStorage := createSignUpMetaStorage(redisClient)
+	idempotencyStorage := createIdempotencyStorage(rdb)
+	signInMetaStorage := createSignInMetaStorage(rdb)
+	invalidatedTokenStorage := createInvalidatedTokenStorage(rdb)
+	signUpMetaStorage := createSignUpMetaStorage(rdb)
 
 	sendCodeService := createSignInSendCodeService(sms, signInMetaStorage, usersClient)
 	signInService := services.NewSignInService(signInMetaStorage, accessTokenConfig, refreshTokenConfig)
