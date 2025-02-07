@@ -53,7 +53,7 @@ func (m *idempotencyMiddleware) Handle(c *gin.Context) {
 	m.lock.Lock(key)
 	defer m.lock.Unlock(key)
 
-	cached, ok, err := m.storage.Get(c, key)
+	cached, ok, err := m.storage.Get(c.Request.Context(), key)
 	if err != nil {
 		log.Printf("idempotency middleware: gettings cached response failed: %s", err)
 		restapi.SendInternalError(c)
@@ -79,9 +79,7 @@ func (m *idempotencyMiddleware) Handle(c *gin.Context) {
 		// Store() looks idempotent so everything is okay
 		var err error
 		for range 3 {
-			// This operation shouldn't be stopped such easily.
-			// So, I pass Background() context to prevent cancellation.
-			err = m.storage.Store(context.Background(), key, resp)
+			err = m.storage.Store(c.Request.Context(), key, resp)
 			if err == nil {
 				break
 			}
