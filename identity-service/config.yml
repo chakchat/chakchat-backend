@@ -39,3 +39,5 @@ sms:
   type: stub
   stub:
     addr: http://sms-service-stub:5023
+otlp:
+  grpc_addr: otel-collector:4317

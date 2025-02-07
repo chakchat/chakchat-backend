@@ -28,7 +28,7 @@ func SignIn(service SignInService) gin.HandlerFunc {
 			return
 		}
 
-		tokens, err := service.SignIn(c, req.SignInKey, req.Code)
+		tokens, err := service.SignIn(c.Request.Context(), req.SignInKey, req.Code)
 
 		if err != nil {
 			switch err {
@@ -43,6 +43,7 @@ func SignIn(service SignInService) gin.HandlerFunc {
 					ErrorMessage: "Wrong phone verification code",
 				})
 			default:
+				c.Error(err)
 				restapi.SendInternalError(c)
 			}
 			return

@@ -22,7 +22,7 @@ func SignOut(service SignOutService) gin.HandlerFunc {
 			return
 		}
 
-		err := service.SignOut(c, jwt.Token(req.RefreshJWT))
+		err := service.SignOut(c.Request.Context(), jwt.Token(req.RefreshJWT))
 
 		// I think that signing out expired token counts as a successful operation
 		if err != nil && err != services.ErrRefreshTokenExpired {
@@ -33,6 +33,7 @@ func SignOut(service SignOutService) gin.HandlerFunc {
 					ErrorMessage: "Refresh token is invalid",
 				})
 			default:
+				c.Error(err)
 				restapi.SendInternalError(c)
 			}
 			return

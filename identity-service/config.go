@@ -49,6 +49,10 @@ type Config struct {
 			Addr string `mapstructure:"addr"`
 		} `mapstructure:"stub"`
 	} `mapstructure:"sms"`
+
+	Otlp struct {
+		GrpcAddr string `mapstructure:"grpc_addr"`
+	} `mapstructure:"otlp"`
 }
 
 type JWTConfig struct {

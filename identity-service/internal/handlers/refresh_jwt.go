@@ -23,7 +23,7 @@ func RefreshJWT(service RefreshJWTService) gin.HandlerFunc {
 			return
 		}
 
-		tokens, err := service.Refresh(c, jwt.Token(req.RefreshToken))
+		tokens, err := service.Refresh(c.Request.Context(), jwt.Token(req.RefreshToken))
 
 		if err != nil {
 			log.Printf("met error in refresh-jwt: %s", err)
@@ -49,6 +49,7 @@ func RefreshJWT(service RefreshJWTService) gin.HandlerFunc {
 					ErrorMessage: "Invalid signature of JWT",
 				})
 			default:
+				c.Error(err)
 				restapi.SendInternalError(c)
 			}
 			return
