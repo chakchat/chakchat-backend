@@ -17,7 +17,15 @@ import (
 	"github.com/chakchat/chakchat-backend/shared/go/idempotency"
 	"github.com/chakchat/chakchat-backend/shared/go/jwt"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/extra/redisotel/v9"
 	"github.com/redis/go-redis/v9"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -38,10 +46,30 @@ func main() {
 		UrlPrefix: conf.S3.UrlPrefix,
 	}
 
+	tp, err := initTracer()
+	if err != nil {
+		log.Fatalf("Failed to initialize tracer: %s", err)
+	}
+	defer func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			log.Printf("Failed to shutdown tracer provider: %s", err)
+		}
+	}()
+	defer func() {
+		if err := tp.ForceFlush(context.Background()); err != nil {
+			log.Fatalf("ForceFlush failed: %s", err)
+		}
+	}()
+
+	rdb := connectRedis()
+	defer rdb.Close()
+	if err := redisotel.InstrumentTracing(rdb); err != nil {
+		log.Fatalf("Add instrument tracing to redis failed: %s", err)
+	}
+
 	db := connectDB()
-	redisClient := connectRedis()
 	s3Client := connectS3()
-	idempStorage := createIdempStorage(redisClient)
+	idempStorage := createIdempStorage(rdb)
 	fileMetaStorage := storage.NewFileMetaStorage(db)
 	uploadMetaStorage := storage.NewUploadMetaStorage(db)
 
@@ -53,6 +81,8 @@ func main() {
 	uploadCompleteService := services.NewUploadCompleteService(fileMetaStorage, uploadMetaStorage, s3Client, s3Config)
 
 	r := gin.New()
+
+	r.Use(otelgin.Middleware("file-storage-service"))
 
 	r.NoRoute(func(c *gin.Context) {
 		c.JSON(http.StatusNotFound, restapi.ErrorResponse{
@@ -146,4 +176,44 @@ func readKey(path string) []byte {
 		log.Fatal(err)
 	}
 	return key
+}
+
+func initTracer() (*sdktrace.TracerProvider, error) {
+	// Create the OTLP gRPC exporter
+	exporter, err := otlptracegrpc.New(
+		context.Background(),
+		otlptracegrpc.WithInsecure(),                   // Use WithInsecure() for non-TLS connections
+		otlptracegrpc.WithEndpoint(conf.Otlp.GrpcAddr), // Replace with your OpenTelemetry Collector endpoint
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a resource describing your application
+	res, err := resource.New(
+		context.Background(),
+		resource.WithAttributes(
+			semconv.ServiceNameKey.String("identity-service"), // Replace with your service name
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a trace provider with the exporter and resource
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(exporter),
+		sdktrace.WithResource(res),
+	)
+
+	// Set the global trace provider
+	otel.SetTracerProvider(tp)
+
+	// Set the global propagator (for context propagation)
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(
+		propagation.TraceContext{},
+		propagation.Baggage{},
+	))
+
+	return tp, nil
 }

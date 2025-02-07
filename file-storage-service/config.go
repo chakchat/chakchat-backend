@@ -44,6 +44,10 @@ type Config struct {
 	DB struct {
 		DSN string `mapstructure:"dsn"`
 	} `mapstructure:"db"`
+
+	Otlp struct {
+		GrpcAddr string `mapstructure:"grpc_addr"`
+	} `mapstructure:"otlp"`
 }
 
 type JWTConfig struct {
