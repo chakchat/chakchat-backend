@@ -19,3 +19,5 @@ multipart_upload:
 s3:
   bucket: demo-chakchat-yandex-storage
   url_prefix: https://storage.yandexcloud.net/demo-chakchat-yandex-storage/
+otlp:
+  grpc_addr: otel-collector:4317

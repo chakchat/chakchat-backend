@@ -29,7 +29,7 @@ func GetFile(service GetFileService) gin.HandlerFunc {
 			return
 		}
 
-		file, err := service.GetFile(c, fileId)
+		file, err := service.GetFile(c.Request.Context(), fileId)
 		if err != nil {
 			if err == services.ErrFileNotFound {
 				c.JSON(http.StatusNotFound, restapi.ErrorResponse{
@@ -38,6 +38,7 @@ func GetFile(service GetFileService) gin.HandlerFunc {
 				})
 				return
 			}
+			c.Error(err)
 			restapi.SendInternalError(c)
 			return
 		}

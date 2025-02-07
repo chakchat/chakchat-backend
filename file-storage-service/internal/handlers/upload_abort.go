@@ -22,7 +22,7 @@ func UploadAbort(service UploadAbortService) gin.HandlerFunc {
 			return
 		}
 
-		err := service.Abort(c, req.UploadId)
+		err := service.Abort(c.Request.Context(), req.UploadId)
 
 		if err != nil {
 			if err == services.ErrUploadNotFound {
@@ -32,6 +32,7 @@ func UploadAbort(service UploadAbortService) gin.HandlerFunc {
 				})
 				return
 			}
+			c.Error(err)
 			restapi.SendInternalError(c)
 			return
 		}

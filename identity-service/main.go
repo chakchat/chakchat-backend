@@ -226,37 +226,32 @@ func readKey(path string) []byte {
 }
 
 func initTracer() (*sdktrace.TracerProvider, error) {
-	// Create the OTLP gRPC exporter
 	exporter, err := otlptracegrpc.New(
 		context.Background(),
-		otlptracegrpc.WithInsecure(),                   // Use WithInsecure() for non-TLS connections
-		otlptracegrpc.WithEndpoint(conf.Otlp.GrpcAddr), // Replace with your OpenTelemetry Collector endpoint
+		otlptracegrpc.WithInsecure(),
+		otlptracegrpc.WithEndpoint(conf.Otlp.GrpcAddr),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	// Create a resource describing your application
 	res, err := resource.New(
 		context.Background(),
 		resource.WithAttributes(
-			semconv.ServiceNameKey.String("identity-service"), // Replace with your service name
+			semconv.ServiceNameKey.String("identity-service"),
 		),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	// Create a trace provider with the exporter and resource
 	tp := sdktrace.NewTracerProvider(
 		sdktrace.WithBatcher(exporter),
 		sdktrace.WithResource(res),
 	)
 
-	// Set the global trace provider
 	otel.SetTracerProvider(tp)
 
-	// Set the global propagator (for context propagation)
 	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(
 		propagation.TraceContext{},
 		propagation.Baggage{},
