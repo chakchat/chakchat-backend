@@ -41,15 +41,17 @@ func main() {
 			log.Printf("Failed to shutdown tracer provider: %s", err)
 		}
 	}()
-	_, span := tp.Tracer("main").Start(context.Background(), "main-span")
-	span.End()
-	if err := tp.ForceFlush(context.Background()); err != nil {
-		log.Fatalf("ForceFlush failed: %s", err)
-	}
+	defer func() {
+		if err := tp.ForceFlush(context.Background()); err != nil {
+			log.Fatalf("ForceFlush failed: %s", err)
+		}
+	}()
 
 	redisClient := connectRedis()
+	defer redisClient.Close()
 	sms := createSmsSender()
-	usersClient := createUsersClient()
+	usersClient, closeGrpc := createUsersClient()
+	defer closeGrpc()
 
 	accessTokenConfig := loadAccessTokenConfig()
 	refreshTokenConfig := loadRefreshTokenConfig()
@@ -165,14 +167,14 @@ func loadInternalTokenConfig() *jwt.Config {
 	return res
 }
 
-func createUsersClient() userservice.UserServiceClient {
+func createUsersClient() (client userservice.UserServiceClient, closeFunc func() error) {
 	addr := conf.UserService.GrpcAddr
 	// TODO: Insecure transport should be replaced in the future
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatal(err)
 	}
-	return userservice.NewUserServiceClient(conn)
+	return userservice.NewUserServiceClient(conn), conn.Close
 }
 
 func connectRedis() *redis.Client {

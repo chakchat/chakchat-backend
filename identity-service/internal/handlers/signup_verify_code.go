@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	"github.com/chakchat/chakchat-backend/identity-service/internal/restapi"
@@ -23,7 +22,7 @@ func SignUpVerifyCode(service SignUpVerifyCodeService) gin.HandlerFunc {
 			return
 		}
 
-		err := service.VerifyCode(c, req.SignUpKey, req.Code)
+		err := service.VerifyCode(c.Request.Context(), req.SignUpKey, req.Code)
 		if err != nil {
 			switch err {
 			case services.ErrSignUpKeyNotFound:
@@ -37,7 +36,7 @@ func SignUpVerifyCode(service SignUpVerifyCodeService) gin.HandlerFunc {
 					ErrorMessage: "Wrong phone verification code",
 				})
 			default:
-				log.Printf("sign up verify code failed: %s", err)
+				c.Error(err)
 				restapi.SendInternalError(c)
 			}
 			return

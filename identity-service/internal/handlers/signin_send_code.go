@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"regexp"
 
@@ -32,7 +31,7 @@ func SignInSendCode(service SignInSendCodeService) gin.HandlerFunc {
 			return
 		}
 
-		signInKey, err := service.SendCode(c, req.Phone)
+		signInKey, err := service.SendCode(c.Request.Context(), req.Phone)
 
 		if err != nil {
 			switch err {
@@ -47,7 +46,7 @@ func SignInSendCode(service SignInSendCodeService) gin.HandlerFunc {
 					ErrorMessage: "Send code operation frequency exceeded",
 				})
 			default:
-				log.Printf("send code endpoint failed: %s", err)
+				c.Error(err)
 				restapi.SendInternalError(c)
 			}
 			return

@@ -35,7 +35,7 @@ func SignUp(service SignUpService) gin.HandlerFunc {
 			return
 		}
 
-		tokens, err := service.SignUp(c, req.SignUpKey, services.CreateUserData{
+		tokens, err := service.SignUp(c.Request.Context(), req.SignUpKey, services.CreateUserData{
 			Username: req.Username,
 			Name:     req.Name,
 		})
@@ -63,6 +63,7 @@ func SignUp(service SignUpService) gin.HandlerFunc {
 					ErrorMessage: "Phone is not verified",
 				})
 			default:
+				c.Error(err)
 				restapi.SendInternalError(c)
 			}
 			return

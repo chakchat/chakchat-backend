@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"strings"
 
@@ -40,9 +39,8 @@ func Identity(service IdentityService) gin.HandlerFunc {
 			})
 		}
 
-		internalToken, err := service.Idenitfy(c, publicToken)
+		internalToken, err := service.Idenitfy(c.Request.Context(), publicToken)
 		if err != nil {
-			log.Printf("met error in identity endpoint: %s", err)
 			switch err {
 			case services.ErrInvalidJWT:
 				c.JSON(http.StatusUnauthorized, restapi.ErrorResponse{
@@ -60,6 +58,7 @@ func Identity(service IdentityService) gin.HandlerFunc {
 					ErrorMessage: "Invalid token type",
 				})
 			default:
+				c.Error(err)
 				restapi.SendInternalError(c)
 			}
 			return

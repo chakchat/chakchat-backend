@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	"github.com/chakchat/chakchat-backend/identity-service/internal/restapi"
@@ -28,7 +27,7 @@ func SignUpSendCode(service SignUpSendCodeService) gin.HandlerFunc {
 			return
 		}
 
-		signUpKey, err := service.SendCode(c, req.Phone)
+		signUpKey, err := service.SendCode(c.Request.Context(), req.Phone)
 
 		if err != nil {
 			switch err {
@@ -43,7 +42,7 @@ func SignUpSendCode(service SignUpSendCodeService) gin.HandlerFunc {
 					ErrorMessage: "Send code operation frequency exceeded",
 				})
 			default:
-				log.Printf("send code endpoint failed: %s", err)
+				c.Error(err)
 				restapi.SendInternalError(c)
 			}
 			return
