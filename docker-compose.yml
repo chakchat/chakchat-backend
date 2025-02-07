@@ -36,6 +36,7 @@ services:
       - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
   jaeger:
     image: jaegertracing/all-in-one:latest
+    ports: [16686:16686]
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
   postgres:

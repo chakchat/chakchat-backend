@@ -17,6 +17,8 @@ github.com/chakchat/chakchat-backend/shared/go v0.0.0-20250120132945-fdfde22b59f
 github.com/chakchat/chakchat-backend/shared/go v0.0.0-20250120132945-fdfde22b59fb/go.mod h1:muKqfMzJnRx4TsEPh+hLbE3nUOtPSVI2h7ygbvh+QVY=
 github.com/chakchat/chakchat-backend/shared/go v0.0.0-20250207104303-499acc1f16d0 h1:bvypz0t3Snf0y+ANLNMdUi05pvTMvE9SXpr1dp4zGoQ=
 github.com/chakchat/chakchat-backend/shared/go v0.0.0-20250207104303-499acc1f16d0/go.mod h1:muKqfMzJnRx4TsEPh+hLbE3nUOtPSVI2h7ygbvh+QVY=
+github.com/chakchat/chakchat-backend/shared/go v0.0.0-20250207154606-0c3bb2e8ad13 h1:f+klHbaAoc2cRv/a/oh4lg5R8UjY9vDUzhp6wM10ez4=
+github.com/chakchat/chakchat-backend/shared/go v0.0.0-20250207154606-0c3bb2e8ad13/go.mod h1:muKqfMzJnRx4TsEPh+hLbE3nUOtPSVI2h7ygbvh+QVY=
 github.com/cloudwego/base64x v0.1.5 h1:XPciSp1xaq2VCSt6lF0phncD4koWyULpl5bUxbfCyP4=
 github.com/cloudwego/base64x v0.1.5/go.mod h1:0zlkT4Wn5C6NdauXdJRhSKRlJvmclQ1hhJgA0rcu/8w=
 github.com/cloudwego/iasm v0.2.0/go.mod h1:8rXZaNYT2n95jn+zTI1sDr+IgcD2GVs0nlbbQPiEFhY=

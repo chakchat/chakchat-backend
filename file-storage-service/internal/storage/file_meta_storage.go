@@ -31,7 +31,7 @@ func NewFileMetaStorage(db *gorm.DB) *FileMetaStorage {
 
 func (s *FileMetaStorage) GetFileMeta(ctx context.Context, id uuid.UUID) (*services.FileMeta, bool, error) {
 	var meta FileMeta
-	if err := s.db.First(&meta, id).Error; err != nil {
+	if err := s.db.WithContext(ctx).First(&meta, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, false, nil
 		}
@@ -58,7 +58,7 @@ func (s *FileMetaStorage) Store(ctx context.Context, m *services.FileMeta) error
 		CreatedAt: m.CreatedAt,
 	}
 
-	if err := s.db.Create(meta).Error; err != nil {
+	if err := s.db.WithContext(ctx).Create(meta).Error; err != nil {
 		return err
 	}
 	return nil

@@ -30,7 +30,7 @@ func NewUploadMetaStorage(db *gorm.DB) *UploadMetaStorage {
 
 func (s *UploadMetaStorage) Get(ctx context.Context, id uuid.UUID) (*services.UploadMeta, bool, error) {
 	var meta UploadMeta
-	if err := s.db.First(&meta, id).Error; err != nil {
+	if err := s.db.WithContext(ctx).First(&meta, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, false, nil
 		}
@@ -57,12 +57,12 @@ func (s *UploadMetaStorage) Store(ctx context.Context, m *services.UploadMeta) e
 		FileId:     m.FileId,
 	}
 
-	if err := s.db.Create(meta).Error; err != nil {
+	if err := s.db.WithContext(ctx).Create(meta).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
 func (s *UploadMetaStorage) Remove(ctx context.Context, id uuid.UUID) error {
-	return s.db.Delete(&UploadMeta{}, id).Error
+	return s.db.WithContext(ctx).Delete(&UploadMeta{}, id).Error
 }
