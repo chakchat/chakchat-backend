@@ -1,13 +1,13 @@
 access_token:
   signing_method: HS512
-  lifetime: 1m # Just for demo
+  lifetime: 5m # Just for demo
   issuer: identity_service
   audience: 
     - client
   key_file_path: /app/keys/sym
 refresh_token:
   signing_method: HS512
-  lifetime: 3m # Just for demo
+  lifetime: 30m # Just for demo
   issuer: identity_service
   audience: 
     - client
