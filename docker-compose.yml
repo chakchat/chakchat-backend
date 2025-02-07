@@ -29,6 +29,16 @@ services:
     depends_on:
       - redis
       - postgres
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports: [16686:16686]
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
   postgres:
     image: postgres:latest
     volumes:
