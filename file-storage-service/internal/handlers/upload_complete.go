@@ -29,7 +29,7 @@ func UploadComplete(service UploadCompleteService) gin.HandlerFunc {
 				ETag:       part.ETag,
 			})
 		}
-		file, err := service.Complete(c, &services.UploadCompleteRequest{
+		file, err := service.Complete(c.Request.Context(), &services.UploadCompleteRequest{
 			UploadId: req.UploadId,
 			Parts:    parts,
 		})
@@ -43,6 +43,7 @@ func UploadComplete(service UploadCompleteService) gin.HandlerFunc {
 				})
 			// TODO: handle occured errors
 			default:
+				c.Error(err)
 				restapi.SendInternalError(c)
 			}
 			return

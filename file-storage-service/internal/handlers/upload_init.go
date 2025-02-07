@@ -26,13 +26,14 @@ func UploadInit(conf *MultipartUploadConfig, service UploadInitService) gin.Hand
 			return
 		}
 
-		uploadId, err := service.Init(c, &services.UploadInitRequest{
+		uploadId, err := service.Init(c.Request.Context(), &services.UploadInitRequest{
 			FileName: req.FileName,
 			MimeType: req.MimeType,
 		})
 		if err != nil {
 			// TODO: for now I don't know what may occur here
 			// But please handle errors properly.
+			c.Error(err)
 			restapi.SendInternalError(c)
 			return
 		}
