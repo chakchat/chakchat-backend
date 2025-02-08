@@ -10,7 +10,7 @@ tags:
   - name: group chat
   - name: update
 paths:
-  /chat/my/all:
+  /chat/all:
     get:
       summary: Get all chats
       description: Get all chats
@@ -33,11 +33,11 @@ paths:
             application/json:
               schema: 
                 $ref: '#/components/schemas/ErrorResponse'
-  /chat/personal/{chatId}:
+  /chat/{chatId}:
     get:
       summary: Get chat
       description: Get chat
-      tags: [personal chat]
+      tags: [chats]
       security:
         - bearerAuth: []
       parameters:
@@ -55,13 +55,19 @@ paths:
                 type: object
                 properties:
                   data:
-                    $ref: '#/components/schemas/PersonalChat'
+                    $ref: '#/components/schemas/GenericChat'
         '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseWithDetails'
         '404':
           description: Not Found
           content:
@@ -329,41 +335,6 @@ paths:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
   /chat/group/{chatId}:
-    get:
-      summary: Get group
-      description: Get group
-      tags: [group chat]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: chatId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/GroupChat'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
     put:
       tags: [group chat]
       summary: Update group chat
@@ -677,10 +648,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                data:
-                  $ref: '#/components/schemas/SendTextMessageRequest'
+              $ref: '#/components/schemas/SendTextMessageRequest'
       responses:
         '200':
           description: OK
@@ -801,6 +769,63 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponseWithDetails'
+  /{chatId}/update:
+    get:
+      tags: ["update"]
+      summary: Get updates in range
+      description: Get updates in range
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: to
+          in: query
+          description: Inclusive bound.
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GenericUpdate'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseWithDetails'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   securitySchemes:
     bearerAuth:
