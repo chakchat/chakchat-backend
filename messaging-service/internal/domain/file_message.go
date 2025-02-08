@@ -56,6 +56,26 @@ func NewFileMessage(chat Chatter, sender UserID, file *FileMeta, replyTo *Messag
 	}, nil
 }
 
+func (m *FileMessage) Forward(chat Chatter, sender UserID, destChat Chatter) (FileMessage, error) {
+	if !chat.IsMember(sender) {
+		return FileMessage{}, ErrUserNotMember
+	}
+	if err := destChat.ValidateCanSend(sender); err != nil {
+		return FileMessage{}, err
+	}
+
+	return FileMessage{
+		Message: Message{
+			Update: Update{
+				ChatID:   destChat.ChatID(),
+				SenderID: sender,
+			},
+			Forwarded: true,
+		},
+		File: m.File,
+	}, nil
+}
+
 func validateFile(file *FileMeta) error {
 	if file.FileSize > MaxFileSize {
 		return ErrFileTooBig

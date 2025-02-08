@@ -70,8 +70,12 @@ func (c *FakeChat) ChatID() ChatID {
 }
 
 func (c *FakeChat) ValidateCanSend(user UserID) error {
-	if user != c.Members[0] && user != c.Members[1] {
+	if !c.IsMember(user) {
 		return ErrUserNotMember
 	}
 	return nil
+}
+
+func (c *FakeChat) IsMember(user UserID) bool {
+	return user == c.Members[0] || user == c.Members[1]
 }
