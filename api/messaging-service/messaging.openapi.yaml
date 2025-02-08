@@ -253,7 +253,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-# Personal secret chat
+# Secret personal chat
   /chat/personal/secret:
     post:
       summary: Create secret chat
@@ -444,6 +444,13 @@ paths:
       description: Update group chat
       security:
         - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         content:
           application/json:
@@ -525,7 +532,7 @@ paths:
     put:
       summary: Add new member
       description: Add new member to group chat
-      tags: [group chat]
+      tags: ["group chat"]
       security:
         - bearerAuth: []
       parameters:
@@ -540,19 +547,25 @@ paths:
           schema:
             type: string
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/GroupChat"
-        400:
+        '400':
           description: Bad request
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-        404:
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
           description: Not found
           content:
             application/json:
@@ -679,11 +692,13 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+
+# Secret group chat
   /chat/group/secret:
     post:
       summary: Create secret group chat
       description: Create secret group chat
-      tags: [group chat]
+      tags: ["secret group chat"]
       security:
         - bearerAuth: []
       parameters:
@@ -708,7 +723,7 @@ paths:
                 type: object
                 properties:
                   data:
-                    $ref: '#/components/schemas/GroupChat'
+                    $ref: '#/components/schemas/SecretGroupChat'
         '401':
           description: Unauthorized
           content:
@@ -727,6 +742,265 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /chat/group/secret/{chatId}:
+    put:
+      tags: ["secret group chat"]
+      summary: Update group chat
+      description: Update group chat
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSecretGroupRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SecretGroupChat'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags: ["secret group chat"]
+      summary: Delete group chat
+      description: Delete group chat
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/EmptySuccessResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  /chat/group/secret/{chatId}/member/{memberId}:
+    put:
+      summary: Add new member
+      description: Add new member to group chat
+      tags: ["secret group chat"]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: memberId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/SecretGroupChat"
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        404:
+          description: Not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+    delete:
+      summary: Delete secret group member
+      description: Delete secret group member
+      tags: ["secret group chat"]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/SecretGroupChat"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  /chat/group/secret/{chatId}/photo:
+    put:
+      summary: Update group photo
+      description: Update group photo
+      tags: ["secret group chat"]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSecretGroupPhotoRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SecretGroupChat'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseWithDetails'
+    delete:
+      summary: Delete group photo
+      description: Delete group photo
+      tags: ["secret group chat"]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/SecretGroupChat"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+
+# 
   /{chatId}/update/message/text:
     post:
       summary: Send text message
@@ -1311,6 +1585,25 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    UpdateSecretGroupPhotoRequest:
+      type: object
+      properties:
+        photo_id:
+          type: string
+          format: uuid
+          description: Photo id. It is used to identify photo loaded to file storage.
+      required:
+        - photo_id
+    UpdateSecretGroupRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+      required:
+        - name
+        - description
     SecretUpdate:
       type: object
       properties:
@@ -1706,8 +1999,6 @@ components:
         admin_id:
           type: string
           format: uuid
-        secret:
-          type: boolean
         group_photo:
           type: string
           format: url
@@ -1718,7 +2009,43 @@ components:
         - members
         - created_at
         - admin_id
-        - secret
+    SecretGroupChat:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        members:
+          type: array
+          items:
+            type: string
+            format: uuid
+        created_at:
+          type: string
+          format: date-time
+        admin_id:
+          type: string
+          format: uuid
+        group_photo:
+          type: string
+          format: url
+        expiration:
+          type: string
+          example: "24h"
+          nullable: true
+          description: Secret chat messages expiration period
+      required:
+        - id
+        - name
+        - description
+        - members
+        - created_at
+        - admin_id
+        - expiration
     CreateSecretChatRequest:
       type: object
       properties:
