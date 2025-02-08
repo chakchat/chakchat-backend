@@ -697,6 +697,12 @@ paths:
           schema:
             type: string
             format: uuid
+        - name: deleteMode
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [only_me, all]
       responses:
         '200':
           description: OK
@@ -1033,6 +1039,98 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponseWithDetails'
+  /{chatId}/update/secret:
+    post:
+      summary: Send secret message
+      description: Send secret message
+      tags: ["update"]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendSecretUpdateRequest'
+      responses:
+        '200':
+          description: Secret message sent
+          content:
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SecretUpdate'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseWithDetails'
+  /{chatId}/update/secret/{updateId}:
+    delete:
+      summary: Delete secret message
+      description: Delete secret message
+      tags: ["update"]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: updateId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/EmptySuccessResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
 components:
   securitySchemes:
     bearerAuth:
@@ -1040,6 +1138,38 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    SecretUpdate:
+      type: object
+      properties:
+        payload:
+          type: string
+          format: binary
+        initialization_vector:
+          type: string
+          format: binary
+        key_id:
+          type: string
+          format: uuid
+      required:
+        - payload
+        - initialization_vector
+        - key_id
+    SendSecretUpdateRequest:
+      type: object
+      properties:
+        payload:
+          type: string
+          format: binary
+        initialization_vector:
+          type: string
+          format: binary
+        key_id:
+          type: string
+          format: uuid
+      required:
+        - payload
+        - initialization_vector
+        - key_id
     ForwardMessageRequest:
       type: object
       properties:
