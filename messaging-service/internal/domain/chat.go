@@ -60,6 +60,7 @@ func (c *Chat) ChatID() ChatID {
 
 type Chatter interface {
 	ChatID() ChatID
+	IsMember(UserID) bool
 	ValidateCanSend(UserID) error
 }
 

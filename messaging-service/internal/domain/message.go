@@ -3,7 +3,8 @@ package domain
 type Message struct {
 	Update
 
-	ReplyTo *Message
+	ReplyTo   *Message
+	Forwarded bool
 }
 
 func (m *Message) Delete(chat Chatter, sender UserID, mode DeleteMode) error {

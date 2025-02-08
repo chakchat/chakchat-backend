@@ -86,6 +86,26 @@ func (m *TextMessage) Edit(chat Chatter, sender UserID, newText string) error {
 	return nil
 }
 
+func (m *TextMessage) Forward(chat Chatter, sender UserID, destChat Chatter) (TextMessage, error) {
+	if !chat.IsMember(sender) {
+		return TextMessage{}, ErrUserNotMember
+	}
+	if err := destChat.ValidateCanSend(sender); err != nil {
+		return TextMessage{}, err
+	}
+
+	return TextMessage{
+		Message: Message{
+			Update: Update{
+				ChatID:   destChat.ChatID(),
+				SenderID: sender,
+			},
+			Forwarded: true,
+		},
+		Text: m.Text,
+	}, nil
+}
+
 func validateText(text string) error {
 	if text == "" {
 		return ErrTextEmpty
