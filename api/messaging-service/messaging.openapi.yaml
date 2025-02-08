@@ -826,6 +826,213 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /{chatId}/update/message/file:
+    post:
+      summary: Send file message
+      description: Send file message
+      tags: ["update"]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendFileMessageRequest'
+      responses:
+        '200':
+          description: File message sent
+          content:
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FileMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseWithDetails'
+  /{chatId}/update/reaction:
+    post:
+      summary: Send reaction
+      description: Send reaction
+      tags: ["update"]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendReactionRequest'
+      responses:
+        '200':
+          description: Reaction sent
+          content:
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ReactionUpdate'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseWithDetails'
+  /{chatId}/update/reaction/{updateId}:
+    delete:
+      summary: Delete reaction
+      description: Delete reaction
+      tags: ["update"]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: updateId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/EmptySuccessResponse"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponseWithDetails"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  /{chatId}/update/message/forward:
+    post:
+      summary: Forward message
+      description: Forward message
+      tags: ["update"]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          description: Chat ID where to forward to.
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForwardMessageRequest'
+      responses:
+        '200':
+          description: Message forwarded
+          content:
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GenericUpdate'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':  
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseWithDetails'
 components:
   securitySchemes:
     bearerAuth:
@@ -833,6 +1040,150 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    ForwardMessageRequest:
+      type: object
+      properties:
+        messages: 
+          type: array
+          items:
+            type: string
+            format: uuid
+        from_chat_id:
+          type: string
+          format: uuid
+      required:
+        - messages
+        - from_chat_id
+    SendReactionRequest:
+      type: object
+      properties:
+        reaction:
+          type: string
+        message_id:
+          type: string
+          format: uuid
+      required:
+        - reaction
+        - message_id
+    ReactionUpdate:
+      type: object
+      properties:
+        update_id:
+          type: integer
+          format: int64
+        chat_id:
+          type: string
+          format: uuid
+        sender_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        content:
+          type: object
+          properties:
+            reaction:
+              type: string
+              description: Reaction
+            message_id:
+              type: string
+              format: uuid
+              description: Message id
+          required:
+            - reaction
+            - message_id
+      required:
+        - update_id
+        - chat_id
+        - sender_id
+        - created_at
+        - content
+    SendFileMessageRequest:
+      type: object
+      properties:
+        file_id:
+          type: string
+          format: uuid
+        reply_to:
+          type: string
+          format: uuid
+      required:
+        - file_id
+        - reply_to
+    FileMessage:
+      type: object
+      properties:
+        update_id:
+          type: integer
+          format: int64
+        chat_id:
+          type: string
+          format: uuid
+        sender_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        content:
+          type: object
+          properties:
+            file:
+              $ref: '#/components/schemas/FileMetadata'
+            reply_to:
+              type: string
+              format: uuid
+              description: Message id to reply to
+            forwarded:
+              type: boolean
+            reactions:
+              type: array
+              items:
+                # TODO: If there are many reactions then it may be too big.
+                $ref: '#/components/schemas/ReactionUpdate'
+          required:
+            - file
+            - reply_to
+            - forwarded
+            - reactions
+      required:
+        - update_id
+        - chat_id
+        - sender_id
+        - created_at
+        - content
+    FileMetadata:
+      type: object
+      properties:
+        file_name:
+          type: string
+          description: File name
+        file_size:
+          type: integer
+          description: File size
+        mime_type:
+          type: string
+          description: File mime type
+        file_id: 
+          type: string
+          description: File ID
+          format: uuid
+        file_url:
+          type: string
+          description: File URL
+          format: url
+        created_at:
+          type: string
+          description: File creation date
+          format: date-time
+      required:
+        - file_name
+        - file_size 
+        - mime_type
+        - file_id
+        - file_url
+        - created_at
     EditTextMessageRequest:
       type: object
       properties:
@@ -876,9 +1227,18 @@ components:
               type: string
               format: uuid
               description: Message id to reply to
+            forwarded:
+              type: boolean
+            reactions:
+              type: array
+              items:
+                # TODO: If there are many reactions then it may be too big.
+                $ref: '#/components/schemas/ReactionUpdate'
           required:
             - text
             - reply_to
+            - forwarded
+            - reactions
       required:
         - update_id
         - chat_id
