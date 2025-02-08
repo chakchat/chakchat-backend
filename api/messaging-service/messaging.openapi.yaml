@@ -509,7 +509,10 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/GroupChat"
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/GroupChat"
         '401':
           description: Unauthorized
           content:
@@ -589,19 +592,22 @@ paths:
           schema:
             type: string
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/GroupChat"
-        400:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/GroupChat"
+        '400':
           description: Bad request
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-        404:
+        '404':
           description: Not found
           content:
             application/json:
@@ -673,7 +679,10 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/GroupChat"
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/GroupChat"
         '401':
           description: Unauthorized
           content:
@@ -852,25 +861,28 @@ paths:
           schema:
             type: string
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/SecretGroupChat"
-        400:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/SecretGroupChat"
+        '400':
           description: Bad request
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-        401:
+        '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-        404:
+        '404':
           description: Not found
           content:
             application/json:
@@ -895,7 +907,10 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/SecretGroupChat"
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/SecretGroupChat"
         '401':
           description: Unauthorized
           content:
@@ -980,7 +995,10 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/SecretGroupChat"
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/SecretGroupChat"
         '401':
           description: Unauthorized
           content:

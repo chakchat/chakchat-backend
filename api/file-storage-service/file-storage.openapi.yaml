@@ -150,7 +150,10 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/UploadPartResponse"
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/UploadPartResponse"
         '400':
           description: Bad request
           content:
