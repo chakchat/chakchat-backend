@@ -1000,7 +1000,134 @@ paths:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
 
-# 
+# Updates
+  /{chatId}/update:
+    get:
+      tags: ["update"]
+      summary: Get updates in range
+      description: Get updates in range
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: to
+          in: query
+          description: Inclusive bound.
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GenericUpdate'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseWithDetails'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /{chatId}/update/message/search:
+    get:
+      summary: Search for messages
+      description: Search for messages
+      tags: ["update"]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: offset
+          description: offset counted from last messages
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: limit
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: pattern
+          description: Search pattern. (For now it is just a substring of message text)
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: sender_id
+          description: Sender id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GenericUpdate'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseWithDetails'
   /{chatId}/update/message/text:
     post:
       summary: Send text message
@@ -1152,63 +1279,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponseWithDetails'
-  /{chatId}/update:
-    get:
-      tags: ["update"]
-      summary: Get updates in range
-      description: Get updates in range
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: chatId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: from
-          in: query
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: to
-          in: query
-          description: Inclusive bound.
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/GenericUpdate'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponseWithDetails'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+
   /{chatId}/update/message/file:
     post:
       summary: Send file message
@@ -1416,11 +1487,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponseWithDetails'
+ 
+# Secret updates
   /{chatId}/update/secret:
     post:
       summary: Send secret message
       description: Send secret message
-      tags: ["update"]
+      tags: ["secret update"]
       security:
         - bearerAuth: []
       parameters:
@@ -1473,7 +1546,7 @@ paths:
     delete:
       summary: Delete secret message
       description: Delete secret message
-      tags: ["update"]
+      tags: ["secret update"]
       security:
         - bearerAuth: []
       parameters:
@@ -1508,76 +1581,6 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  /{chatId}/update/message/search:
-    get:
-      summary: Search for messages
-      description: Search for messages
-      tags: ["update"]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: chatId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: offset
-          description: offset counted from last messages
-          in: query
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: limit
-          in: query
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: pattern
-          description: Search pattern. (For now it is just a substring of message text)
-          in: query
-          required: false
-          schema:
-            type: string
-        - name: sender_id
-          description: Sender id
-          in: query
-          required: false
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/GenericUpdate'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponseWithDetails'
 components:
   securitySchemes:
     bearerAuth:
