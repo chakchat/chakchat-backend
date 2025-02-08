@@ -8,6 +8,7 @@ tags:
   - name: chats
   - name: personal chat
   - name: group chat
+  - name: update
 paths:
   /chat/my/all:
     get:
@@ -652,6 +653,154 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /{chatId}/update/message/text:
+    post:
+      summary: Send text message
+      description: Send text message
+      tags: ["update"]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  $ref: '#/components/schemas/SendTextMessageRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TextMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseWithDetails'
+  /{chatId}/update/message/{updateId}:
+    delete:
+      summary: Delete message
+      description: Delete message
+      tags: ["update"]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: updateId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/EmptySuccessResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  /{chatId}/update/message/text/{updateId}:
+    put:
+      summary: Edit text message
+      description: Edit text message
+      tags: ["update"]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: updateId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditTextMessageRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TextMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseWithDetails'
 components:
   securitySchemes:
     bearerAuth:
@@ -659,6 +808,58 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    EditTextMessageRequest:
+      type: object
+      properties:
+        text:
+          type: string
+      required:
+        - text
+    SendTextMessageRequest:
+      type: object
+      properties:
+        text:
+          type: string
+        reply_to:
+          type: string
+          format: uuid
+      required:
+        - text
+        - reply_to
+    TextMessage:
+      type: object
+      properties:
+        update_id:
+          type: integer
+          format: int64
+        chat_id:
+          type: string
+          format: uuid
+        sender_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        content:
+          type: object
+          properties:
+            text:
+              type: string
+              description: Text message
+            reply_to:
+              type: string
+              format: uuid
+              description: Message id to reply to
+          required:
+            - text
+            - reply_to
+      required:
+        - update_id
+        - chat_id
+        - sender_id
+        - created_at
+        - content
     AllChatsResponse:
       type: object
       properties:
