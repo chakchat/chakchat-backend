@@ -1131,6 +1131,82 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+  /{chatId}/update/message/search:
+    post:
+      summary: Search for messages
+      description: Search for messages
+      tags: ["update"]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: offset
+          description: offset counted from last messages
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: limit
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: pattern
+          description: Search pattern. (For now it is just a substring of message text)
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: sender_id
+          description: Sender id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GenericUpdate'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseWithDetails'
 components:
   securitySchemes:
     bearerAuth:
@@ -1141,19 +1217,40 @@ components:
     SecretUpdate:
       type: object
       properties:
-        payload:
-          type: string
-          format: binary
-        initialization_vector:
-          type: string
-          format: binary
-        key_id:
+        update_id:
+          type: integer
+          format: int64
+        chat_id:
           type: string
           format: uuid
+        sender_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        content:
+          type: object
+          properties:
+            payload:
+              type: string
+              format: binary
+            initialization_vector:
+              type: string
+              format: binary
+            key_id:
+              type: string
+              format: uuid
+          required:
+            - payload
+            - initialization_vector
+            - key_id
       required:
-        - payload
-        - initialization_vector
-        - key_id
+        - update_id
+        - chat_id
+        - sender_id
+        - created_at
+        - content
     SendSecretUpdateRequest:
       type: object
       properties:
