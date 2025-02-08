@@ -5,11 +5,16 @@ info:
 servers:
   - url: http://localhost:80/api/messaging/v1.0/
 tags:
-  - name: chats
-  - name: personal chat
-  - name: group chat
-  - name: update
+  - name: "chats"
+  - name: "personal chat"
+  - name: "secret personal chat"
+  - name: "group chat"
+  - name: "secret group chat"
+  - name: "update"
+  - name: "secret update"
 paths:
+
+# All chats
   /chat/all:
     get:
       summary: Get all chats
@@ -74,6 +79,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+
+# Personal chat
   /chat/personal:
     post:
       summary: Create chat
@@ -116,7 +123,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponseWithDetails'
-  /chat/personal/block/{chatId}:
+  /chat/personal/{chatId}/block: 
     put:
       summary: Block chat
       description: Block chat
@@ -158,7 +165,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponseWithDetails'
-  /chat/personal/unblock/{chatId}:
+  /chat/personal/{chatId}/unblock:
     put:
       summary: Unblock chat
       description: Unblock chat
@@ -200,55 +207,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponseWithDetails'
-  /chat/personal/secret:
-    post:
-      summary: Create secret chat
-      description: Create secret chat
-      tags: [personal chat]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: Idempotency-Key
-          in: header
-          description: Idempotency key
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateSecretChatRequest'
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/PersonalChat'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponseWithDetails'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /chat/personal/delete/{chatId}/{deleteMode}:
+  /chat/personal/{chatId}/delete/{deleteMode}:
     delete:
       summary: Delete chat
       description: Delete chat
@@ -293,6 +252,150 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+
+# Personal secret chat
+  /chat/personal/secret:
+    post:
+      summary: Create secret chat
+      description: Create secret chat
+      tags: ["secret personal chat"]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          description: Idempotency key
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSecretChatRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SecretPersonalChat'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseWithDetails'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /chat/personal/secret/{chatId}/expiration:
+    put:
+      summary: Set expiration period for secret chat
+      description: Set expiration period for secret chat
+      tags: ["secret personal chat"]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetExpirationRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SecretPersonalChat'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseWithDetails'
+  /chat/personal/secret/{chatId}/delete/{deleteMode}:
+    delete:
+      summary: Delete chat
+      description: Delete chat
+      tags: ["secret personal chat"]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: deleteMode
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [only_me, all]
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptySuccessResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseWithDetails'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+# Group chat
   /chat/group:
     post:
       summary: Create a group
@@ -1132,7 +1235,7 @@ paths:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
   /{chatId}/update/message/search:
-    post:
+    get:
       summary: Search for messages
       description: Search for messages
       tags: ["update"]
@@ -1141,12 +1244,6 @@ paths:
       parameters:
         - name: chatId
           in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: Idempotency-Key
-          in: header
           required: true
           schema:
             type: string
@@ -1655,17 +1752,38 @@ components:
             type: string
             format: uuid
           description: List of user ids who blocked this chat
-        secret:
-          type: boolean
-        # TODO: Here should be:
-        # 1. Preview updates
-        # 2. Aggregated all updates
       required:
         - chat_id
         - member_id
         - blocked
         - blocked_by
-        - secret
+    SetExpirationRequest:
+      type: object
+      properties:
+        expiration:
+          type: string
+          example: "24h"
+          nullable: true
+          description: Secret chat messages expiration period
+      required:
+        - expiration
+    SecretPersonalChat:
+      type: object
+      properties:
+        chat_id:
+          type: string
+          format: uuid
+        member_id:
+          type: string
+          format: uuid
+        expiration:
+          type: string
+          example: "24h"
+          nullable: true
+          description: Secret chat messages expiration period
+      required:
+        - chat_id
+        - member_id
     EmptySuccessResponse:
       type: object
       example: {}
