@@ -665,9 +665,33 @@ components:
         chats:
           type: array
           items:
-            $ref: '#/components/schemas/GenericChat'
+            $ref: '#components/schemas/GenericChat'
       required:
         - chats
+    GenericUpdate:
+      type: object
+      properties:
+        update_id:
+          type: integer
+          format: int64
+        chat_id:
+          type: string
+          format: uuid
+        sender_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        content:
+          type: object
+          description: Message content. It will vary depending on message type.
+      required:
+        - update_id
+        - chat_id
+        - sender_id
+        - created_at
+        - content
     GenericChat:
       type: object
       properties:
@@ -676,7 +700,7 @@ components:
           format: uuid
         type:
           type: string
-          enum: [personal, group]
+          enum: [personal, personal_secret, group, group_secret]
         secret: 
           type: boolean
         name:
@@ -684,13 +708,22 @@ components:
         chat_photo:
           type: string
           format: url
-        # TODO: Add message preview. (As well as in other places)
+        last_update_id:
+          type: integer
+          format: int64``
+          description: Last update id
+        preview:
+          type: array
+          items:
+            $ref: '#components/schemas/GenericUpdate'
+          description: Chat preview
       required:
         - chat_id
         - type
         - secret
         - name
         - chat_photo
+        - preview
     UpdateGroupPhotoRequest:
       type: object
       properties:
