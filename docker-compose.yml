@@ -8,13 +8,23 @@ services:
     depends_on:
       - identity-service
       - file-storage-service
+
+  # Identity service
   identity-service:
     build: ./identity-service
     volumes:
       - ./identity-service/config.yml:/app/config.yml:ro
       - ./keys:/app/keys:ro
     depends_on:
-      - redis
+      - identity-redis
+  identity-redis:
+    image: redis:latest
+    volumes:
+      - identity_redis_data:/data
+    environment:
+      - REDIS_PASSWORD=secret
+
+  # File storage service
   file-storage-service:
     build: ./file-storage-service
     volumes:
@@ -25,10 +35,35 @@ services:
       FILE_STORAGE_AWS_REGION: ${FILE_STORAGE_AWS_REGION}
       FILE_STORAGE_AWS_ENDPOINT_URL: ${FILE_STORAGE_AWS_ENDPOINT_URL}
       FILE_STORAGE_AWS_SECRET_ACCESS_KEY: ${FILE_STORAGE_AWS_SECRET_ACCESS_KEY}
-      FILE_STORAGE_DB_DSN: host=postgres port=5432 user=postgres password=secret dbname=file_metadata sslmode=disable
+      FILE_STORAGE_DB_DSN: host=file-storage-postgres port=5432 user=postgres password=secret dbname=file_metadata sslmode=disable
     depends_on:
-      - redis
-      - postgres
+      - file-storage-redis
+      - file-storage-postgres
+  file-storage-postgres:
+    image: postgres:latest
+    volumes:
+      - file_storage_postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=file_metadata
+  file-storage-redis:
+    image: redis:latest
+    volumes:
+      - file_storage_redis_data:/data
+    environment:
+      - REDIS_PASSWORD=secret
+      
+  # Stubs
+  user-service-stub:
+    build:
+      context: stubs/user-service-stub
+      dockerfile: Dockerfile
+  sms-service-stub:
+    build:
+      context: stubs/sms-service-stub
+
+  # Observability
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
     command: ["--config=/etc/otel-collector-config.yaml"]
@@ -39,29 +74,8 @@ services:
     ports: [16686:16686]
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
-  postgres:
-    image: postgres:latest
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_PASSWORD=secret
-      - POSTGRES_USER=postgres
-      - POSTGRES_DB=file_metadata
-  redis:
-    image: redis:latest
-    volumes:
-      - redis_data:/data
-    environment:
-      - REDIS_PASSWORD=secret
 
-  # Stubs
-  user-service-stub:
-    build:
-      context: stubs/user-service-stub
-      dockerfile: Dockerfile
-  sms-service-stub:
-    build:
-      context: stubs/sms-service-stub
 volumes:
-  redis_data:
-  postgres_data:
+  file_storage_redis_data:
+  file_storage_postgres_data:
+  identity_redis_data:
