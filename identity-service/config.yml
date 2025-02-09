@@ -24,7 +24,7 @@ invalidated_token_storage:
 userservice:
   grpc_addr: user-service-stub:9090
 redis:
-  addr: redis:6379
+  addr: identity-redis:6379
   password: secret
   db: 0
 signin_meta:

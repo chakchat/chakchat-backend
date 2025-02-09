@@ -6,7 +6,7 @@ jwt:
     - file_storage_service
   key_file_path: /app/keys/rsa.pub
 redis:
-  addr: redis:6379
+  addr: file-storage-redis:6379
   password: secret
   db: 0
 idempotency:
