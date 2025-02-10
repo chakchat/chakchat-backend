@@ -8,6 +8,7 @@ services:
     depends_on:
       - identity-service
       - file-storage-service
+    restart: on-failure
 
   # Identity service
   identity-service:
@@ -17,12 +18,14 @@ services:
       - ./keys:/app/keys:ro
     depends_on:
       - identity-redis
+    restart: on-failure
   identity-redis:
     image: redis:latest
     volumes:
       - identity_redis_data:/data
     environment:
       - REDIS_PASSWORD=secret
+    restart: on-failure
 
   # File storage service
   file-storage-service:
@@ -39,6 +42,7 @@ services:
     depends_on:
       - file-storage-redis
       - file-storage-postgres
+    restart: on-failure
   file-storage-postgres:
     image: postgres:latest
     volumes:
@@ -47,21 +51,25 @@ services:
       - POSTGRES_PASSWORD=secret
       - POSTGRES_USER=postgres
       - POSTGRES_DB=file_metadata
+    restart: on-failure
   file-storage-redis:
     image: redis:latest
     volumes:
       - file_storage_redis_data:/data
     environment:
       - REDIS_PASSWORD=secret
+    restart: on-failure
       
   # Stubs
   user-service-stub:
     build:
       context: stubs/user-service-stub
       dockerfile: Dockerfile
+    restart: on-failure
   sms-service-stub:
     build:
       context: stubs/sms-service-stub
+    restart: on-failure
 
   # Observability
   otel-collector:
@@ -69,11 +77,13 @@ services:
     command: ["--config=/etc/otel-collector-config.yaml"]
     volumes:
       - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+    restart: on-failure
   jaeger:
     image: jaegertracing/all-in-one:latest
     ports: [16686:16686]
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
+    restart: on-failure
 
 volumes:
   file_storage_redis_data:
