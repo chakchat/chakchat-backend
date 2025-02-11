@@ -8,7 +8,7 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/external"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish/events"
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/repository"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 	"github.com/google/uuid"
 )
