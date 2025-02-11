@@ -38,7 +38,7 @@ func (s *PersonalChatService) BlockChat(ctx context.Context, userId, chatId uuid
 	err = chat.BlockBy(domain.UserID(userId))
 
 	if err != nil {
-		if errors.Is(err, personal.ErrAlreadyBlocked) {
+		if errors.Is(err, domain.ErrAlreadyBlocked) {
 			return services.ErrChatAlreadyBlocked
 		}
 		if errors.Is(err, domain.ErrUserNotMember) {
@@ -51,7 +51,7 @@ func (s *PersonalChatService) BlockChat(ctx context.Context, userId, chatId uuid
 		return errors.Join(services.ErrInternal, err)
 	}
 
-	s.pub.PublishForUsers(getSecondUserSlice(chat.Members, domain.UserID(userId)), events.ChatBlocked{
+	s.pub.PublishForUsers(services.GetSecondUserSlice(chat.Members, domain.UserID(userId)), events.ChatBlocked{
 		ChatID: chatId,
 	})
 
@@ -70,7 +70,7 @@ func (s *PersonalChatService) UnblockChat(ctx context.Context, userId, chatId uu
 	err = chat.UnblockBy(domain.UserID(userId))
 
 	if err != nil {
-		if errors.Is(err, personal.ErrAlreadyUnblocked) {
+		if errors.Is(err, domain.ErrAlreadyUnblocked) {
 			return services.ErrChatAlreadyUnblocked
 		}
 		if errors.Is(err, domain.ErrUserNotMember) {
@@ -83,7 +83,7 @@ func (s *PersonalChatService) UnblockChat(ctx context.Context, userId, chatId uu
 		return errors.Join(services.ErrInternal, err)
 	}
 
-	s.pub.PublishForUsers(getSecondUserSlice(chat.Members, domain.UserID(userId)), events.ChatUnblocked{
+	s.pub.PublishForUsers(services.GetSecondUserSlice(chat.Members, domain.UserID(userId)), events.ChatUnblocked{
 		ChatID: chatId,
 	})
 
@@ -170,14 +170,4 @@ func (s *PersonalChatService) validateChatNotExists(ctx context.Context, members
 	}
 
 	return nil
-}
-
-func getSecondUserSlice(users [2]domain.UserID, first domain.UserID) []uuid.UUID {
-	var second domain.UserID
-	if users[0] == first {
-		second = users[1]
-	} else {
-		second = users[0]
-	}
-	return []uuid.UUID{uuid.UUID(second)}
 }

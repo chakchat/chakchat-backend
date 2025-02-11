@@ -36,12 +36,12 @@ func (u *SecretUpdate) Expired(exp *time.Duration) bool {
 	return expTime.Before(now)
 }
 
-func NewSecretUpdate(chat SecretChatter, sender UserID, data SecretData) (SecretUpdate, error) {
+func NewSecretUpdate(chat SecretChatter, sender UserID, data SecretData) (*SecretUpdate, error) {
 	if err := chat.ValidateCanSend(sender); err != nil {
-		return SecretUpdate{}, err
+		return nil, err
 	}
 
-	return SecretUpdate{
+	return &SecretUpdate{
 		Update: Update{
 			ChatID:   chat.ChatID(),
 			SenderID: sender,

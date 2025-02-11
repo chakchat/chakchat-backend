@@ -22,22 +22,22 @@ type TextMessageEdited struct {
 	NewText   string
 }
 
-func NewTextMessage(chat Chatter, sender UserID, text string, replyTo *Message) (TextMessage, error) {
+func NewTextMessage(chat Chatter, sender UserID, text string, replyTo *Message) (*TextMessage, error) {
 	if err := chat.ValidateCanSend(sender); err != nil {
-		return TextMessage{}, err
+		return nil, err
 	}
 
 	if replyTo != nil {
 		if err := validateCanReply(chat, sender, replyTo); err != nil {
-			return TextMessage{}, err
+			return nil, err
 		}
 	}
 
 	if err := validateText(text); err != nil {
-		return TextMessage{}, err
+		return nil, err
 	}
 
-	return TextMessage{
+	return &TextMessage{
 		Message: Message{
 			Update: Update{
 				ChatID:   chat.ChatID(),
@@ -79,15 +79,15 @@ func (m *TextMessage) Edit(chat Chatter, sender UserID, newText string) error {
 	return nil
 }
 
-func (m *TextMessage) Forward(chat Chatter, sender UserID, destChat Chatter) (TextMessage, error) {
+func (m *TextMessage) Forward(chat Chatter, sender UserID, destChat Chatter) (*TextMessage, error) {
 	if !chat.IsMember(sender) {
-		return TextMessage{}, ErrUserNotMember
+		return nil, ErrUserNotMember
 	}
 	if err := destChat.ValidateCanSend(sender); err != nil {
-		return TextMessage{}, err
+		return nil, err
 	}
 
-	return TextMessage{
+	return &TextMessage{
 		Message: Message{
 			Update: Update{
 				ChatID:   destChat.ChatID(),

@@ -7,6 +7,15 @@ type TxProvider interface {
 }
 
 type Tx interface {
-	Commit() error
-	Rollback() error
+	Commit(context.Context) error
+	Rollback(context.Context) error
+}
+
+func HandleTx(ctx context.Context, tx Tx, err error) {
+	// TODO: handle tx errors.
+	if err != nil {
+		tx.Rollback(ctx)
+	} else {
+		tx.Commit(ctx)
+	}
 }
