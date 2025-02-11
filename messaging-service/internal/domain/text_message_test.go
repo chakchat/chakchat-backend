@@ -56,7 +56,7 @@ func TestTextMessage(t *testing.T) {
 
 	t.Run("EditDeleted", func(t *testing.T) {
 		msg := msgBase
-		msg.Deleted = []UpdateDeleted{{
+		msg.Deleted = []*UpdateDeleted{{
 			Update: Update{
 				UpdateID: 13,
 				ChatID:   chat.ChatID(),
