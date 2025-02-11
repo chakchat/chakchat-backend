@@ -63,21 +63,8 @@ func (s *PersonalUpdateService) SendTextMessage(ctx context.Context, req request
 		replyToMessage,
 	)
 
-	switch {
-	case errors.Is(err, domain.ErrUserNotMember):
-		return nil, services.ErrUserNotMember
-	case errors.Is(err, domain.ErrChatBlocked):
-		return nil, services.ErrChatBlocked
-	case errors.Is(err, domain.ErrUpdateDeleted):
-		return nil, services.ErrUpdateDeleted
-	case errors.Is(err, domain.ErrUpdateNotFromChat):
-		return nil, services.ErrUpdateNotFromChat
-	case errors.Is(err, domain.ErrTextEmpty):
-		return nil, services.ErrTextEmpty
-	case errors.Is(err, domain.ErrTooMuchTextRunes):
-		return nil, services.ErrTooMuchTextRunes
-	case err != nil:
-		return nil, errors.Join(services.ErrInternal, err)
+	if err != nil {
+		return nil, err
 	}
 
 	msg, err = s.updateRepo.CreateTextMessage(ctx, msg)
@@ -119,23 +106,8 @@ func (s *PersonalUpdateService) EditTextMessage(ctx context.Context, req request
 
 	err = msg.Edit(chat, domain.UserID(req.SenderID), req.NewText)
 
-	switch {
-	case errors.Is(err, domain.ErrUserNotMember):
-		return nil, services.ErrUserNotMember
-	case errors.Is(err, domain.ErrChatBlocked):
-		return nil, services.ErrChatBlocked
-	case errors.Is(err, domain.ErrUpdateNotFromChat):
-		return nil, services.ErrUpdateNotFromChat
-	case errors.Is(err, domain.ErrUserNotSender):
-		return nil, services.ErrUserNotSender
-	case errors.Is(err, domain.ErrUpdateDeleted):
-		return nil, domain.ErrUpdateDeleted
-	case errors.Is(err, domain.ErrTextEmpty):
-		return nil, services.ErrTextEmpty
-	case errors.Is(err, domain.ErrTooMuchTextRunes):
-		return nil, services.ErrTooMuchTextRunes
-	case err != nil:
-		return nil, errors.Join(services.ErrInternal, err)
+	if err != nil {
+		return nil, err
 	}
 
 	err = storage.RunInTx(ctx, s.txProvider, func(ctx context.Context) error {
@@ -190,17 +162,8 @@ func (s *PersonalUpdateService) DeleteMessage(ctx context.Context, req request.D
 
 	err = msg.Delete(chat, domain.UserID(req.SenderID), domain.DeleteMode(req.DeleteMode))
 
-	switch {
-	case errors.Is(err, domain.ErrUserNotMember):
-		return nil, services.ErrUserNotMember
-	case errors.Is(err, domain.ErrChatBlocked):
-		return nil, services.ErrChatBlocked
-	case errors.Is(err, domain.ErrUpdateNotFromChat):
-		return nil, services.ErrUpdateNotFromChat
-	case errors.Is(err, domain.ErrUpdateDeleted):
-		return nil, services.ErrUpdateDeleted
-	case err != nil:
-		return nil, errors.Join(services.ErrInternal, err)
+	if err != nil {
+		return nil, err
 	}
 
 	err = storage.RunInTx(ctx, s.txProvider, func(ctx context.Context) error {

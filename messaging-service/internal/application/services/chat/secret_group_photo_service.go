@@ -55,7 +55,7 @@ func (s *SecretGroupPhotoService) UpdatePhoto(ctx context.Context, groupId, file
 	err = g.UpdatePhoto(domain.URL(file.FileUrl))
 
 	if err != nil {
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	g, err = s.repo.Update(ctx, g)
@@ -87,9 +87,7 @@ func (s *SecretGroupPhotoService) DeletePhoto(ctx context.Context, groupId uuid.
 	err = g.DeletePhoto()
 
 	if err != nil {
-		if errors.Is(err, domain.ErrGroupPhotoEmpty) {
-			return nil, services.ErrGroupPhotoEmpty
-		}
+		return nil, err
 	}
 
 	g, err = s.repo.Update(ctx, g)

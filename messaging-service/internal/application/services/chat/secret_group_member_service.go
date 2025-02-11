@@ -36,10 +36,7 @@ func (s *SecretGroupMemberService) AddMember(ctx context.Context, chatId, userId
 	err = g.AddMember(domain.UserID(userId))
 
 	if err != nil {
-		if errors.Is(err, domain.ErrUserAlreadyMember) {
-			return nil, services.ErrUserAlreadyMember
-		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	g, err = s.repo.Update(ctx, g)
@@ -67,13 +64,8 @@ func (s *SecretGroupMemberService) DeleteMember(ctx context.Context, chatId, mem
 
 	err = g.DeleteMember(domain.UserID(memberId))
 
-	switch {
-	case errors.Is(err, domain.ErrMemberIsAdmin):
-		return nil, services.ErrMemberIsAdmin
-	case errors.Is(err, domain.ErrUserNotMember):
-		return nil, services.ErrUserNotMember
-	case err != nil:
-		return nil, errors.Join(services.ErrInternal, err)
+	if err != nil {
+		return nil, err
 	}
 
 	g, err = s.repo.Update(ctx, g)
