@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository/mocks"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/personal"
@@ -50,7 +51,7 @@ func TestPersonalChat_CreateChat(t *testing.T) {
 
 		_, err := service.CreateChat(context.Background(), user1, user2)
 
-		require.ErrorIs(t, err, ErrChatAlreadyExists)
+		require.ErrorIs(t, err, services.ErrChatAlreadyExists)
 
 		repo.AssertNotCalled(t, "Create")
 	})

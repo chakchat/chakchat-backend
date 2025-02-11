@@ -7,6 +7,7 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish/events"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/secpersonal"
@@ -37,14 +38,14 @@ func (s *SecretPersonalChatService) CreateChat(ctx context.Context, userId, with
 
 	if err != nil {
 		if errors.Is(err, domain.ErrChatWithMyself) {
-			return nil, ErrChatWithMyself
+			return nil, services.ErrChatWithMyself
 		}
-		return nil, errors.Join(ErrInternal, err)
+		return nil, errors.Join(services.ErrInternal, err)
 	}
 
 	chat, err = s.repo.Create(ctx, chat)
 	if err != nil {
-		return nil, errors.Join(ErrInternal, err)
+		return nil, errors.Join(services.ErrInternal, err)
 	}
 
 	chatDto := dto.NewSecretPersonalChatDTO(chat)
@@ -62,9 +63,9 @@ func (s *SecretPersonalChatService) GetChatById(ctx context.Context, chatId uuid
 	chat, err := s.repo.FindById(ctx, domain.ChatID(chatId))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			return nil, ErrChatNotFound
+			return nil, services.ErrChatNotFound
 		}
-		return nil, errors.Join(ErrInternal, err)
+		return nil, errors.Join(services.ErrInternal, err)
 	}
 
 	chatDto := dto.NewSecretPersonalChatDTO(chat)
@@ -75,16 +76,16 @@ func (s *SecretPersonalChatService) DeleteChat(ctx context.Context, chatId uuid.
 	chat, err := s.repo.FindById(ctx, domain.ChatID(chatId))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			return ErrChatNotFound
+			return services.ErrChatNotFound
 		}
-		return errors.Join(ErrInternal, err)
+		return errors.Join(services.ErrInternal, err)
 	}
 
 	// TODO: put other logic here after you decide what to do with messages
 	// For now I think that messages with in deleted chat should be deleted by background task
 
 	if err := s.repo.Delete(ctx, chat.ID); err != nil {
-		return errors.Join(ErrInternal, err)
+		return errors.Join(services.ErrInternal, err)
 	}
 
 	s.pub.PublishForUsers(dto.UUIDs(chat.Members[:]), events.ChatDeleted{
@@ -98,11 +99,11 @@ func (s *SecretPersonalChatService) validateChatNotExists(ctx context.Context, m
 	_, err := s.repo.FindByMembers(ctx, members)
 
 	if err != nil && err != repository.ErrNotFound {
-		return errors.Join(ErrInternal, err)
+		return errors.Join(services.ErrInternal, err)
 	}
 
 	if !errors.Is(err, repository.ErrNotFound) {
-		return ErrChatAlreadyExists
+		return services.ErrChatAlreadyExists
 	}
 
 	return nil

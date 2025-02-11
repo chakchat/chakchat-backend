@@ -7,6 +7,7 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish/events"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 	"github.com/google/uuid"
@@ -28,7 +29,7 @@ func (s *SecretGroupMemberService) AddMember(ctx context.Context, chatId, userId
 	g, err := s.repo.FindById(ctx, domain.ChatID(chatId))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			return nil, ErrChatNotFound
+			return nil, services.ErrChatNotFound
 		}
 	}
 
@@ -36,14 +37,14 @@ func (s *SecretGroupMemberService) AddMember(ctx context.Context, chatId, userId
 
 	if err != nil {
 		if errors.Is(err, domain.ErrUserAlreadyMember) {
-			return nil, ErrUserAlreadyMember
+			return nil, services.ErrUserAlreadyMember
 		}
-		return nil, errors.Join(ErrInternal, err)
+		return nil, errors.Join(services.ErrInternal, err)
 	}
 
 	g, err = s.repo.Update(ctx, g)
 	if err != nil {
-		return nil, errors.Join(ErrInternal, err)
+		return nil, errors.Join(services.ErrInternal, err)
 	}
 
 	gDto := dto.NewSecretGroupChatDTO(g)
@@ -60,7 +61,7 @@ func (s *SecretGroupMemberService) DeleteMember(ctx context.Context, chatId, mem
 	g, err := s.repo.FindById(ctx, domain.ChatID(chatId))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			return nil, ErrChatNotFound
+			return nil, services.ErrChatNotFound
 		}
 	}
 
@@ -68,16 +69,16 @@ func (s *SecretGroupMemberService) DeleteMember(ctx context.Context, chatId, mem
 
 	switch {
 	case errors.Is(err, domain.ErrMemberIsAdmin):
-		return nil, ErrMemberIsAdmin
+		return nil, services.ErrMemberIsAdmin
 	case errors.Is(err, domain.ErrUserNotMember):
-		return nil, ErrUserNotMember
+		return nil, services.ErrUserNotMember
 	case err != nil:
-		return nil, errors.Join(ErrInternal, err)
+		return nil, errors.Join(services.ErrInternal, err)
 	}
 
 	g, err = s.repo.Update(ctx, g)
 	if err != nil {
-		return nil, errors.Join(ErrInternal, err)
+		return nil, errors.Join(services.ErrInternal, err)
 	}
 
 	gDto := dto.NewSecretGroupChatDTO(g)
