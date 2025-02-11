@@ -3,7 +3,7 @@ inpackage: False     # Generate mocks in a separate package
 testonly: False      # Generate mocks for non-test code
 force-file-write: True  # Overwrites existing files
 packages:
-  pository:
+  github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository:
     config:
       # Don't use `mockery` directly, use `go generate ./...` instead (or `make gen`)
       dir: ./mocks
