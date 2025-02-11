@@ -16,3 +16,11 @@ type EditTextMessage struct {
 	MessageID int64
 	NewText   string
 }
+
+type DeleteMessage struct {
+	ChatID   uuid.UUID
+	SenderID uuid.UUID
+
+	MessageID  int64
+	DeleteMode string
+}

@@ -47,7 +47,7 @@ func (s *PersonalUpdateService) SendTextMessage(ctx context.Context, req request
 
 	var replyToMessage *domain.Message
 	if req.ReplyToMessage != nil {
-		replyToMessage, err = s.updateRepo.FindGenericMessage(ctx, domain.UpdateID(*req.ReplyToMessage))
+		replyToMessage, err = s.updateRepo.FindGenericMessage(ctx, domain.ChatID(req.ChatID), domain.UpdateID(*req.ReplyToMessage))
 		if err != nil {
 			if errors.Is(err, repository.ErrNotFound) {
 				return nil, services.ErrMessageNotFound
@@ -109,7 +109,7 @@ func (s *PersonalUpdateService) EditTextMessage(ctx context.Context, req request
 		return nil, errors.Join(services.ErrInternal, err)
 	}
 
-	msg, err := s.updateRepo.FindTextMessage(ctx, domain.UpdateID(req.MessageID))
+	msg, err := s.updateRepo.FindTextMessage(ctx, domain.ChatID(req.ChatID), domain.UpdateID(req.MessageID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrMessageNotFound
@@ -167,4 +167,56 @@ func (s *PersonalUpdateService) EditTextMessage(ctx context.Context, req request
 
 	msgDto := dto.NewTextMessageDTO(msg)
 	return &msgDto, nil
+}
+
+func (s *PersonalUpdateService) DeleteMessage(ctx context.Context, req request.DeleteMessage) (*dto.UpdateDeletedDTO, error) {
+	// TODO:
+	// Refactoring idea:
+	// Wrap code to some helper that will have inner common code
+	chat, err := s.pchatRepo.FindById(ctx, domain.ChatID(req.ChatID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrChatNotFound
+		}
+	}
+
+	msg, err := s.updateRepo.FindTextMessage(ctx, domain.ChatID(req.ChatID), domain.UpdateID(req.MessageID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrMessageNotFound
+		}
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	err = msg.Delete(chat, domain.UserID(req.SenderID), domain.DeleteMode(req.DeleteMode))
+
+	switch {
+	case errors.Is(err, domain.ErrUserNotMember):
+		return nil, services.ErrUserNotMember
+	case errors.Is(err, domain.ErrChatBlocked):
+		return nil, services.ErrChatBlocked
+	case errors.Is(err, domain.ErrUpdateNotFromChat):
+		return nil, services.ErrUpdateNotFromChat
+	case errors.Is(err, domain.ErrUpdateDeleted):
+		return nil, services.ErrUpdateDeleted
+	case err != nil:
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	err = storage.RunInTx(ctx, s.txProvider, func(ctx context.Context) error {
+		if msg.DeletedForAll() {
+			err := s.updateRepo.DeleteMessage(ctx, msg.ChatID, msg.UpdateID)
+			if err != nil {
+				return err
+			}
+		}
+		msg.Deleted[len(msg.Deleted)-1], err = s.updateRepo.CreateUpdateDeleted(ctx, msg.Deleted[len(msg.Deleted)-1])
+		return err
+	})
+	if err != nil {
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	deletedDto := dto.NewUpdateDeletedDTO(msg.Deleted[len(msg.Deleted)-1])
+	return &deletedDto, nil
 }

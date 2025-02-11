@@ -21,14 +21,14 @@ type Update struct {
 	SenderID UserID
 
 	CreatedAt Timestamp
-	Deleted   []UpdateDeleted
+	Deleted   []*UpdateDeleted
 }
 
-type DeleteMode int
+type DeleteMode string
 
 const (
-	DeleteModeForSender = iota
-	DeleteModeForAll
+	DeleteModeForSender = "deleted_for_delition_sender"
+	DeleteModeForAll    = "deleted_for_all"
 )
 
 // Caution: SenderID here is deletion update's sender but not a original update's sender
@@ -36,6 +36,16 @@ type UpdateDeleted struct {
 	Update
 	DeletedID UpdateID
 	Mode      DeleteMode
+}
+
+func (u *Update) DeletedForAll() bool {
+	for _, d := range u.Deleted {
+		if d.Mode == DeleteModeForAll {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (u *Update) DeletedFor(user UserID) bool {
@@ -52,7 +62,7 @@ func (u *Update) DeletedFor(user UserID) bool {
 }
 
 func (u *Update) AddDeletion(sender UserID, mode DeleteMode) {
-	d := UpdateDeleted{
+	d := &UpdateDeleted{
 		Update: Update{
 			ChatID:   u.ChatID,
 			SenderID: sender,
@@ -62,7 +72,7 @@ func (u *Update) AddDeletion(sender UserID, mode DeleteMode) {
 	}
 
 	if mode == DeleteModeForAll {
-		u.Deleted = []UpdateDeleted{d}
+		u.Deleted = []*UpdateDeleted{d}
 	} else {
 		u.Deleted = append(u.Deleted, d)
 	}
