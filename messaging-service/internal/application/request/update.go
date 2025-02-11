@@ -8,3 +8,11 @@ type SendTextMessage struct {
 	Text           string
 	ReplyToMessage *int64
 }
+
+type EditTextMessage struct {
+	ChatID   uuid.UUID
+	SenderID uuid.UUID
+
+	MessageID int64
+	NewText   string
+}
