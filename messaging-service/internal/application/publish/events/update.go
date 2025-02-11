@@ -20,3 +20,12 @@ type TextMessageEdited struct {
 	NewText   string `json:"text"`
 	CreatedAt int64  `json:"created_at"`
 }
+
+type UpdateDeleted struct {
+	ChatID   uuid.UUID `json:"chat_id"`
+	UpdateID int64     `json:"update_id"`
+	SenderID uuid.UUID `json:"sender_id"`
+
+	DeletedID  int64  `json:"deleted_id"`
+	DeleteMode string `json:"delete_mode"`
+}

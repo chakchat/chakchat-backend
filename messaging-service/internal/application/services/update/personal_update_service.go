@@ -180,6 +180,19 @@ func (s *PersonalUpdateService) DeleteMessage(ctx context.Context, req request.D
 		return nil, errors.Join(services.ErrInternal, err)
 	}
 
+	if msg.DeletedForAll() {
+		s.pub.PublishForUsers(
+			services.GetSecondUserSlice(chat.Members, domain.UserID(req.SenderID)),
+			events.UpdateDeleted{
+				ChatID:     uuid.UUID(msg.ChatID),
+				UpdateID:   int64(msg.Deleted[len(msg.Deleted)-1].UpdateID),
+				SenderID:   req.SenderID,
+				DeletedID:  req.MessageID,
+				DeleteMode: req.DeleteMode,
+			},
+		)
+	}
+
 	deletedDto := dto.NewUpdateDeletedDTO(msg.Deleted[len(msg.Deleted)-1])
 	return &deletedDto, nil
 }
