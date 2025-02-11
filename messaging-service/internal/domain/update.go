@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"errors"
 	"time"
 )
 
@@ -14,12 +13,6 @@ type Timestamp int64
 func (t Timestamp) Time() time.Time {
 	return time.Unix(int64(t), 0)
 }
-
-var (
-	ErrUserNotSender     = errors.New("user is not update's sender")
-	ErrUpdateNotFromChat = errors.New("update is not from this chat")
-	ErrUpdateDeleted     = errors.New("update is deleted")
-)
 
 type Update struct {
 	// It will be assigned automatically when it is stored in DB

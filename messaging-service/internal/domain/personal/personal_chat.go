@@ -1,15 +1,9 @@
 package personal
 
 import (
-	"errors"
 	"slices"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
-)
-
-var (
-	ErrAlreadyBlocked   = errors.New("chat is already blocked")
-	ErrAlreadyUnblocked = errors.New("chat is already unblocked")
 )
 
 type PersonalChat struct {
@@ -39,7 +33,7 @@ func (c *PersonalChat) BlockBy(user domain.UserID) error {
 	}
 
 	if slices.Contains(c.BlockedBy, user) {
-		return ErrAlreadyBlocked
+		return domain.ErrAlreadyBlocked
 	}
 
 	c.BlockedBy = append(c.BlockedBy, user)
@@ -53,7 +47,7 @@ func (c *PersonalChat) UnblockBy(user domain.UserID) error {
 	}
 
 	if !slices.Contains(c.BlockedBy, user) {
-		return ErrAlreadyUnblocked
+		return domain.ErrAlreadyUnblocked
 	}
 
 	c.BlockedBy = slices.DeleteFunc(c.BlockedBy, func(member domain.UserID) bool {

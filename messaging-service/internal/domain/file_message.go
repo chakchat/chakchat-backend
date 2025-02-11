@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -9,10 +8,6 @@ import (
 
 const (
 	MaxFileSize = 1 << 30
-)
-
-var (
-	ErrFileTooBig = errors.New("file is too big")
 )
 
 type FileMeta struct {

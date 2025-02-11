@@ -1,14 +1,6 @@
 package domain
 
-import (
-	"errors"
-)
-
 type ReactionType string
-
-var (
-	ErrReactionNotFromUser = errors.New("the reaction is not from this user")
-)
 
 type Reaction struct {
 	Update

@@ -11,25 +11,6 @@ const (
 	maxDescriptionLen = 300
 )
 
-var (
-	ErrAdminNotMember = errors.New("group members doesn't include admin")
-
-	ErrGroupNameEmpty   = errors.New("group name is empty")
-	ErrGroupNameTooLong = errors.New("group name is too long")
-	ErrGroupDescTooLong = errors.New("group description is too long")
-
-	ErrUserAlreadyMember = errors.New("user is already a member of a chat")
-	ErrMemberIsAdmin     = errors.New("group member is admin")
-
-	ErrGroupPhotoEmpty = errors.New("group photo is empty")
-
-	ErrChatWithMyself = errors.New("chat with myself")
-)
-
-var (
-	ErrChatBlocked = errors.New("chat is blocked")
-)
-
 type (
 	URL    string
 	ChatID uuid.UUID

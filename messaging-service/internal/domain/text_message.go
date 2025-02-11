@@ -1,17 +1,11 @@
 package domain
 
 import (
-	"errors"
 	"unicode/utf8"
 )
 
 const (
 	MaxTextRunesCount = 2000
-)
-
-var (
-	ErrTooMuchTextRunes = errors.New("too much runes in text")
-	ErrTextEmpty        = errors.New("the text is empty")
 )
 
 type TextMessage struct {
