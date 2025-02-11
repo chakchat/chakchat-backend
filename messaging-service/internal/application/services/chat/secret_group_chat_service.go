@@ -7,8 +7,8 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish/events"
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/query"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/repository"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/secgroup"
 	"github.com/google/uuid"
@@ -26,7 +26,7 @@ func NewSecretGroupChatService(repo repository.SecretGroupChatRepository, pub pu
 	}
 }
 
-func (s *SecretGroupChatService) CreateGroup(ctx context.Context, req query.CreateSecretGroupRequest) (*dto.SecretGroupChatDTO, error) {
+func (s *SecretGroupChatService) CreateGroup(ctx context.Context, req request.CreateSecretGroup) (*dto.SecretGroupChatDTO, error) {
 	members := make([]domain.UserID, len(req.Members))
 	for i, m := range req.Members {
 		members[i] = domain.UserID(m)
@@ -60,7 +60,7 @@ func (s *SecretGroupChatService) CreateGroup(ctx context.Context, req query.Crea
 	return &gDto, nil
 }
 
-func (s *SecretGroupChatService) UpdateGroupInfo(ctx context.Context, req query.UpdateSecretGroupInfoRequest) (*dto.SecretGroupChatDTO, error) {
+func (s *SecretGroupChatService) UpdateGroupInfo(ctx context.Context, req request.UpdateSecretGroupInfo) (*dto.SecretGroupChatDTO, error) {
 	g, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {

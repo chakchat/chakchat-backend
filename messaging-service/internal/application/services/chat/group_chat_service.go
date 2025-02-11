@@ -7,8 +7,8 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish/events"
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/query"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/repository"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/group"
 	"github.com/google/uuid"
@@ -39,7 +39,7 @@ func NewGroupChatService(repo repository.GroupChatRepository, pub publish.Publis
 	}
 }
 
-func (s *GroupChatService) CreateGroup(ctx context.Context, req query.CreateGroupRequest) (*dto.GroupChatDTO, error) {
+func (s *GroupChatService) CreateGroup(ctx context.Context, req request.CreateGroup) (*dto.GroupChatDTO, error) {
 	members := make([]domain.UserID, len(req.Members))
 	for i, m := range req.Members {
 		members[i] = domain.UserID(m)
@@ -73,7 +73,7 @@ func (s *GroupChatService) CreateGroup(ctx context.Context, req query.CreateGrou
 	return &gDto, nil
 }
 
-func (s *GroupChatService) UpdateGroupInfo(ctx context.Context, req query.UpdateGroupInfoRequest) (*dto.GroupChatDTO, error) {
+func (s *GroupChatService) UpdateGroupInfo(ctx context.Context, req request.UpdateGroupInfo) (*dto.GroupChatDTO, error) {
 	g, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
