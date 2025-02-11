@@ -35,15 +35,8 @@ func (s *SecretGroupChatService) CreateGroup(ctx context.Context, req request.Cr
 
 	g, err := secgroup.NewSecretGroupChat(domain.UserID(req.Admin), members, req.Name)
 
-	switch {
-	case errors.Is(err, domain.ErrAdminNotMember):
-		return nil, services.ErrAdminNotMember
-	case errors.Is(err, domain.ErrGroupNameEmpty):
-		return nil, services.ErrGroupNameEmpty
-	case errors.Is(err, domain.ErrGroupNameTooLong):
-		return nil, services.ErrGroupNameTooLong
-	case err != nil:
-		return nil, errors.Join(services.ErrInternal, err)
+	if err != nil {
+		return nil, err
 	}
 
 	g, err = s.repo.Create(ctx, g)
@@ -72,15 +65,8 @@ func (s *SecretGroupChatService) UpdateGroupInfo(ctx context.Context, req reques
 
 	err = g.UpdateInfo(req.Name, req.Description)
 
-	switch {
-	case errors.Is(err, domain.ErrGroupNameEmpty):
-		return nil, services.ErrGroupNameEmpty
-	case errors.Is(err, domain.ErrGroupNameTooLong):
-		return nil, services.ErrGroupNameTooLong
-	case errors.Is(err, domain.ErrGroupDescTooLong):
-		return nil, services.ErrGroupDescTooLong
-	case err != nil:
-		return nil, errors.Join(services.ErrInternal, err)
+	if err != nil {
+		return nil, err
 	}
 
 	g, err = s.repo.Update(ctx, g)

@@ -38,13 +38,7 @@ func (s *PersonalChatService) BlockChat(ctx context.Context, userId, chatId uuid
 	err = chat.BlockBy(domain.UserID(userId))
 
 	if err != nil {
-		if errors.Is(err, domain.ErrAlreadyBlocked) {
-			return services.ErrChatAlreadyBlocked
-		}
-		if errors.Is(err, domain.ErrUserNotMember) {
-			return services.ErrUserNotMember
-		}
-		return errors.Join(services.ErrInternal, err)
+		return err
 	}
 
 	if _, err := s.repo.Update(ctx, chat); err != nil {
@@ -70,13 +64,7 @@ func (s *PersonalChatService) UnblockChat(ctx context.Context, userId, chatId uu
 	err = chat.UnblockBy(domain.UserID(userId))
 
 	if err != nil {
-		if errors.Is(err, domain.ErrAlreadyUnblocked) {
-			return services.ErrChatAlreadyUnblocked
-		}
-		if errors.Is(err, domain.ErrUserNotMember) {
-			return services.ErrUserNotMember
-		}
-		return errors.Join(services.ErrInternal, err)
+		return err
 	}
 
 	if _, err := s.repo.Update(ctx, chat); err != nil {
@@ -100,10 +88,7 @@ func (s *PersonalChatService) CreateChat(ctx context.Context, userId, withUserId
 	chat, err := personal.NewPersonalChat(domainMembers)
 
 	if err != nil {
-		if errors.Is(err, domain.ErrChatWithMyself) {
-			return nil, services.ErrChatWithMyself
-		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	chat, err = s.repo.Create(ctx, chat)

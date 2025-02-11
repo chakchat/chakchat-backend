@@ -37,10 +37,7 @@ func (s *SecretPersonalChatService) CreateChat(ctx context.Context, userId, with
 	chat, err := secpersonal.NewSecretPersonalChatService(domainMembers)
 
 	if err != nil {
-		if errors.Is(err, domain.ErrChatWithMyself) {
-			return nil, services.ErrChatWithMyself
-		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	chat, err = s.repo.Create(ctx, chat)

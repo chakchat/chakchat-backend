@@ -112,9 +112,7 @@ func (s *GroupPhotoService) DeletePhoto(ctx context.Context, groupId uuid.UUID) 
 	err = g.DeletePhoto()
 
 	if err != nil {
-		if errors.Is(err, domain.ErrGroupPhotoEmpty) {
-			return nil, services.ErrGroupPhotoEmpty
-		}
+		return nil, err
 	}
 
 	g, err = s.repo.Update(ctx, g)
