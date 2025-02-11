@@ -25,6 +25,7 @@ type TextMessageEdited struct {
 	Update
 
 	MessageID UpdateID
+	NewText   string
 }
 
 func NewTextMessage(chat Chatter, sender UserID, text string, replyTo *Message) (TextMessage, error) {
@@ -77,11 +78,9 @@ func (m *TextMessage) Edit(chat Chatter, sender UserID, newText string) error {
 
 	m.Text = newText
 	m.Edited = &TextMessageEdited{
-		Update: Update{
-			ChatID:   chat.ChatID(),
-			SenderID: sender,
-		},
+		Update:    Update{ChatID: chat.ChatID(), SenderID: sender},
 		MessageID: m.UpdateID,
+		NewText:   newText,
 	}
 	return nil
 }
