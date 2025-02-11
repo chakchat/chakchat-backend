@@ -1,17 +1,11 @@
 package domain
 
 import (
-	"errors"
 	"unicode/utf8"
 )
 
 const (
 	MaxTextRunesCount = 2000
-)
-
-var (
-	ErrTooMuchTextRunes = errors.New("too much runes in text")
-	ErrTextEmpty        = errors.New("the text is empty")
 )
 
 type TextMessage struct {
@@ -25,24 +19,25 @@ type TextMessageEdited struct {
 	Update
 
 	MessageID UpdateID
+	NewText   string
 }
 
-func NewTextMessage(chat Chatter, sender UserID, text string, replyTo *Message) (TextMessage, error) {
+func NewTextMessage(chat Chatter, sender UserID, text string, replyTo *Message) (*TextMessage, error) {
 	if err := chat.ValidateCanSend(sender); err != nil {
-		return TextMessage{}, err
+		return nil, err
 	}
 
 	if replyTo != nil {
 		if err := validateCanReply(chat, sender, replyTo); err != nil {
-			return TextMessage{}, err
+			return nil, err
 		}
 	}
 
 	if err := validateText(text); err != nil {
-		return TextMessage{}, err
+		return nil, err
 	}
 
-	return TextMessage{
+	return &TextMessage{
 		Message: Message{
 			Update: Update{
 				ChatID:   chat.ChatID(),
@@ -77,24 +72,22 @@ func (m *TextMessage) Edit(chat Chatter, sender UserID, newText string) error {
 
 	m.Text = newText
 	m.Edited = &TextMessageEdited{
-		Update: Update{
-			ChatID:   chat.ChatID(),
-			SenderID: sender,
-		},
+		Update:    Update{ChatID: chat.ChatID(), SenderID: sender},
 		MessageID: m.UpdateID,
+		NewText:   newText,
 	}
 	return nil
 }
 
-func (m *TextMessage) Forward(chat Chatter, sender UserID, destChat Chatter) (TextMessage, error) {
+func (m *TextMessage) Forward(chat Chatter, sender UserID, destChat Chatter) (*TextMessage, error) {
 	if !chat.IsMember(sender) {
-		return TextMessage{}, ErrUserNotMember
+		return nil, ErrUserNotMember
 	}
 	if err := destChat.ValidateCanSend(sender); err != nil {
-		return TextMessage{}, err
+		return nil, err
 	}
 
-	return TextMessage{
+	return &TextMessage{
 		Message: Message{
 			Update: Update{
 				ChatID:   destChat.ChatID(),

@@ -7,8 +7,9 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish/events"
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/query"
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/repository"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/secgroup"
 	"github.com/google/uuid"
@@ -26,7 +27,7 @@ func NewSecretGroupChatService(repo repository.SecretGroupChatRepository, pub pu
 	}
 }
 
-func (s *SecretGroupChatService) CreateGroup(ctx context.Context, req query.CreateSecretGroupRequest) (*dto.SecretGroupChatDTO, error) {
+func (s *SecretGroupChatService) CreateGroup(ctx context.Context, req request.CreateSecretGroup) (*dto.SecretGroupChatDTO, error) {
 	members := make([]domain.UserID, len(req.Members))
 	for i, m := range req.Members {
 		members[i] = domain.UserID(m)
@@ -36,18 +37,18 @@ func (s *SecretGroupChatService) CreateGroup(ctx context.Context, req query.Crea
 
 	switch {
 	case errors.Is(err, domain.ErrAdminNotMember):
-		return nil, ErrAdminNotMember
+		return nil, services.ErrAdminNotMember
 	case errors.Is(err, domain.ErrGroupNameEmpty):
-		return nil, ErrGroupNameEmpty
+		return nil, services.ErrGroupNameEmpty
 	case errors.Is(err, domain.ErrGroupNameTooLong):
-		return nil, ErrGroupNameTooLong
+		return nil, services.ErrGroupNameTooLong
 	case err != nil:
-		return nil, errors.Join(ErrInternal, err)
+		return nil, errors.Join(services.ErrInternal, err)
 	}
 
 	g, err = s.repo.Create(ctx, g)
 	if err != nil {
-		return nil, errors.Join(ErrInternal, err)
+		return nil, errors.Join(services.ErrInternal, err)
 	}
 
 	gDto := dto.NewSecretGroupChatDTO(g)
@@ -60,31 +61,31 @@ func (s *SecretGroupChatService) CreateGroup(ctx context.Context, req query.Crea
 	return &gDto, nil
 }
 
-func (s *SecretGroupChatService) UpdateGroupInfo(ctx context.Context, req query.UpdateSecretGroupInfoRequest) (*dto.SecretGroupChatDTO, error) {
+func (s *SecretGroupChatService) UpdateGroupInfo(ctx context.Context, req request.UpdateSecretGroupInfo) (*dto.SecretGroupChatDTO, error) {
 	g, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			return nil, ErrChatNotFound
+			return nil, services.ErrChatNotFound
 		}
-		return nil, errors.Join(ErrInternal, err)
+		return nil, errors.Join(services.ErrInternal, err)
 	}
 
 	err = g.UpdateInfo(req.Name, req.Description)
 
 	switch {
 	case errors.Is(err, domain.ErrGroupNameEmpty):
-		return nil, ErrGroupNameEmpty
+		return nil, services.ErrGroupNameEmpty
 	case errors.Is(err, domain.ErrGroupNameTooLong):
-		return nil, ErrGroupNameTooLong
+		return nil, services.ErrGroupNameTooLong
 	case errors.Is(err, domain.ErrGroupDescTooLong):
-		return nil, ErrGroupDescTooLong
+		return nil, services.ErrGroupDescTooLong
 	case err != nil:
-		return nil, errors.Join(ErrInternal, err)
+		return nil, errors.Join(services.ErrInternal, err)
 	}
 
 	g, err = s.repo.Update(ctx, g)
 	if err != nil {
-		return nil, errors.Join(ErrInternal, err)
+		return nil, errors.Join(services.ErrInternal, err)
 	}
 
 	gDto := dto.NewSecretGroupChatDTO(g)
@@ -103,15 +104,15 @@ func (s *SecretGroupChatService) DeleteGroup(ctx context.Context, chatId uuid.UU
 	g, err := s.repo.FindById(ctx, domain.ChatID(chatId))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			return ErrChatNotFound
+			return services.ErrChatNotFound
 		}
-		return errors.Join(ErrInternal, err)
+		return errors.Join(services.ErrInternal, err)
 	}
 
 	// TODO: put other logic here after you decide what to do with messages
 
 	if err := s.repo.Delete(ctx, g.ID); err != nil {
-		return errors.Join(ErrInternal, err)
+		return errors.Join(services.ErrInternal, err)
 	}
 
 	s.pub.PublishForUsers(dto.UUIDs(g.Members), events.ChatDeleted{

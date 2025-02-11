@@ -1,14 +1,6 @@
 package domain
 
-import (
-	"errors"
-)
-
 type ReactionType string
-
-var (
-	ErrReactionNotFromUser = errors.New("the reaction is not from this user")
-)
 
 type Reaction struct {
 	Update
@@ -21,20 +13,20 @@ func NewReaction(
 	sender UserID,
 	m *Message,
 	reaction ReactionType,
-) (Reaction, error) {
+) (*Reaction, error) {
 	if err := chat.ValidateCanSend(sender); err != nil {
-		return Reaction{}, err
+		return nil, err
 	}
 
 	if chat.ChatID() != m.ChatID {
-		return Reaction{}, ErrUpdateNotFromChat
+		return nil, ErrUpdateNotFromChat
 	}
 
 	if m.DeletedFor(sender) {
-		return Reaction{}, ErrUpdateDeleted
+		return nil, ErrUpdateDeleted
 	}
 
-	return Reaction{
+	return &Reaction{
 		Update: Update{
 			ChatID:   chat.ChatID(),
 			SenderID: sender,

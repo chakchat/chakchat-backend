@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -9,10 +8,6 @@ import (
 
 const (
 	MaxFileSize = 1 << 30
-)
-
-var (
-	ErrFileTooBig = errors.New("file is too big")
 )
 
 type FileMeta struct {
@@ -29,22 +24,22 @@ type FileMessage struct {
 	File FileMeta
 }
 
-func NewFileMessage(chat Chatter, sender UserID, file *FileMeta, replyTo *Message) (FileMessage, error) {
+func NewFileMessage(chat Chatter, sender UserID, file *FileMeta, replyTo *Message) (*FileMessage, error) {
 	if err := chat.ValidateCanSend(sender); err != nil {
-		return FileMessage{}, err
+		return nil, err
 	}
 
 	if err := validateFile(file); err != nil {
-		return FileMessage{}, err
+		return nil, err
 	}
 
 	if replyTo != nil {
 		if err := validateCanReply(chat, sender, replyTo); err != nil {
-			return FileMessage{}, err
+			return nil, err
 		}
 	}
 
-	return FileMessage{
+	return &FileMessage{
 		Message: Message{
 			Update: Update{
 				ChatID:   chat.ChatID(),
@@ -56,15 +51,15 @@ func NewFileMessage(chat Chatter, sender UserID, file *FileMeta, replyTo *Messag
 	}, nil
 }
 
-func (m *FileMessage) Forward(chat Chatter, sender UserID, destChat Chatter) (FileMessage, error) {
+func (m *FileMessage) Forward(chat Chatter, sender UserID, destChat Chatter) (*FileMessage, error) {
 	if !chat.IsMember(sender) {
-		return FileMessage{}, ErrUserNotMember
+		return nil, ErrUserNotMember
 	}
 	if err := destChat.ValidateCanSend(sender); err != nil {
-		return FileMessage{}, err
+		return nil, err
 	}
 
-	return FileMessage{
+	return &FileMessage{
 		Message: Message{
 			Update: Update{
 				ChatID:   destChat.ChatID(),
