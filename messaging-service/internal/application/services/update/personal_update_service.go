@@ -16,23 +16,26 @@ import (
 )
 
 type PersonalUpdateService struct {
-	pchatRepo  repository.PersonalChatRepository
-	updateRepo repository.UpdateRepository
-	txProvider storage.TxProvider
-	pub        publish.Publisher
+	pchatRepo   repository.PersonalChatRepository
+	updateRepo  repository.UpdateRepository
+	chatterRepo repository.ChatterRepository
+	txProvider  storage.TxProvider
+	pub         publish.Publisher
 }
 
 func NewPersonalUpdateService(
 	pchatRepo repository.PersonalChatRepository,
 	updateRepo repository.UpdateRepository,
+	chatterRepo repository.ChatterRepository,
 	transactioner storage.TxProvider,
 	pub publish.Publisher,
 ) *PersonalUpdateService {
 	return &PersonalUpdateService{
-		pchatRepo:  pchatRepo,
-		updateRepo: updateRepo,
-		txProvider: transactioner,
-		pub:        pub,
+		pchatRepo:   pchatRepo,
+		updateRepo:  updateRepo,
+		chatterRepo: chatterRepo,
+		txProvider:  transactioner,
+		pub:         pub,
 	}
 }
 
@@ -296,4 +299,54 @@ func (s *PersonalUpdateService) DeleteReaction(ctx context.Context, req request.
 
 	deletedDto := dto.NewUpdateDeletedDTO(deleted)
 	return &deletedDto, nil
+}
+
+func (s *PersonalUpdateService) ForwardTextMessage(ctx context.Context, req request.ForwardMessage) (*dto.TextMessageDTO, error) {
+	fromChat, err := s.chatterRepo.FindChatter(ctx, domain.ChatID(req.FromChatID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrChatNotFound
+		}
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	toChat, err := s.pchatRepo.FindById(ctx, domain.ChatID(req.ToChatID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrChatNotFound
+		}
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	msg, err := s.updateRepo.FindTextMessage(ctx, domain.ChatID(req.FromChatID), domain.UpdateID(req.MessageID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrMessageNotFound
+		}
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	forwarded, err := msg.Forward(fromChat, domain.UserID(req.SenderID), toChat)
+	if err != nil {
+		return nil, err
+	}
+
+	forwarded, err = s.updateRepo.CreateTextMessage(ctx, forwarded)
+	if err != nil {
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	s.pub.PublishForUsers(
+		services.GetSecondUserSlice(toChat.Members, forwarded.SenderID),
+		events.TextMessageSent{
+			ChatID:    uuid.UUID(forwarded.ChatID),
+			UpdateID:  int64(forwarded.UpdateID),
+			SenderID:  uuid.UUID(forwarded.SenderID),
+			Text:      forwarded.Text,
+			CreatedAt: int64(forwarded.CreatedAt),
+		},
+	)
+
+	forwardedDto := dto.NewTextMessageDTO(forwarded)
+	return &forwardedDto, nil
 }
