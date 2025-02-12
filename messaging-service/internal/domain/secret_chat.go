@@ -5,12 +5,14 @@ import "time"
 type SecretChat struct {
 	Chat
 
-	// If no expiration is set it is equal to NoExpiration
-	Expiration *time.Duration
+	Exp *time.Duration
+}
+
+func (c *SecretChat) Expiration() *time.Duration {
+	return c.Exp
 }
 
 type SecretChatter interface {
 	Chatter
-	// If no expiration is set it is equal to NoExpiration
 	Expiration() *time.Duration
 }

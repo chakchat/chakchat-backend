@@ -30,6 +30,6 @@ func NewSecretGroupChatDTO(g *secgroup.SecretGroupChat) SecretGroupChatDTO {
 		Name:          g.Name,
 		Description:   g.Description,
 		GroupPhotoURL: string(g.GroupPhoto),
-		Expiration:    g.Expiration,
+		Expiration:    g.Exp,
 	}
 }

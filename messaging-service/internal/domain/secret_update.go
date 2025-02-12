@@ -27,6 +27,23 @@ type SecretUpdate struct {
 	Data SecretData
 }
 
+func (u *SecretUpdate) Delete(chat SecretChatter, sender UserID) error {
+	if !chat.IsMember(sender) {
+		return ErrUserNotMember
+	}
+
+	if chat.ChatID() != u.ChatID {
+		return ErrUpdateNotFromChat
+	}
+
+	if u.DeletedFor(sender) {
+		return ErrUpdateDeleted
+	}
+
+	u.AddDeletion(sender, DeleteModeForAll)
+	return nil
+}
+
 func (u *SecretUpdate) Expired(exp *time.Duration) bool {
 	if exp == nil {
 		return false
