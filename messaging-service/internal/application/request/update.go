@@ -32,3 +32,18 @@ type SendReaction struct {
 	MessageID    int64
 	ReactionType string
 }
+
+type DeleteReaction struct {
+	ChatID   uuid.UUID
+	SenderID uuid.UUID
+
+	ReactionID int64
+}
+
+type ForwardMessage struct {
+	ToChatID uuid.UUID
+	SenderID uuid.UUID
+
+	MessageID  int64
+	FromChatID uuid.UUID
+}
