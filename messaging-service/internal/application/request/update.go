@@ -54,3 +54,12 @@ type SendFileMessage struct {
 	FileID         uuid.UUID
 	ReplyToMessage *int64
 }
+
+type SendSecretUpdate struct {
+	ChatID   uuid.UUID
+	SenderID uuid.UUID
+
+	Payload              []byte
+	InitializationVector []byte
+	KeyID                uuid.UUID
+}

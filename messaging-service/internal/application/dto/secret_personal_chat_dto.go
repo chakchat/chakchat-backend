@@ -18,7 +18,7 @@ func NewSecretPersonalChatDTO(c *secpersonal.SecretPersonalChat) SecretPersonalC
 	return SecretPersonalChatDTO{
 		ID:         uuid.UUID(c.ID),
 		CreatedAt:  int64(c.CreatedAt),
-		Expiration: c.Expiration,
+		Expiration: c.Exp,
 		Members: [2]uuid.UUID{
 			uuid.UUID(c.Members[0]),
 			uuid.UUID(c.Members[1]),
