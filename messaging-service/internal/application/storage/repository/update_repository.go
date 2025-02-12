@@ -27,6 +27,6 @@ type UpdateRepository interface {
 type SecretUpdateRepository interface {
 	CreateSecretUpdate(context.Context, *domain.SecretUpdate) (*domain.SecretUpdate, error)
 	FindSecretUpdate(context.Context, domain.ChatID, domain.UpdateID) (*domain.SecretUpdate, error)
-	DeleteSecretUpdate(context.Context, *domain.SecretUpdate) error
+	DeleteSecretUpdate(context.Context, domain.ChatID, domain.UpdateID) error
 	CreateUpdateDeleted(context.Context, *domain.UpdateDeleted) (*domain.UpdateDeleted, error)
 }

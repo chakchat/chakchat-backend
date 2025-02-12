@@ -63,3 +63,10 @@ type SendSecretUpdate struct {
 	InitializationVector []byte
 	KeyID                uuid.UUID
 }
+
+type DeleteSecretUpdate struct {
+	ChatID   uuid.UUID
+	SenderID uuid.UUID
+
+	SecretUpdateID int64
+}
