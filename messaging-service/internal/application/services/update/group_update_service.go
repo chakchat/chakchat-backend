@@ -138,5 +138,63 @@ func (s *GroupUpdateService) EditTextMessage(ctx context.Context, req request.Ed
 
 	msgDto := dto.NewTextMessageDTO(msg)
 	return &msgDto, nil
+}
 
+func (s *GroupUpdateService) DeleteMessage(ctx context.Context, req request.DeleteMessage) (*dto.UpdateDeletedDTO, error) {
+	// TODO:
+	// Refactoring idea:
+	// Wrap code to some helper that will have inner common code
+	chat, err := s.groupRepo.FindById(ctx, domain.ChatID(req.ChatID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrChatNotFound
+		}
+		return nil, err
+	}
+
+	msg, err := s.updateRepo.FindTextMessage(ctx, domain.ChatID(req.ChatID), domain.UpdateID(req.MessageID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrMessageNotFound
+		}
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	err = msg.Delete(chat, domain.UserID(req.SenderID), domain.DeleteMode(req.DeleteMode))
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = storage.RunInTx(ctx, s.txProvider, func(ctx context.Context) error {
+		if msg.DeletedForAll() {
+			err := s.updateRepo.DeleteMessage(ctx, msg.ChatID, msg.UpdateID)
+			if err != nil {
+				return err
+			}
+		}
+		msg.Deleted[len(msg.Deleted)-1], err = s.updateRepo.CreateUpdateDeleted(ctx, msg.Deleted[len(msg.Deleted)-1])
+		return err
+	})
+	if err != nil {
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	deleted := msg.Deleted[len(msg.Deleted)-1]
+	if msg.DeletedForAll() {
+		s.pub.PublishForUsers(
+			services.GetReceivingUpdateMembers(chat.Members[:], domain.UserID(req.SenderID), &msg.Update),
+			events.UpdateDeleted{
+				ChatID:     uuid.UUID(msg.ChatID),
+				UpdateID:   int64(deleted.UpdateID),
+				SenderID:   req.SenderID,
+				DeletedID:  req.MessageID,
+				DeleteMode: req.DeleteMode,
+				CreatedAt:  int64(deleted.CreatedAt),
+			},
+		)
+	}
+
+	deletedDto := dto.NewUpdateDeletedDTO(deleted)
+	return &deletedDto, nil
 }
