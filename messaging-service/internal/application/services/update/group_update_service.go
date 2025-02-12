@@ -16,23 +16,26 @@ import (
 )
 
 type GroupUpdateService struct {
-	groupRepo  repository.GroupChatRepository
-	updateRepo repository.UpdateRepository
-	txProvider storage.TxProvider
-	pub        publish.Publisher
+	groupRepo   repository.GroupChatRepository
+	updateRepo  repository.UpdateRepository
+	chatterRepo repository.ChatterRepository
+	txProvider  storage.TxProvider
+	pub         publish.Publisher
 }
 
 func NewGroupUpdateService(
 	groupRepo repository.GroupChatRepository,
 	updateRepo repository.UpdateRepository,
+	chatterRepo repository.ChatterRepository,
 	txProvider storage.TxProvider,
 	pub publish.Publisher,
 ) *GroupUpdateService {
 	return &GroupUpdateService{
-		groupRepo:  groupRepo,
-		updateRepo: updateRepo,
-		txProvider: txProvider,
-		pub:        pub,
+		groupRepo:   groupRepo,
+		updateRepo:  updateRepo,
+		chatterRepo: chatterRepo,
+		txProvider:  txProvider,
+		pub:         pub,
 	}
 }
 
@@ -292,4 +295,111 @@ func (s *GroupUpdateService) DeleteReaction(ctx context.Context, req request.Del
 
 	deletedDto := dto.NewUpdateDeletedDTO(deleted)
 	return &deletedDto, nil
+}
+
+func (s *GroupUpdateService) ForwardTextMessage(ctx context.Context, req request.ForwardMessage) (*dto.TextMessageDTO, error) {
+	fromChat, err := s.chatterRepo.FindChatter(ctx, domain.ChatID(req.FromChatID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrChatNotFound
+		}
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	toChat, err := s.groupRepo.FindById(ctx, domain.ChatID(req.ToChatID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrChatNotFound
+		}
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	msg, err := s.updateRepo.FindTextMessage(ctx, domain.ChatID(req.FromChatID), domain.UpdateID(req.MessageID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrMessageNotFound
+		}
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	forwarded, err := msg.Forward(fromChat, domain.UserID(req.SenderID), toChat)
+	if err != nil {
+		return nil, err
+	}
+
+	forwarded, err = s.updateRepo.CreateTextMessage(ctx, forwarded)
+	if err != nil {
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	s.pub.PublishForUsers(
+		services.GetReceivingUpdateMembers(toChat.Members[:], forwarded.SenderID, &forwarded.Update),
+		events.TextMessageSent{
+			ChatID:    uuid.UUID(forwarded.ChatID),
+			UpdateID:  int64(forwarded.UpdateID),
+			SenderID:  uuid.UUID(forwarded.SenderID),
+			Text:      forwarded.Text,
+			CreatedAt: int64(forwarded.CreatedAt),
+		},
+	)
+
+	forwardedDto := dto.NewTextMessageDTO(forwarded)
+	return &forwardedDto, nil
+}
+
+func (s *GroupUpdateService) ForwardFileMessage(ctx context.Context, req request.ForwardMessage) (*dto.FileMessageDTO, error) {
+	fromChat, err := s.chatterRepo.FindChatter(ctx, domain.ChatID(req.FromChatID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrChatNotFound
+		}
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	toChat, err := s.groupRepo.FindById(ctx, domain.ChatID(req.ToChatID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrChatNotFound
+		}
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	msg, err := s.updateRepo.FindFileMessage(ctx, domain.ChatID(req.FromChatID), domain.UpdateID(req.MessageID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrMessageNotFound
+		}
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	forwarded, err := msg.Forward(fromChat, domain.UserID(req.SenderID), toChat)
+	if err != nil {
+		return nil, err
+	}
+
+	forwarded, err = s.updateRepo.CreateFileMessage(ctx, forwarded)
+	if err != nil {
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	s.pub.PublishForUsers(
+		services.GetReceivingUpdateMembers(toChat.Members[:], forwarded.SenderID, &forwarded.Update),
+		events.FileMessageSent{
+			ChatID:   uuid.UUID(forwarded.ChatID),
+			UpdateID: int64(forwarded.UpdateID),
+			SenderID: uuid.UUID(forwarded.SenderID),
+			File: events.FileMeta{
+				FileId:    forwarded.File.FileId,
+				FileName:  forwarded.File.FileName,
+				MimeType:  forwarded.File.MimeType,
+				FileSize:  forwarded.File.FileSize,
+				FileUrl:   string(forwarded.File.FileUrl),
+				CreatedAt: int64(forwarded.File.CreatedAt),
+			},
+			CreatedAt: int64(forwarded.CreatedAt),
+		},
+	)
+
+	forwardedDto := dto.NewFileMessageDTO(forwarded)
+	return &forwardedDto, nil
 }
