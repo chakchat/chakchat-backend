@@ -141,9 +141,6 @@ func (s *GroupUpdateService) EditTextMessage(ctx context.Context, req request.Ed
 }
 
 func (s *GroupUpdateService) DeleteMessage(ctx context.Context, req request.DeleteMessage) (*dto.UpdateDeletedDTO, error) {
-	// TODO:
-	// Refactoring idea:
-	// Wrap code to some helper that will have inner common code
 	chat, err := s.groupRepo.FindById(ctx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
@@ -197,4 +194,46 @@ func (s *GroupUpdateService) DeleteMessage(ctx context.Context, req request.Dele
 
 	deletedDto := dto.NewUpdateDeletedDTO(deleted)
 	return &deletedDto, nil
+}
+
+func (s *GroupUpdateService) SendReaction(ctx context.Context, req request.SendReaction) (*dto.ReactionDTO, error) {
+	chat, err := s.groupRepo.FindById(ctx, domain.ChatID(req.ChatID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrChatNotFound
+		}
+		return nil, err
+	}
+
+	msg, err := s.updateRepo.FindGenericMessage(ctx, domain.ChatID(req.ChatID), domain.UpdateID(req.MessageID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrMessageNotFound
+		}
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	reaction, err := domain.NewReaction(chat, domain.UserID(req.SenderID), msg, domain.ReactionType(req.ReactionType))
+	if err != nil {
+		return nil, err
+	}
+
+	reaction, err = s.updateRepo.CreateReaction(ctx, reaction)
+	if err != nil {
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	s.pub.PublishForUsers(
+		services.GetReceivingUpdateMembers(chat.Members[:], reaction.SenderID, &msg.Update),
+		events.ReactionSent{
+			ChatID:       uuid.UUID(reaction.ChatID),
+			UpdateID:     int64(reaction.UpdateID),
+			SenderID:     uuid.UUID(reaction.SenderID),
+			CreatedAt:    int64(reaction.CreatedAt),
+			ReactionType: string(reaction.Type),
+		},
+	)
+
+	reactionDto := dto.NewReactionDTO(reaction)
+	return &reactionDto, nil
 }
