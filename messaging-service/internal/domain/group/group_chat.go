@@ -39,6 +39,13 @@ func NewGroupChat(admin domain.UserID, members []domain.UserID, name string) (*G
 	}, nil
 }
 
+func (g *GroupChat) Delete(sender domain.UserID) error {
+	if sender != g.Admin {
+		return domain.ErrNotAdmin
+	}
+	return nil
+}
+
 func (g *GroupChat) UpdateInfo(sender domain.UserID, name, description string) error {
 	if sender != g.Admin {
 		return domain.ErrNotAdmin

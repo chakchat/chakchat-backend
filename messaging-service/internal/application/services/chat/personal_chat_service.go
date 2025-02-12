@@ -45,7 +45,7 @@ func (s *PersonalChatService) BlockChat(ctx context.Context, userId, chatId uuid
 		return errors.Join(services.ErrInternal, err)
 	}
 
-	s.pub.PublishForUsers(services.GetSecondUserSlice(chat.Members, domain.UserID(userId)), events.ChatBlocked{
+	s.pub.PublishForUsers(services.GetReceivingMembers(chat.Members[:], domain.UserID(userId)), events.ChatBlocked{
 		ChatID: chatId,
 	})
 
@@ -71,7 +71,7 @@ func (s *PersonalChatService) UnblockChat(ctx context.Context, userId, chatId uu
 		return errors.Join(services.ErrInternal, err)
 	}
 
-	s.pub.PublishForUsers(services.GetSecondUserSlice(chat.Members, domain.UserID(userId)), events.ChatUnblocked{
+	s.pub.PublishForUsers(services.GetReceivingMembers(chat.Members[:], domain.UserID(userId)), events.ChatUnblocked{
 		ChatID: chatId,
 	})
 
