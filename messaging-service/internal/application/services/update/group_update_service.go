@@ -15,32 +15,32 @@ import (
 	"github.com/google/uuid"
 )
 
-type PersonalUpdateService struct {
-	pchatRepo   repository.PersonalChatRepository
+type GroupUpdateService struct {
+	groupRepo   repository.GroupChatRepository
 	updateRepo  repository.UpdateRepository
 	chatterRepo repository.ChatterRepository
 	txProvider  storage.TxProvider
 	pub         publish.Publisher
 }
 
-func NewPersonalUpdateService(
-	pchatRepo repository.PersonalChatRepository,
+func NewGroupUpdateService(
+	groupRepo repository.GroupChatRepository,
 	updateRepo repository.UpdateRepository,
 	chatterRepo repository.ChatterRepository,
-	transactioner storage.TxProvider,
+	txProvider storage.TxProvider,
 	pub publish.Publisher,
-) *PersonalUpdateService {
-	return &PersonalUpdateService{
-		pchatRepo:   pchatRepo,
+) *GroupUpdateService {
+	return &GroupUpdateService{
+		groupRepo:   groupRepo,
 		updateRepo:  updateRepo,
 		chatterRepo: chatterRepo,
-		txProvider:  transactioner,
+		txProvider:  txProvider,
 		pub:         pub,
 	}
 }
 
-func (s *PersonalUpdateService) SendTextMessage(ctx context.Context, req request.SendTextMessage) (*dto.TextMessageDTO, error) {
-	chat, err := s.pchatRepo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *GroupUpdateService) SendTextMessage(ctx context.Context, req request.SendTextMessage) (*dto.TextMessageDTO, error) {
+	chat, err := s.groupRepo.FindById(ctx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -65,7 +65,6 @@ func (s *PersonalUpdateService) SendTextMessage(ctx context.Context, req request
 		req.Text,
 		replyToMessage,
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +75,7 @@ func (s *PersonalUpdateService) SendTextMessage(ctx context.Context, req request
 	}
 
 	s.pub.PublishForUsers(
-		services.GetReceivingUpdateMembers(chat.Members[:], msg.SenderID, &msg.Update),
+		services.GetReceivingUpdateMembers(chat.Members[:], domain.UserID(req.SenderID), &msg.Update),
 		events.TextMessageSent{
 			ChatID:    uuid.UUID(msg.ChatID),
 			UpdateID:  int64(msg.UpdateID),
@@ -90,8 +89,8 @@ func (s *PersonalUpdateService) SendTextMessage(ctx context.Context, req request
 	return &msgDto, nil
 }
 
-func (s *PersonalUpdateService) EditTextMessage(ctx context.Context, req request.EditTextMessage) (*dto.TextMessageDTO, error) {
-	chat, err := s.pchatRepo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *GroupUpdateService) EditTextMessage(ctx context.Context, req request.EditTextMessage) (*dto.TextMessageDTO, error) {
+	chat, err := s.groupRepo.FindById(ctx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -129,7 +128,7 @@ func (s *PersonalUpdateService) EditTextMessage(ctx context.Context, req request
 	}
 
 	s.pub.PublishForUsers(
-		services.GetReceivingUpdateMembers(chat.Members[:], msg.Edited.SenderID, &msg.Update),
+		services.GetReceivingUpdateMembers(chat.Members, msg.Edited.SenderID, &msg.Update),
 		events.TextMessageEdited{
 			ChatID:    uuid.UUID(msg.ChatID),
 			UpdateID:  int64(msg.Edited.UpdateID),
@@ -144,11 +143,8 @@ func (s *PersonalUpdateService) EditTextMessage(ctx context.Context, req request
 	return &msgDto, nil
 }
 
-func (s *PersonalUpdateService) DeleteMessage(ctx context.Context, req request.DeleteMessage) (*dto.UpdateDeletedDTO, error) {
-	// TODO:
-	// Refactoring idea:
-	// Wrap code to some helper that will have inner common code
-	chat, err := s.pchatRepo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *GroupUpdateService) DeleteMessage(ctx context.Context, req request.DeleteMessage) (*dto.UpdateDeletedDTO, error) {
+	chat, err := s.groupRepo.FindById(ctx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -187,7 +183,7 @@ func (s *PersonalUpdateService) DeleteMessage(ctx context.Context, req request.D
 	deleted := msg.Deleted[len(msg.Deleted)-1]
 	if msg.DeletedForAll() {
 		s.pub.PublishForUsers(
-			services.GetReceivingUpdateMembers(chat.Members[:], domain.UserID(req.SenderID), &msg.Update),
+			services.GetReceivingUpdateMembers(chat.Members, domain.UserID(req.SenderID), &msg.Update),
 			events.UpdateDeleted{
 				ChatID:     uuid.UUID(msg.ChatID),
 				UpdateID:   int64(deleted.UpdateID),
@@ -203,8 +199,8 @@ func (s *PersonalUpdateService) DeleteMessage(ctx context.Context, req request.D
 	return &deletedDto, nil
 }
 
-func (s *PersonalUpdateService) SendReaction(ctx context.Context, req request.SendReaction) (*dto.ReactionDTO, error) {
-	chat, err := s.pchatRepo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *GroupUpdateService) SendReaction(ctx context.Context, req request.SendReaction) (*dto.ReactionDTO, error) {
+	chat, err := s.groupRepo.FindById(ctx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -231,7 +227,7 @@ func (s *PersonalUpdateService) SendReaction(ctx context.Context, req request.Se
 	}
 
 	s.pub.PublishForUsers(
-		services.GetReceivingUpdateMembers(chat.Members[:], reaction.SenderID, &msg.Update),
+		services.GetReceivingUpdateMembers(chat.Members, reaction.SenderID, &msg.Update),
 		events.ReactionSent{
 			ChatID:       uuid.UUID(reaction.ChatID),
 			UpdateID:     int64(reaction.UpdateID),
@@ -245,8 +241,8 @@ func (s *PersonalUpdateService) SendReaction(ctx context.Context, req request.Se
 	return &reactionDto, nil
 }
 
-func (s *PersonalUpdateService) DeleteReaction(ctx context.Context, req request.DeleteReaction) (*dto.UpdateDeletedDTO, error) {
-	chat, err := s.pchatRepo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *GroupUpdateService) DeleteReaction(ctx context.Context, req request.DeleteReaction) (*dto.UpdateDeletedDTO, error) {
+	chat, err := s.groupRepo.FindById(ctx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -286,7 +282,7 @@ func (s *PersonalUpdateService) DeleteReaction(ctx context.Context, req request.
 
 	deleted := reaction.Deleted[len(reaction.Deleted)-1]
 	s.pub.PublishForUsers(
-		services.GetReceivingUpdateMembers(chat.Members[:], domain.UserID(req.SenderID), &reaction.Update),
+		services.GetReceivingUpdateMembers(chat.Members, domain.UserID(req.SenderID), &reaction.Update),
 		events.UpdateDeleted{
 			ChatID:     uuid.UUID(reaction.ChatID),
 			UpdateID:   int64(deleted.UpdateID),
@@ -301,7 +297,7 @@ func (s *PersonalUpdateService) DeleteReaction(ctx context.Context, req request.
 	return &deletedDto, nil
 }
 
-func (s *PersonalUpdateService) ForwardTextMessage(ctx context.Context, req request.ForwardMessage) (*dto.TextMessageDTO, error) {
+func (s *GroupUpdateService) ForwardTextMessage(ctx context.Context, req request.ForwardMessage) (*dto.TextMessageDTO, error) {
 	fromChat, err := s.chatterRepo.FindChatter(ctx, domain.ChatID(req.FromChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
@@ -310,7 +306,7 @@ func (s *PersonalUpdateService) ForwardTextMessage(ctx context.Context, req requ
 		return nil, errors.Join(services.ErrInternal, err)
 	}
 
-	toChat, err := s.pchatRepo.FindById(ctx, domain.ChatID(req.ToChatID))
+	toChat, err := s.groupRepo.FindById(ctx, domain.ChatID(req.ToChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -351,7 +347,7 @@ func (s *PersonalUpdateService) ForwardTextMessage(ctx context.Context, req requ
 	return &forwardedDto, nil
 }
 
-func (s *PersonalUpdateService) ForwardFileMessage(ctx context.Context, req request.ForwardMessage) (*dto.FileMessageDTO, error) {
+func (s *GroupUpdateService) ForwardFileMessage(ctx context.Context, req request.ForwardMessage) (*dto.FileMessageDTO, error) {
 	fromChat, err := s.chatterRepo.FindChatter(ctx, domain.ChatID(req.FromChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
@@ -360,7 +356,7 @@ func (s *PersonalUpdateService) ForwardFileMessage(ctx context.Context, req requ
 		return nil, errors.Join(services.ErrInternal, err)
 	}
 
-	toChat, err := s.pchatRepo.FindById(ctx, domain.ChatID(req.ToChatID))
+	toChat, err := s.groupRepo.FindById(ctx, domain.ChatID(req.ToChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound

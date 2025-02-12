@@ -78,7 +78,7 @@ func (s *PersonalFileService) SendFileMessage(ctx context.Context, req request.S
 	}
 
 	s.pub.PublishForUsers(
-		services.GetSecondUserSlice(chat.Members, msg.SenderID),
+		services.GetReceivingUpdateMembers(chat.Members[:], msg.SenderID, &msg.Update),
 		events.FileMessageSent{
 			ChatID:   uuid.UUID(msg.ChatID),
 			UpdateID: int64(msg.UpdateID),

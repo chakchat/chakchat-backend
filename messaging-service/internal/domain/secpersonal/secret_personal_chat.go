@@ -22,6 +22,13 @@ func NewSecretPersonalChatService(users [2]domain.UserID) (*SecretPersonalChat, 
 	}, nil
 }
 
+func (c *SecretPersonalChat) Delete(sender domain.UserID) error {
+	if !c.IsMember(sender) {
+		return domain.ErrUserNotMember
+	}
+	return nil
+}
+
 func (c *SecretPersonalChat) IsMember(user domain.UserID) bool {
 	return user == c.Members[0] || user == c.Members[1]
 }

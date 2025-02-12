@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository/mocks"
@@ -32,7 +33,9 @@ func TestPersonalChat_CreateChat(t *testing.T) {
 
 		service := NewPersonalChatService(repo, FakePublisher{})
 
-		chat, err := service.CreateChat(context.Background(), user1, user2)
+		chat, err := service.CreateChat(context.Background(),
+			request.CreatePersonalChat{SenderID: user1, MemberID: user2},
+		)
 
 		require.NoError(t, err)
 		require.Equal(t, [2]uuid.UUID{user1, user2}, chat.Members)
@@ -49,7 +52,9 @@ func TestPersonalChat_CreateChat(t *testing.T) {
 
 		service := NewPersonalChatService(repo, FakePublisher{})
 
-		_, err := service.CreateChat(context.Background(), user1, user2)
+		_, err := service.CreateChat(context.Background(),
+			request.CreatePersonalChat{SenderID: user1, MemberID: user2},
+		)
 
 		require.ErrorIs(t, err, services.ErrChatAlreadyExists)
 

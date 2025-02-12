@@ -21,4 +21,5 @@ var (
 	ErrUpdateDeleted       = errors.New("update is deleted")
 	ErrAlreadyBlocked      = errors.New("chat is already blocked")
 	ErrAlreadyUnblocked    = errors.New("chat is already unblocked")
+	ErrNotAdmin            = errors.New("sender is not admin")
 )

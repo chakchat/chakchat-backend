@@ -33,7 +33,7 @@ func (s *SecretGroupChatService) CreateGroup(ctx context.Context, req request.Cr
 		members[i] = domain.UserID(m)
 	}
 
-	g, err := secgroup.NewSecretGroupChat(domain.UserID(req.Admin), members, req.Name)
+	g, err := secgroup.NewSecretGroupChat(domain.UserID(req.SenderID), members, req.Name)
 
 	if err != nil {
 		return nil, err
@@ -46,10 +46,13 @@ func (s *SecretGroupChatService) CreateGroup(ctx context.Context, req request.Cr
 
 	gDto := dto.NewSecretGroupChatDTO(g)
 
-	s.pub.PublishForUsers(gDto.Members, events.ChatCreated{
-		ChatID:   uuid.UUID(gDto.ID),
-		ChatType: events.ChatTypeSecretGroup,
-	})
+	s.pub.PublishForUsers(
+		services.GetReceivingMembers(g.Members, domain.UserID(req.SenderID)),
+		events.ChatCreated{
+			ChatID:   uuid.UUID(gDto.ID),
+			ChatType: events.ChatTypeSecretGroup,
+		},
+	)
 
 	return &gDto, nil
 }
@@ -63,7 +66,7 @@ func (s *SecretGroupChatService) UpdateGroupInfo(ctx context.Context, req reques
 		return nil, errors.Join(services.ErrInternal, err)
 	}
 
-	err = g.UpdateInfo(req.Name, req.Description)
+	err = g.UpdateInfo(domain.UserID(req.SenderID), req.Name, req.Description)
 
 	if err != nil {
 		return nil, err
@@ -76,18 +79,21 @@ func (s *SecretGroupChatService) UpdateGroupInfo(ctx context.Context, req reques
 
 	gDto := dto.NewSecretGroupChatDTO(g)
 
-	s.pub.PublishForUsers(gDto.Members, events.GroupInfoUpdated{
-		ChatID:        gDto.ID,
-		Name:          gDto.Name,
-		Description:   gDto.Description,
-		GroupPhotoURL: string(g.GroupPhoto),
-	})
+	s.pub.PublishForUsers(
+		services.GetReceivingMembers(g.Members, domain.UserID(req.SenderID)),
+		events.GroupInfoUpdated{
+			ChatID:        gDto.ID,
+			Name:          gDto.Name,
+			Description:   gDto.Description,
+			GroupPhotoURL: string(g.GroupPhoto),
+		},
+	)
 
 	return &gDto, nil
 }
 
-func (s *SecretGroupChatService) DeleteGroup(ctx context.Context, chatId uuid.UUID) error {
-	g, err := s.repo.FindById(ctx, domain.ChatID(chatId))
+func (s *SecretGroupChatService) DeleteGroup(ctx context.Context, req request.DeleteChat) error {
+	g, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return services.ErrChatNotFound
@@ -95,27 +101,33 @@ func (s *SecretGroupChatService) DeleteGroup(ctx context.Context, chatId uuid.UU
 		return errors.Join(services.ErrInternal, err)
 	}
 
-	// TODO: put other logic here after you decide what to do with messages
+	err = g.Delete(domain.UserID(req.SenderID))
+	if err != nil {
+		return err
+	}
 
 	if err := s.repo.Delete(ctx, g.ID); err != nil {
 		return errors.Join(services.ErrInternal, err)
 	}
 
-	s.pub.PublishForUsers(dto.UUIDs(g.Members), events.ChatDeleted{
-		ChatID: chatId,
-	})
+	s.pub.PublishForUsers(
+		services.GetReceivingMembers(g.Members, domain.UserID(req.SenderID)),
+		events.ChatDeleted{
+			ChatID: req.ChatID,
+		},
+	)
 
 	return nil
 }
-func (s *SecretGroupChatService) AddMember(ctx context.Context, chatId, userId uuid.UUID) (*dto.SecretGroupChatDTO, error) {
-	g, err := s.repo.FindById(ctx, domain.ChatID(chatId))
+func (s *SecretGroupChatService) AddMember(ctx context.Context, req request.AddMember) (*dto.SecretGroupChatDTO, error) {
+	g, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
 		}
 	}
 
-	err = g.AddMember(domain.UserID(userId))
+	err = g.AddMember(domain.UserID(req.SenderID), domain.UserID(req.MemberID))
 
 	if err != nil {
 		return nil, err
@@ -126,25 +138,27 @@ func (s *SecretGroupChatService) AddMember(ctx context.Context, chatId, userId u
 		return nil, errors.Join(services.ErrInternal, err)
 	}
 
+	s.pub.PublishForUsers(
+		services.GetReceivingMembers(g.Members, domain.UserID(req.SenderID)),
+		events.GroupMemberAdded{
+			ChatID:   req.ChatID,
+			MemberID: req.MemberID,
+		},
+	)
+
 	gDto := dto.NewSecretGroupChatDTO(g)
-
-	s.pub.PublishForUsers(gDto.Members, events.GroupMemberAdded{
-		ChatID:   chatId,
-		MemberID: userId,
-	})
-
 	return &gDto, nil
 }
 
-func (s *SecretGroupChatService) DeleteMember(ctx context.Context, chatId, memberId uuid.UUID) (*dto.SecretGroupChatDTO, error) {
-	g, err := s.repo.FindById(ctx, domain.ChatID(chatId))
+func (s *SecretGroupChatService) DeleteMember(ctx context.Context, req request.DeleteMember) (*dto.SecretGroupChatDTO, error) {
+	g, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
 		}
 	}
 
-	err = g.DeleteMember(domain.UserID(memberId))
+	err = g.DeleteMember(domain.UserID(req.SenderID), domain.UserID(req.MemberID))
 
 	if err != nil {
 		return nil, err
@@ -157,10 +171,13 @@ func (s *SecretGroupChatService) DeleteMember(ctx context.Context, chatId, membe
 
 	gDto := dto.NewSecretGroupChatDTO(g)
 
-	s.pub.PublishForUsers(gDto.Members, events.GroupMemberAdded{
-		ChatID:   chatId,
-		MemberID: memberId,
-	})
+	s.pub.PublishForUsers(
+		services.GetReceivingMembers(g.Members, domain.UserID(req.SenderID)),
+		events.GroupMemberAdded{
+			ChatID:   req.ChatID,
+			MemberID: req.MemberID,
+		},
+	)
 
 	return &gDto, nil
 }

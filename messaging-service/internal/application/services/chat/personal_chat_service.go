@@ -7,6 +7,7 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish/events"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
@@ -45,9 +46,12 @@ func (s *PersonalChatService) BlockChat(ctx context.Context, userId, chatId uuid
 		return errors.Join(services.ErrInternal, err)
 	}
 
-	s.pub.PublishForUsers(services.GetSecondUserSlice(chat.Members, domain.UserID(userId)), events.ChatBlocked{
-		ChatID: chatId,
-	})
+	s.pub.PublishForUsers(
+		services.GetReceivingMembers(chat.Members[:], domain.UserID(userId)),
+		events.ChatBlocked{
+			ChatID: chatId,
+		},
+	)
 
 	return nil
 }
@@ -71,15 +75,18 @@ func (s *PersonalChatService) UnblockChat(ctx context.Context, userId, chatId uu
 		return errors.Join(services.ErrInternal, err)
 	}
 
-	s.pub.PublishForUsers(services.GetSecondUserSlice(chat.Members, domain.UserID(userId)), events.ChatUnblocked{
-		ChatID: chatId,
-	})
+	s.pub.PublishForUsers(
+		services.GetReceivingMembers(chat.Members[:], domain.UserID(userId)),
+		events.ChatUnblocked{
+			ChatID: chatId,
+		},
+	)
 
 	return nil
 }
 
-func (s *PersonalChatService) CreateChat(ctx context.Context, userId, withUserId uuid.UUID) (*dto.PersonalChatDTO, error) {
-	domainMembers := [2]domain.UserID{domain.UserID(userId), domain.UserID(withUserId)}
+func (s *PersonalChatService) CreateChat(ctx context.Context, req request.CreatePersonalChat) (*dto.PersonalChatDTO, error) {
+	domainMembers := [2]domain.UserID{domain.UserID(req.SenderID), domain.UserID(req.MemberID)}
 
 	if err := s.validateChatNotExists(ctx, domainMembers); err != nil {
 		return nil, err
@@ -98,7 +105,7 @@ func (s *PersonalChatService) CreateChat(ctx context.Context, userId, withUserId
 
 	chatDto := dto.NewPersonalChatDTO(chat)
 
-	s.pub.PublishForUsers([]uuid.UUID{withUserId}, events.ChatCreated{
+	s.pub.PublishForUsers([]uuid.UUID{req.MemberID}, events.ChatCreated{
 		ChatID:   chatDto.ID,
 		ChatType: events.ChatTypePersonal,
 	})
@@ -120,8 +127,8 @@ func (s *PersonalChatService) GetChatById(ctx context.Context,
 	return &chatDto, nil
 }
 
-func (s *PersonalChatService) DeleteChat(ctx context.Context, chatId uuid.UUID, deleteForAll bool) error {
-	chat, err := s.repo.FindById(ctx, domain.ChatID(chatId))
+func (s *PersonalChatService) DeleteChat(ctx context.Context, req request.DeleteChat) error {
+	chat, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return services.ErrChatNotFound
@@ -129,16 +136,21 @@ func (s *PersonalChatService) DeleteChat(ctx context.Context, chatId uuid.UUID, 
 		return errors.Join(services.ErrInternal, err)
 	}
 
-	// TODO: put other logic here after you decide what to do with messages
-	// For now I think that messages with in deleted chat should be deleted by background task
+	err = chat.Delete(domain.UserID(req.SenderID))
+	if err != nil {
+		return err
+	}
 
 	if err := s.repo.Delete(ctx, chat.ID); err != nil {
 		return errors.Join(services.ErrInternal, err)
 	}
 
-	s.pub.PublishForUsers(dto.UUIDs(chat.Members[:]), events.ChatDeleted{
-		ChatID: chatId,
-	})
+	s.pub.PublishForUsers(
+		services.GetReceivingMembers(chat.Members[:], domain.UserID(req.SenderID)),
+		events.ChatDeleted{
+			ChatID: req.ChatID,
+		},
+	)
 
 	return nil
 }
