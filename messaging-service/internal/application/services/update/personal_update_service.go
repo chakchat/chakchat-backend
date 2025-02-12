@@ -189,10 +189,53 @@ func (s *PersonalUpdateService) DeleteMessage(ctx context.Context, req request.D
 				SenderID:   req.SenderID,
 				DeletedID:  req.MessageID,
 				DeleteMode: req.DeleteMode,
+				CreatedAt:  int64(msg.Deleted[len(msg.Deleted)-1].CreatedAt),
 			},
 		)
 	}
 
 	deletedDto := dto.NewUpdateDeletedDTO(msg.Deleted[len(msg.Deleted)-1])
 	return &deletedDto, nil
+}
+
+func (s *PersonalUpdateService) SendReaction(ctx context.Context, req request.SendReaction) (*dto.ReactionDTO, error) {
+
+	chat, err := s.pchatRepo.FindById(ctx, domain.ChatID(req.ChatID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrChatNotFound
+		}
+	}
+
+	msg, err := s.updateRepo.FindGenericMessage(ctx, domain.ChatID(req.ChatID), domain.UpdateID(req.MessageID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrMessageNotFound
+		}
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	reaction, err := domain.NewReaction(chat, domain.UserID(req.SenderID), msg, domain.ReactionType(req.ReactionType))
+	if err != nil {
+		return nil, err
+	}
+
+	reaction, err = s.updateRepo.CreateReaction(ctx, reaction)
+	if err != nil {
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	s.pub.PublishForUsers(
+		services.GetSecondUserSlice(chat.Members, reaction.SenderID),
+		events.ReactionSent{
+			ChatID:       uuid.UUID(reaction.ChatID),
+			UpdateID:     int64(reaction.UpdateID),
+			SenderID:     uuid.UUID(reaction.SenderID),
+			CreatedAt:    int64(reaction.CreatedAt),
+			ReactionType: string(reaction.Type),
+		},
+	)
+
+	reactionDto := dto.NewReactionDTO(reaction)
+	return &reactionDto, nil
 }

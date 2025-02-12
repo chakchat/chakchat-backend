@@ -24,3 +24,11 @@ type DeleteMessage struct {
 	MessageID  int64
 	DeleteMode string
 }
+
+type SendReaction struct {
+	ChatID   uuid.UUID
+	SenderID uuid.UUID
+
+	MessageID    int64
+	ReactionType string
+}

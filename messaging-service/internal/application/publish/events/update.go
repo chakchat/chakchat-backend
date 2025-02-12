@@ -28,4 +28,15 @@ type UpdateDeleted struct {
 
 	DeletedID  int64  `json:"deleted_id"`
 	DeleteMode string `json:"delete_mode"`
+
+	CreatedAt int64 `json:"created_at"`
+}
+
+type ReactionSent struct {
+	ChatID   uuid.UUID `json:"chat_id"`
+	UpdateID int64     `json:"update_id"`
+	SenderID uuid.UUID `json:"sender_id"`
+
+	CreatedAt    int64  `json:"created_at"`
+	ReactionType string `json:"reaction_type"`
 }

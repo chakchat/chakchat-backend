@@ -14,4 +14,5 @@ type UpdateRepository interface {
 	CreateTextMessageEdited(context.Context, *domain.TextMessageEdited) (*domain.TextMessageEdited, error)
 	DeleteMessage(context.Context, domain.ChatID, domain.UpdateID) error
 	CreateUpdateDeleted(context.Context, *domain.UpdateDeleted) (*domain.UpdateDeleted, error)
+	CreateReaction(context.Context, *domain.Reaction) (*domain.Reaction, error)
 }
