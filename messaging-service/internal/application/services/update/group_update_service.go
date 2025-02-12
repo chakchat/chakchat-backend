@@ -180,7 +180,7 @@ func (s *GroupUpdateService) DeleteMessage(ctx context.Context, req request.Dele
 	deleted := msg.Deleted[len(msg.Deleted)-1]
 	if msg.DeletedForAll() {
 		s.pub.PublishForUsers(
-			services.GetReceivingUpdateMembers(chat.Members[:], domain.UserID(req.SenderID), &msg.Update),
+			services.GetReceivingUpdateMembers(chat.Members, domain.UserID(req.SenderID), &msg.Update),
 			events.UpdateDeleted{
 				ChatID:     uuid.UUID(msg.ChatID),
 				UpdateID:   int64(deleted.UpdateID),
@@ -224,7 +224,7 @@ func (s *GroupUpdateService) SendReaction(ctx context.Context, req request.SendR
 	}
 
 	s.pub.PublishForUsers(
-		services.GetReceivingUpdateMembers(chat.Members[:], reaction.SenderID, &msg.Update),
+		services.GetReceivingUpdateMembers(chat.Members, reaction.SenderID, &msg.Update),
 		events.ReactionSent{
 			ChatID:       uuid.UUID(reaction.ChatID),
 			UpdateID:     int64(reaction.UpdateID),
@@ -236,4 +236,60 @@ func (s *GroupUpdateService) SendReaction(ctx context.Context, req request.SendR
 
 	reactionDto := dto.NewReactionDTO(reaction)
 	return &reactionDto, nil
+}
+
+func (s *GroupUpdateService) DeleteReaction(ctx context.Context, req request.DeleteReaction) (*dto.UpdateDeletedDTO, error) {
+	chat, err := s.groupRepo.FindById(ctx, domain.ChatID(req.ChatID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrChatNotFound
+		}
+		return nil, err
+	}
+
+	reaction, err := s.updateRepo.FindReaction(ctx, domain.ChatID(req.ChatID), domain.UpdateID(req.ReactionID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrReactionNotFound
+		}
+		return nil, err
+	}
+
+	err = reaction.Delete(chat, domain.UserID(req.SenderID))
+	if err != nil {
+		return nil, err
+	}
+
+	err = storage.RunInTx(ctx, s.txProvider, func(ctx context.Context) error {
+		reaction.Deleted[len(reaction.Deleted)-1], err = s.updateRepo.CreateUpdateDeleted(ctx, reaction.Deleted[len(reaction.Deleted)-1])
+		if err != nil {
+			return err
+		}
+
+		// For now reaction is always deleted for all users. And no `if reaction.DeletedForAll() {...}` check is performed.
+		err = s.updateRepo.DeleteReaction(ctx, reaction.ChatID, reaction.UpdateID)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	deleted := reaction.Deleted[len(reaction.Deleted)-1]
+	s.pub.PublishForUsers(
+		services.GetReceivingUpdateMembers(chat.Members, domain.UserID(req.SenderID), &reaction.Update),
+		events.UpdateDeleted{
+			ChatID:     uuid.UUID(reaction.ChatID),
+			UpdateID:   int64(deleted.UpdateID),
+			SenderID:   uuid.UUID(deleted.SenderID),
+			DeletedID:  int64(deleted.DeletedID),
+			DeleteMode: string(deleted.Mode),
+			CreatedAt:  int64(deleted.CreatedAt),
+		},
+	)
+
+	deletedDto := dto.NewUpdateDeletedDTO(deleted)
+	return &deletedDto, nil
 }
