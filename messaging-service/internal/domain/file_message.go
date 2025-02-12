@@ -1,8 +1,6 @@
 package domain
 
 import (
-	"time"
-
 	"github.com/google/uuid"
 )
 
@@ -15,8 +13,8 @@ type FileMeta struct {
 	FileName  string
 	MimeType  string
 	FileSize  int64
-	FileUrl   string
-	CreatedAt time.Time
+	FileUrl   URL
+	CreatedAt Timestamp
 }
 
 type FileMessage struct {

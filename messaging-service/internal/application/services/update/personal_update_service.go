@@ -16,23 +16,26 @@ import (
 )
 
 type PersonalUpdateService struct {
-	pchatRepo  repository.PersonalChatRepository
-	updateRepo repository.UpdateRepository
-	txProvider storage.TxProvider
-	pub        publish.Publisher
+	pchatRepo   repository.PersonalChatRepository
+	updateRepo  repository.UpdateRepository
+	chatterRepo repository.ChatterRepository
+	txProvider  storage.TxProvider
+	pub         publish.Publisher
 }
 
 func NewPersonalUpdateService(
 	pchatRepo repository.PersonalChatRepository,
 	updateRepo repository.UpdateRepository,
+	chatterRepo repository.ChatterRepository,
 	transactioner storage.TxProvider,
 	pub publish.Publisher,
 ) *PersonalUpdateService {
 	return &PersonalUpdateService{
-		pchatRepo:  pchatRepo,
-		updateRepo: updateRepo,
-		txProvider: transactioner,
-		pub:        pub,
+		pchatRepo:   pchatRepo,
+		updateRepo:  updateRepo,
+		chatterRepo: chatterRepo,
+		txProvider:  transactioner,
+		pub:         pub,
 	}
 }
 
@@ -150,6 +153,7 @@ func (s *PersonalUpdateService) DeleteMessage(ctx context.Context, req request.D
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
 		}
+		return nil, err
 	}
 
 	msg, err := s.updateRepo.FindTextMessage(ctx, domain.ChatID(req.ChatID), domain.UpdateID(req.MessageID))
@@ -180,6 +184,226 @@ func (s *PersonalUpdateService) DeleteMessage(ctx context.Context, req request.D
 		return nil, errors.Join(services.ErrInternal, err)
 	}
 
-	deletedDto := dto.NewUpdateDeletedDTO(msg.Deleted[len(msg.Deleted)-1])
+	deleted := msg.Deleted[len(msg.Deleted)-1]
+	if msg.DeletedForAll() {
+		s.pub.PublishForUsers(
+			services.GetSecondUserSlice(chat.Members, domain.UserID(req.SenderID)),
+			events.UpdateDeleted{
+				ChatID:     uuid.UUID(msg.ChatID),
+				UpdateID:   int64(deleted.UpdateID),
+				SenderID:   req.SenderID,
+				DeletedID:  req.MessageID,
+				DeleteMode: req.DeleteMode,
+				CreatedAt:  int64(deleted.CreatedAt),
+			},
+		)
+	}
+
+	deletedDto := dto.NewUpdateDeletedDTO(deleted)
 	return &deletedDto, nil
+}
+
+func (s *PersonalUpdateService) SendReaction(ctx context.Context, req request.SendReaction) (*dto.ReactionDTO, error) {
+	chat, err := s.pchatRepo.FindById(ctx, domain.ChatID(req.ChatID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrChatNotFound
+		}
+		return nil, err
+	}
+
+	msg, err := s.updateRepo.FindGenericMessage(ctx, domain.ChatID(req.ChatID), domain.UpdateID(req.MessageID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrMessageNotFound
+		}
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	reaction, err := domain.NewReaction(chat, domain.UserID(req.SenderID), msg, domain.ReactionType(req.ReactionType))
+	if err != nil {
+		return nil, err
+	}
+
+	reaction, err = s.updateRepo.CreateReaction(ctx, reaction)
+	if err != nil {
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	s.pub.PublishForUsers(
+		services.GetSecondUserSlice(chat.Members, reaction.SenderID),
+		events.ReactionSent{
+			ChatID:       uuid.UUID(reaction.ChatID),
+			UpdateID:     int64(reaction.UpdateID),
+			SenderID:     uuid.UUID(reaction.SenderID),
+			CreatedAt:    int64(reaction.CreatedAt),
+			ReactionType: string(reaction.Type),
+		},
+	)
+
+	reactionDto := dto.NewReactionDTO(reaction)
+	return &reactionDto, nil
+}
+
+func (s *PersonalUpdateService) DeleteReaction(ctx context.Context, req request.DeleteReaction) (*dto.UpdateDeletedDTO, error) {
+	chat, err := s.pchatRepo.FindById(ctx, domain.ChatID(req.ChatID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrChatNotFound
+		}
+		return nil, err
+	}
+
+	reaction, err := s.updateRepo.FindReaction(ctx, domain.ChatID(req.ChatID), domain.UpdateID(req.ReactionID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrReactionNotFound
+		}
+		return nil, err
+	}
+
+	err = reaction.Delete(chat, domain.UserID(req.SenderID))
+	if err != nil {
+		return nil, err
+	}
+
+	err = storage.RunInTx(ctx, s.txProvider, func(ctx context.Context) error {
+		reaction.Deleted[len(reaction.Deleted)-1], err = s.updateRepo.CreateUpdateDeleted(ctx, reaction.Deleted[len(reaction.Deleted)-1])
+		if err != nil {
+			return err
+		}
+
+		// For now reaction is always deleted for all users. And no `if reaction.DeletedForAll() {...}` check is performed.
+		err = s.updateRepo.DeleteReaction(ctx, reaction.ChatID, reaction.UpdateID)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	deleted := reaction.Deleted[len(reaction.Deleted)-1]
+	s.pub.PublishForUsers(
+		services.GetSecondUserSlice(chat.Members, domain.UserID(req.SenderID)),
+		events.UpdateDeleted{
+			ChatID:     uuid.UUID(reaction.ChatID),
+			UpdateID:   int64(deleted.UpdateID),
+			SenderID:   uuid.UUID(deleted.SenderID),
+			DeletedID:  int64(deleted.DeletedID),
+			DeleteMode: string(deleted.Mode),
+			CreatedAt:  int64(deleted.CreatedAt),
+		},
+	)
+
+	deletedDto := dto.NewUpdateDeletedDTO(deleted)
+	return &deletedDto, nil
+}
+
+func (s *PersonalUpdateService) ForwardTextMessage(ctx context.Context, req request.ForwardMessage) (*dto.TextMessageDTO, error) {
+	fromChat, err := s.chatterRepo.FindChatter(ctx, domain.ChatID(req.FromChatID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrChatNotFound
+		}
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	toChat, err := s.pchatRepo.FindById(ctx, domain.ChatID(req.ToChatID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrChatNotFound
+		}
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	msg, err := s.updateRepo.FindTextMessage(ctx, domain.ChatID(req.FromChatID), domain.UpdateID(req.MessageID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrMessageNotFound
+		}
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	forwarded, err := msg.Forward(fromChat, domain.UserID(req.SenderID), toChat)
+	if err != nil {
+		return nil, err
+	}
+
+	forwarded, err = s.updateRepo.CreateTextMessage(ctx, forwarded)
+	if err != nil {
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	s.pub.PublishForUsers(
+		services.GetSecondUserSlice(toChat.Members, forwarded.SenderID),
+		events.TextMessageSent{
+			ChatID:    uuid.UUID(forwarded.ChatID),
+			UpdateID:  int64(forwarded.UpdateID),
+			SenderID:  uuid.UUID(forwarded.SenderID),
+			Text:      forwarded.Text,
+			CreatedAt: int64(forwarded.CreatedAt),
+		},
+	)
+
+	forwardedDto := dto.NewTextMessageDTO(forwarded)
+	return &forwardedDto, nil
+}
+
+func (s *PersonalUpdateService) ForwardFileMessage(ctx context.Context, req request.ForwardMessage) (*dto.FileMessageDTO, error) {
+	fromChat, err := s.chatterRepo.FindChatter(ctx, domain.ChatID(req.FromChatID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrChatNotFound
+		}
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	toChat, err := s.pchatRepo.FindById(ctx, domain.ChatID(req.ToChatID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrChatNotFound
+		}
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	msg, err := s.updateRepo.FindFileMessage(ctx, domain.ChatID(req.FromChatID), domain.UpdateID(req.MessageID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrMessageNotFound
+		}
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	forwarded, err := msg.Forward(fromChat, domain.UserID(req.SenderID), toChat)
+	if err != nil {
+		return nil, err
+	}
+
+	forwarded, err = s.updateRepo.CreateFileMessage(ctx, forwarded)
+	if err != nil {
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	s.pub.PublishForUsers(
+		services.GetSecondUserSlice(toChat.Members, forwarded.SenderID),
+		events.FileMessageSent{
+			ChatID:   uuid.UUID(forwarded.ChatID),
+			UpdateID: int64(forwarded.UpdateID),
+			SenderID: uuid.UUID(forwarded.SenderID),
+			File: events.FileMeta{
+				FileId:    forwarded.File.FileId,
+				FileName:  forwarded.File.FileName,
+				MimeType:  forwarded.File.MimeType,
+				FileSize:  forwarded.File.FileSize,
+				FileUrl:   string(forwarded.File.FileUrl),
+				CreatedAt: int64(forwarded.File.CreatedAt),
+			},
+			CreatedAt: int64(forwarded.CreatedAt),
+		},
+	)
+
+	forwardedDto := dto.NewFileMessageDTO(forwarded)
+	return &forwardedDto, nil
 }

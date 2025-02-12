@@ -9,4 +9,5 @@ var (
 	ErrInvalidPhoto      = errors.New("service: invalid photo")
 	ErrChatAlreadyExists = errors.New("service: chat already exists")
 	ErrMessageNotFound   = errors.New("service: message not found")
+	ErrReactionNotFound  = errors.New("service: reaction not found")
 )
