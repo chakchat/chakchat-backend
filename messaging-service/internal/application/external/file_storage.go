@@ -2,7 +2,6 @@ package external
 
 import (
 	"errors"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -17,7 +16,7 @@ type FileMeta struct {
 	MimeType  string
 	FileSize  int64
 	FileUrl   string
-	CreatedAt time.Time
+	CreatedAt int64
 }
 
 type FileStorage interface {

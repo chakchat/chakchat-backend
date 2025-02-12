@@ -47,3 +47,10 @@ type ForwardMessage struct {
 	MessageID  int64
 	FromChatID uuid.UUID
 }
+
+type SendFileMessage struct {
+	ChatID         uuid.UUID
+	SenderID       uuid.UUID
+	FileID         uuid.UUID
+	ReplyToMessage *int64
+}
