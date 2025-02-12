@@ -85,3 +85,58 @@ func (s *GroupUpdateService) SendTextMessage(ctx context.Context, req request.Se
 	msgDto := dto.NewTextMessageDTO(msg)
 	return &msgDto, nil
 }
+
+func (s *GroupUpdateService) EditTextMessage(ctx context.Context, req request.EditTextMessage) (*dto.TextMessageDTO, error) {
+	chat, err := s.groupRepo.FindById(ctx, domain.ChatID(req.ChatID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrChatNotFound
+		}
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	msg, err := s.updateRepo.FindTextMessage(ctx, domain.ChatID(req.ChatID), domain.UpdateID(req.MessageID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrMessageNotFound
+		}
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	err = msg.Edit(chat, domain.UserID(req.SenderID), req.NewText)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = storage.RunInTx(ctx, s.txProvider, func(ctx context.Context) error {
+		msg.Edited, err = s.updateRepo.CreateTextMessageEdited(ctx, msg.Edited)
+		if err != nil {
+			return err
+		}
+		msg, err = s.updateRepo.UpdateTextMessage(ctx, msg)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	s.pub.PublishForUsers(
+		services.GetReceivingUpdateMembers(chat.Members, msg.Edited.SenderID, &msg.Update),
+		events.TextMessageEdited{
+			ChatID:    uuid.UUID(msg.ChatID),
+			UpdateID:  int64(msg.Edited.UpdateID),
+			SenderID:  uuid.UUID(msg.Edited.SenderID),
+			MessageID: int64(msg.UpdateID),
+			NewText:   msg.Edited.NewText,
+			CreatedAt: int64(msg.Edited.CreatedAt),
+		},
+	)
+
+	msgDto := dto.NewTextMessageDTO(msg)
+	return &msgDto, nil
+
+}
