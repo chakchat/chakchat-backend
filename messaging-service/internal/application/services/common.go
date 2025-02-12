@@ -6,14 +6,24 @@ import (
 	"github.com/google/uuid"
 )
 
-func GetSecondUserSlice(users [2]domain.UserID, first domain.UserID) []uuid.UUID {
-	var second domain.UserID
-	if users[0] == first {
-		second = users[1]
-	} else {
-		second = users[0]
+func GetReceivingMembers(members []domain.UserID, sender domain.UserID) []uuid.UUID {
+	res := make([]uuid.UUID, 0, len(members)-1)
+	for _, user := range members {
+		if user != sender {
+			res = append(res, uuid.UUID(user))
+		}
 	}
-	return []uuid.UUID{uuid.UUID(second)}
+	return res
+}
+
+func GetReceivingUpdateMembers(members []domain.UserID, sender domain.UserID, update *domain.Update) []uuid.UUID {
+	res := make([]uuid.UUID, 0, len(members)-1)
+	for _, user := range members {
+		if user != sender && !update.DeletedFor(user) {
+			res = append(res, uuid.UUID(user))
+		}
+	}
+	return res
 }
 
 func NewDomainFileMeta(f *external.FileMeta) domain.FileMeta {

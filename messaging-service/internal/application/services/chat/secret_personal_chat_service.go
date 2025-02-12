@@ -7,6 +7,7 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish/events"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
@@ -69,8 +70,8 @@ func (s *SecretPersonalChatService) GetChatById(ctx context.Context, chatId uuid
 	return &chatDto, nil
 }
 
-func (s *SecretPersonalChatService) DeleteChat(ctx context.Context, chatId uuid.UUID) error {
-	chat, err := s.repo.FindById(ctx, domain.ChatID(chatId))
+func (s *SecretPersonalChatService) DeleteChat(ctx context.Context, req request.DeleteChat) error {
+	chat, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return services.ErrChatNotFound
@@ -78,16 +79,21 @@ func (s *SecretPersonalChatService) DeleteChat(ctx context.Context, chatId uuid.
 		return errors.Join(services.ErrInternal, err)
 	}
 
-	// TODO: put other logic here after you decide what to do with messages
-	// For now I think that messages with in deleted chat should be deleted by background task
+	err = chat.Delete(domain.UserID(req.SenderID))
+	if err != nil {
+		return err
+	}
 
 	if err := s.repo.Delete(ctx, chat.ID); err != nil {
 		return errors.Join(services.ErrInternal, err)
 	}
 
-	s.pub.PublishForUsers(dto.UUIDs(chat.Members[:]), events.ChatDeleted{
-		ChatID: chatId,
-	})
+	s.pub.PublishForUsers(
+		services.GetReceivingMembers(chat.Members[:], domain.UserID(req.SenderID)),
+		events.ChatDeleted{
+			ChatID: req.ChatID,
+		},
+	)
 
 	return nil
 }

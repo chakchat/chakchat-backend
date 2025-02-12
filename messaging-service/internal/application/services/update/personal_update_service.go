@@ -76,7 +76,7 @@ func (s *PersonalUpdateService) SendTextMessage(ctx context.Context, req request
 	}
 
 	s.pub.PublishForUsers(
-		services.GetSecondUserSlice(chat.Members, msg.SenderID),
+		services.GetReceivingUpdateMembers(chat.Members[:], msg.SenderID, &msg.Update),
 		events.TextMessageSent{
 			ChatID:    uuid.UUID(msg.ChatID),
 			UpdateID:  int64(msg.UpdateID),
@@ -129,7 +129,7 @@ func (s *PersonalUpdateService) EditTextMessage(ctx context.Context, req request
 	}
 
 	s.pub.PublishForUsers(
-		services.GetSecondUserSlice(chat.Members, msg.Edited.SenderID),
+		services.GetReceivingUpdateMembers(chat.Members[:], msg.Edited.SenderID, &msg.Update),
 		events.TextMessageEdited{
 			ChatID:    uuid.UUID(msg.ChatID),
 			UpdateID:  int64(msg.Edited.UpdateID),
@@ -187,7 +187,7 @@ func (s *PersonalUpdateService) DeleteMessage(ctx context.Context, req request.D
 	deleted := msg.Deleted[len(msg.Deleted)-1]
 	if msg.DeletedForAll() {
 		s.pub.PublishForUsers(
-			services.GetSecondUserSlice(chat.Members, domain.UserID(req.SenderID)),
+			services.GetReceivingUpdateMembers(chat.Members[:], domain.UserID(req.SenderID), &msg.Update),
 			events.UpdateDeleted{
 				ChatID:     uuid.UUID(msg.ChatID),
 				UpdateID:   int64(deleted.UpdateID),
@@ -231,7 +231,7 @@ func (s *PersonalUpdateService) SendReaction(ctx context.Context, req request.Se
 	}
 
 	s.pub.PublishForUsers(
-		services.GetSecondUserSlice(chat.Members, reaction.SenderID),
+		services.GetReceivingUpdateMembers(chat.Members[:], reaction.SenderID, &msg.Update),
 		events.ReactionSent{
 			ChatID:       uuid.UUID(reaction.ChatID),
 			UpdateID:     int64(reaction.UpdateID),
@@ -286,7 +286,7 @@ func (s *PersonalUpdateService) DeleteReaction(ctx context.Context, req request.
 
 	deleted := reaction.Deleted[len(reaction.Deleted)-1]
 	s.pub.PublishForUsers(
-		services.GetSecondUserSlice(chat.Members, domain.UserID(req.SenderID)),
+		services.GetReceivingUpdateMembers(chat.Members[:], domain.UserID(req.SenderID), &reaction.Update),
 		events.UpdateDeleted{
 			ChatID:     uuid.UUID(reaction.ChatID),
 			UpdateID:   int64(deleted.UpdateID),
@@ -337,7 +337,7 @@ func (s *PersonalUpdateService) ForwardTextMessage(ctx context.Context, req requ
 	}
 
 	s.pub.PublishForUsers(
-		services.GetSecondUserSlice(toChat.Members, forwarded.SenderID),
+		services.GetReceivingUpdateMembers(toChat.Members[:], forwarded.SenderID, &forwarded.Update),
 		events.TextMessageSent{
 			ChatID:    uuid.UUID(forwarded.ChatID),
 			UpdateID:  int64(forwarded.UpdateID),
@@ -387,7 +387,7 @@ func (s *PersonalUpdateService) ForwardFileMessage(ctx context.Context, req requ
 	}
 
 	s.pub.PublishForUsers(
-		services.GetSecondUserSlice(toChat.Members, forwarded.SenderID),
+		services.GetReceivingUpdateMembers(toChat.Members[:], forwarded.SenderID, &forwarded.Update),
 		events.FileMessageSent{
 			ChatID:   uuid.UUID(forwarded.ChatID),
 			UpdateID: int64(forwarded.UpdateID),

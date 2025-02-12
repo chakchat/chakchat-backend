@@ -2,13 +2,18 @@ package request
 
 import "github.com/google/uuid"
 
+type CreatePersonalChat struct {
+	SenderID uuid.UUID
+	MemberID uuid.UUID
+}
+
 type CreateGroup struct {
 	SenderID uuid.UUID
 	Members  []uuid.UUID
 	Name     string
 }
 
-type DeleteGroup struct {
+type DeleteChat struct {
 	ChatID   uuid.UUID
 	SenderID uuid.UUID
 }

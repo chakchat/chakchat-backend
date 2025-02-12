@@ -41,6 +41,13 @@ func NewSecretGroupChat(admin domain.UserID, members []domain.UserID, name strin
 	}, nil
 }
 
+func (g *SecretGroupChat) Delete(sender domain.UserID) error {
+	if sender != g.Admin {
+		return domain.ErrNotAdmin
+	}
+	return nil
+}
+
 func (g *SecretGroupChat) UpdateInfo(sender domain.UserID, name, description string) error {
 	if sender != g.Admin {
 		return domain.ErrNotAdmin
@@ -59,7 +66,7 @@ func (g *SecretGroupChat) UpdatePhoto(sender domain.UserID, photo domain.URL) er
 	if sender != g.Admin {
 		return domain.ErrNotAdmin
 	}
-	
+
 	g.GroupPhoto = photo
 	return nil
 }
@@ -68,7 +75,7 @@ func (g *SecretGroupChat) DeletePhoto(sender domain.UserID) error {
 	if sender != g.Admin {
 		return domain.ErrNotAdmin
 	}
-	
+
 	if g.GroupPhoto == "" {
 		return domain.ErrGroupPhotoEmpty
 	}
@@ -81,7 +88,7 @@ func (g *SecretGroupChat) AddMember(sender domain.UserID, newMember domain.UserI
 	if sender != g.Admin {
 		return domain.ErrNotAdmin
 	}
-	
+
 	if g.IsMember(newMember) {
 		return domain.ErrUserAlreadyMember
 	}
@@ -94,7 +101,7 @@ func (g *SecretGroupChat) DeleteMember(sender domain.UserID, member domain.UserI
 	if sender != g.Admin {
 		return domain.ErrNotAdmin
 	}
-	
+
 	if g.Admin == member {
 		return domain.ErrMemberIsAdmin
 	}

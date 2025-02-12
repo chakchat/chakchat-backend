@@ -65,12 +65,15 @@ func (s *SecretGroupPhotoService) UpdatePhoto(ctx context.Context, req request.U
 
 	gDto := dto.NewSecretGroupChatDTO(g)
 
-	s.pub.PublishForUsers(gDto.Members, events.GroupInfoUpdated{
-		ChatID:        gDto.ID,
-		Name:          gDto.Name,
-		Description:   gDto.Description,
-		GroupPhotoURL: string(g.GroupPhoto),
-	})
+	s.pub.PublishForUsers(
+		services.GetReceivingMembers(g.Members, domain.UserID(req.SenderID)),
+		events.GroupInfoUpdated{
+			ChatID:        gDto.ID,
+			Name:          gDto.Name,
+			Description:   gDto.Description,
+			GroupPhotoURL: string(g.GroupPhoto),
+		},
+	)
 
 	return &gDto, nil
 }
@@ -97,12 +100,15 @@ func (s *SecretGroupPhotoService) DeletePhoto(ctx context.Context, req request.D
 
 	gDto := dto.NewSecretGroupChatDTO(g)
 
-	s.pub.PublishForUsers(gDto.Members, events.GroupInfoUpdated{
-		ChatID:        gDto.ID,
-		Name:          gDto.Name,
-		Description:   gDto.Description,
-		GroupPhotoURL: string(g.GroupPhoto),
-	})
+	s.pub.PublishForUsers(
+		services.GetReceivingMembers(g.Members, domain.UserID(req.SenderID)),
+		events.GroupInfoUpdated{
+			ChatID:        gDto.ID,
+			Name:          gDto.Name,
+			Description:   gDto.Description,
+			GroupPhotoURL: string(g.GroupPhoto),
+		},
+	)
 
 	return &gDto, nil
 }

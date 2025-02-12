@@ -27,6 +27,13 @@ func NewPersonalChat(users [2]domain.UserID) (*PersonalChat, error) {
 	}, nil
 }
 
+func (c *PersonalChat) Delete(sender domain.UserID) error {
+	if !c.IsMember(sender) {
+		return domain.ErrUserNotMember
+	}
+	return nil
+}
+
 func (c *PersonalChat) BlockBy(user domain.UserID) error {
 	if !c.IsMember(user) {
 		return domain.ErrUserNotMember
