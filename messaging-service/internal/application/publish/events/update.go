@@ -1,6 +1,8 @@
 package events
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 type TextMessageSent struct {
 	ChatID   uuid.UUID `json:"chat_id"`
@@ -39,4 +41,22 @@ type ReactionSent struct {
 
 	CreatedAt    int64  `json:"created_at"`
 	ReactionType string `json:"reaction_type"`
+}
+
+type FileMeta struct {
+	FileId    uuid.UUID `json:"file_id"`
+	FileName  string    `json:"file_name"`
+	MimeType  string    `json:"mime_type"`
+	FileSize  int64     `json:"file_size"`
+	FileUrl   string    `json:"file_url"`
+	CreatedAt int64     `json:"created_at"`
+}
+
+type FileMessageSent struct {
+	ChatID   uuid.UUID `json:"chat_id"`
+	UpdateID int64     `json:"update_id"`
+	SenderID uuid.UUID `json:"sender_id"`
+
+	File      FileMeta `json:"file"`
+	CreatedAt int64    `json:"created_at"`
 }

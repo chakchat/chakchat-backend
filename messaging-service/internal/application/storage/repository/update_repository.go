@@ -19,4 +19,7 @@ type UpdateRepository interface {
 	CreateReaction(context.Context, *domain.Reaction) (*domain.Reaction, error)
 	FindReaction(context.Context, domain.ChatID, domain.UpdateID) (*domain.Reaction, error)
 	DeleteReaction(context.Context, domain.ChatID, domain.UpdateID) error
+
+	FindFileMessage(context.Context, domain.ChatID, domain.UpdateID) (*domain.FileMessage, error)
+	CreateFileMessage(context.Context, *domain.FileMessage) (*domain.FileMessage, error)
 }
