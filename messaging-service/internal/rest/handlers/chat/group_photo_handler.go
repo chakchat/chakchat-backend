@@ -10,8 +10,6 @@ import (
 	"github.com/google/uuid"
 )
 
-const paramPhotoID = "photoId"
-
 type GroupPhotoService interface {
 	UpdatePhoto(ctx context.Context, req request.UpdateGroupPhoto) (*dto.GroupChatDTO, error)
 	DeletePhoto(ctx context.Context, req request.DeleteGroupPhoto) (*dto.GroupChatDTO, error)
