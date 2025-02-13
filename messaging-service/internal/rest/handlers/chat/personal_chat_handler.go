@@ -17,7 +17,6 @@ type PersonalChatService interface {
 	BlockChat(ctx context.Context, req request.BlockChat) (*dto.PersonalChatDTO, error)
 	UnblockChat(ctx context.Context, req request.UnblockChat) (*dto.PersonalChatDTO, error)
 	CreateChat(ctx context.Context, req request.CreatePersonalChat) (*dto.PersonalChatDTO, error)
-	GetChatById(ctx context.Context, chatId uuid.UUID) (*dto.PersonalChatDTO, error)
 	DeleteChat(ctx context.Context, req request.DeleteChat) error
 }
 
@@ -92,6 +91,25 @@ func (h *PersonalChatHandler) UnblockChat(c *gin.Context) {
 	}
 
 	restapi.SendSuccess(c, newPersonalChatResponse(chat))
+}
+
+func (h *PersonalChatHandler) DeleteChat(c *gin.Context) {
+	chatId, err := uuid.Parse(c.Param(paramChatID))
+	if err != nil {
+		restapi.SendInvalidChatID(c)
+		return
+	}
+	userId := getUserID(c.Request.Context())
+
+	err = h.service.DeleteChat(c.Request.Context(), request.DeleteChat{
+		ChatID:   chatId,
+		SenderID: userId,
+	})
+	if err != nil {
+		c.Error(err)
+	}
+
+	restapi.SendSuccess(c, struct{}{})
 }
 
 type personalChatResponse struct {
