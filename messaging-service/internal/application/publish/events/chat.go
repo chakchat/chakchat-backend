@@ -1,6 +1,10 @@
 package events
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 const (
 	ChatTypePersonal       = "personal"
@@ -16,6 +20,12 @@ type ChatCreated struct {
 
 type ChatDeleted struct {
 	ChatID uuid.UUID `json:"chat_id"`
+}
+
+type ExpirationSet struct {
+	ChatID     uuid.UUID      `json:"chat_id"`
+	SenderID   uuid.UUID      `json:"sender_id"`
+	Expiration *time.Duration `json:"duration"`
 }
 
 type GroupInfoUpdated struct {
