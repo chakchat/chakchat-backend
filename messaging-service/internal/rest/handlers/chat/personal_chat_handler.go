@@ -54,15 +54,45 @@ func (h *PersonalChatHandler) CreateChat(c *gin.Context) {
 	restapi.SendSuccess(c, newPersonalChatResponse(chat))
 }
 
-// func (h *PersonalChatHandler) BlockChat(c *gin.Context) {
-// 	chatId := c.Param(paramChatID)
-// 	userId := getUserID(c.Request.Context())
+func (h *PersonalChatHandler) BlockChat(c *gin.Context) {
+	chatId, err := uuid.Parse(c.Param(paramChatID))
+	if err != nil {
+		restapi.SendInvalidChatID(c)
+		return
+	}
+	userId := getUserID(c.Request.Context())
 
-// 	chat, err := h.service.BlockChat(c.Request.Context(), request.BlockChat{
-// 		ChatID:   chatId,
-// 		SenderID: userId,
-// 	})
-// }
+	chat, err := h.service.BlockChat(c.Request.Context(), request.BlockChat{
+		ChatID:   chatId,
+		SenderID: userId,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	restapi.SendSuccess(c, newPersonalChatResponse(chat))
+}
+
+func (h *PersonalChatHandler) UnblockChat(c *gin.Context) {
+	chatId, err := uuid.Parse(c.Param(paramChatID))
+	if err != nil {
+		restapi.SendInvalidChatID(c)
+		return
+	}
+	userId := getUserID(c.Request.Context())
+
+	chat, err := h.service.UnblockChat(c.Request.Context(), request.UnblockChat{
+		ChatID:   chatId,
+		SenderID: userId,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	restapi.SendSuccess(c, newPersonalChatResponse(chat))
+}
 
 type personalChatResponse struct {
 	ID      uuid.UUID    `json:"chat_id"`
