@@ -62,14 +62,14 @@ func NewJWT(conf *JWTConfig) gin.HandlerFunc {
 			return
 		}
 
-		setClaims(c, Claims(claims))
+		ctx := context.WithValue(
+			c.Request.Context(),
+			keyClaims, Claims(claims),
+		)
+		c.Request = c.Request.WithContext(ctx)
 
 		c.Next()
 	}
-}
-
-func setClaims(c *gin.Context, claims Claims) {
-	c.Set(keyClaims, claims)
 }
 
 func GetClaims(ctx context.Context) Claims {

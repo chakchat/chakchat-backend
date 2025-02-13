@@ -27,8 +27,8 @@ func NewPersonalChatService(repo repository.PersonalChatRepository, pub publish.
 	}
 }
 
-func (s *PersonalChatService) BlockChat(ctx context.Context, userId, chatId uuid.UUID) error {
-	chat, err := s.repo.FindById(ctx, domain.ChatID(chatId))
+func (s *PersonalChatService) BlockChat(ctx context.Context, req request.BlockChat) error {
+	chat, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return services.ErrChatNotFound
@@ -36,7 +36,7 @@ func (s *PersonalChatService) BlockChat(ctx context.Context, userId, chatId uuid
 		return errors.Join(services.ErrInternal, err)
 	}
 
-	err = chat.BlockBy(domain.UserID(userId))
+	err = chat.BlockBy(domain.UserID(req.SenderID))
 
 	if err != nil {
 		return err
@@ -47,17 +47,17 @@ func (s *PersonalChatService) BlockChat(ctx context.Context, userId, chatId uuid
 	}
 
 	s.pub.PublishForUsers(
-		services.GetReceivingMembers(chat.Members[:], domain.UserID(userId)),
+		services.GetReceivingMembers(chat.Members[:], domain.UserID(req.SenderID)),
 		events.ChatBlocked{
-			ChatID: chatId,
+			ChatID: req.ChatID,
 		},
 	)
 
 	return nil
 }
 
-func (s *PersonalChatService) UnblockChat(ctx context.Context, userId, chatId uuid.UUID) error {
-	chat, err := s.repo.FindById(ctx, domain.ChatID(chatId))
+func (s *PersonalChatService) UnblockChat(ctx context.Context, req request.UnblockChat) error {
+	chat, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return services.ErrChatNotFound
@@ -65,7 +65,7 @@ func (s *PersonalChatService) UnblockChat(ctx context.Context, userId, chatId uu
 		return errors.Join(services.ErrInternal, err)
 	}
 
-	err = chat.UnblockBy(domain.UserID(userId))
+	err = chat.UnblockBy(domain.UserID(req.SenderID))
 
 	if err != nil {
 		return err
@@ -76,9 +76,9 @@ func (s *PersonalChatService) UnblockChat(ctx context.Context, userId, chatId uu
 	}
 
 	s.pub.PublishForUsers(
-		services.GetReceivingMembers(chat.Members[:], domain.UserID(userId)),
+		services.GetReceivingMembers(chat.Members[:], domain.UserID(req.SenderID)),
 		events.ChatUnblocked{
-			ChatID: chatId,
+			ChatID: req.ChatID,
 		},
 	)
 
