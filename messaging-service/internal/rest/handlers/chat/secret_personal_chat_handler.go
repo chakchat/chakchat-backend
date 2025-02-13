@@ -13,6 +13,7 @@ import (
 
 type SecretPersonalChatService interface {
 	CreateChat(ctx context.Context, req request.CreateSecretPersonalChat) (*dto.SecretPersonalChatDTO, error)
+	SetExpiration(ctx context.Context, req request.SetExpiration) (*dto.SecretPersonalChatDTO, error)
 	DeleteChat(ctx context.Context, req request.DeleteChat) error
 }
 
@@ -65,7 +66,17 @@ func (h *SecretPersonalChatHandler) SetExpiration(c *gin.Context) {
 		return
 	}
 
-	h.service.
+	chat, err := h.service.SetExpiration(c.Request.Context(), request.SetExpiration{
+		ChatID:     chatId,
+		SenderID:   userId,
+		Expiration: req.Expiration,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	restapi.SendSuccess(c, newSecretPersonalChatResponse(chat))
 }
 
 type secretPersonalChatResponse struct {
