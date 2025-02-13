@@ -38,8 +38,17 @@ func SendInternalError(c *gin.Context) {
 func SendInvalidChatID(c *gin.Context) {
 	SendValidationError(c, []ErrorDetail{
 		{
-			Field:   "fileId",
-			Message: "Invalid fileId query parameter",
+			Field:   "chatId",
+			Message: "Invalid chatId route parameter",
+		},
+	})
+}
+
+func SendInvalidMemberID(c *gin.Context) {
+	SendValidationError(c, []ErrorDetail{
+		{
+			Field:   "chatId",
+			Message: "Invalid chatId route parameter",
 		},
 	})
 }
