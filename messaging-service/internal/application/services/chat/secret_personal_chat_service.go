@@ -28,8 +28,8 @@ func NewSecretPersonalChatService(repo repository.SecretPersonalChatRepository,
 	}
 }
 
-func (s *SecretPersonalChatService) CreateChat(ctx context.Context, userId, withUserId uuid.UUID) (*dto.SecretPersonalChatDTO, error) {
-	domainMembers := [2]domain.UserID{domain.UserID(userId), domain.UserID(withUserId)}
+func (s *SecretPersonalChatService) CreateChat(ctx context.Context, req request.CreateSecretPersonalChat) (*dto.SecretPersonalChatDTO, error) {
+	domainMembers := [2]domain.UserID{domain.UserID(req.SenderID), domain.UserID(req.MemberID)}
 
 	if err := s.validateChatNotExists(ctx, domainMembers); err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func (s *SecretPersonalChatService) CreateChat(ctx context.Context, userId, with
 
 	chatDto := dto.NewSecretPersonalChatDTO(chat)
 
-	s.pub.PublishForUsers([]uuid.UUID{withUserId}, events.ChatCreated{
+	s.pub.PublishForUsers([]uuid.UUID{req.MemberID}, events.ChatCreated{
 		ChatID:   chatDto.ID,
 		ChatType: events.ChatTypePersonal,
 	})
@@ -65,6 +65,38 @@ func (s *SecretPersonalChatService) GetChatById(ctx context.Context, chatId uuid
 		}
 		return nil, errors.Join(services.ErrInternal, err)
 	}
+
+	chatDto := dto.NewSecretPersonalChatDTO(chat)
+	return &chatDto, nil
+}
+
+func (s *SecretPersonalChatService) SetExpiration(ctx context.Context, req request.SetExpiration) (*dto.SecretPersonalChatDTO, error) {
+	chat, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrChatNotFound
+		}
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	err = chat.SetExpiration(domain.UserID(req.SenderID), req.Expiration)
+	if err != nil {
+		return nil, err
+	}
+
+	chat, err = s.repo.Update(ctx, chat)
+	if err != nil {
+		return nil, errors.Join(services.ErrInternal, err)
+	}
+
+	s.pub.PublishForUsers(
+		services.GetReceivingMembers(chat.Members[:], domain.UserID(req.SenderID)),
+		events.ExpirationSet{
+			ChatID:     req.ChatID,
+			SenderID:   req.SenderID,
+			Expiration: req.Expiration,
+		},
+	)
 
 	chatDto := dto.NewSecretPersonalChatDTO(chat)
 	return &chatDto, nil

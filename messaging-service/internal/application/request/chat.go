@@ -1,6 +1,10 @@
 package request
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type BlockChat struct {
 	ChatID   uuid.UUID
@@ -17,10 +21,21 @@ type CreatePersonalChat struct {
 	MemberID uuid.UUID
 }
 
+type CreateSecretPersonalChat struct {
+	SenderID uuid.UUID
+	MemberID uuid.UUID
+}
+
 type CreateGroup struct {
 	SenderID uuid.UUID
 	Members  []uuid.UUID
 	Name     string
+}
+
+type SetExpiration struct {
+	ChatID     uuid.UUID
+	SenderID   uuid.UUID
+	Expiration *time.Duration
 }
 
 type DeleteChat struct {

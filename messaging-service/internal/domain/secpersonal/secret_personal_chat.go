@@ -1,6 +1,10 @@
 package secpersonal
 
-import "github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
+import (
+	"time"
+
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
+)
 
 type SecretPersonalChat struct {
 	domain.SecretChat
@@ -20,6 +24,14 @@ func NewSecretPersonalChatService(users [2]domain.UserID) (*SecretPersonalChat, 
 		},
 		Members: users,
 	}, nil
+}
+
+func (c *SecretPersonalChat) SetExpiration(sender domain.UserID, exp *time.Duration) error {
+	if !c.IsMember(sender) {
+		return domain.ErrUserNotMember
+	}
+	c.Exp = exp
+	return nil
 }
 
 func (c *SecretPersonalChat) Delete(sender domain.UserID) error {
