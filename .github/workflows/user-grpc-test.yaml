@@ -2,19 +2,19 @@ name: Run User Service Tests in Docker
 
 on:
   push:
-    # branches:
-    #   - '**'
-    # paths:
-    #   - user-service/**
-    #   - .github/workflows/user-service-test.yaml
-    #   - tests/user-service/**
+    branches:
+      - '**'
+    paths:
+      - user-service/**
+      - .github/workflows/user-service-test.yaml
+      - tests/user-service/**
   pull_request:
-    # branches:
-    #   - main
-    # paths:
-    #   - user-service/**
-    #   - .github/workflows/user-service-test.yaml
-    #   - tests/user-service/**
+    branches:
+      - main
+    paths:
+      - user-service/**
+      - .github/workflows/user-service-test.yaml
+      - tests/user-service/**
 
 jobs:
   test:
