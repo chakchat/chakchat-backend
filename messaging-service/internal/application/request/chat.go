@@ -17,6 +17,11 @@ type CreatePersonalChat struct {
 	MemberID uuid.UUID
 }
 
+type CreateSecretPersonalChat struct {
+	SenderID uuid.UUID
+	MemberID uuid.UUID
+}
+
 type CreateGroup struct {
 	SenderID uuid.UUID
 	Members  []uuid.UUID

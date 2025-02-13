@@ -28,8 +28,8 @@ func NewSecretPersonalChatService(repo repository.SecretPersonalChatRepository,
 	}
 }
 
-func (s *SecretPersonalChatService) CreateChat(ctx context.Context, userId, withUserId uuid.UUID) (*dto.SecretPersonalChatDTO, error) {
-	domainMembers := [2]domain.UserID{domain.UserID(userId), domain.UserID(withUserId)}
+func (s *SecretPersonalChatService) CreateChat(ctx context.Context, req request.CreateSecretPersonalChat) (*dto.SecretPersonalChatDTO, error) {
+	domainMembers := [2]domain.UserID{domain.UserID(req.SenderID), domain.UserID(req.MemberID)}
 
 	if err := s.validateChatNotExists(ctx, domainMembers); err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func (s *SecretPersonalChatService) CreateChat(ctx context.Context, userId, with
 
 	chatDto := dto.NewSecretPersonalChatDTO(chat)
 
-	s.pub.PublishForUsers([]uuid.UUID{withUserId}, events.ChatCreated{
+	s.pub.PublishForUsers([]uuid.UUID{req.MemberID}, events.ChatCreated{
 		ChatID:   chatDto.ID,
 		ChatType: events.ChatTypePersonal,
 	})
