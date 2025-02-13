@@ -2,6 +2,16 @@ package request
 
 import "github.com/google/uuid"
 
+type BlockChat struct {
+	ChatID   uuid.UUID
+	SenderID uuid.UUID
+}
+
+type UnblockChat struct {
+	ChatID   uuid.UUID
+	SenderID uuid.UUID
+}
+
 type CreatePersonalChat struct {
 	SenderID uuid.UUID
 	MemberID uuid.UUID

@@ -65,7 +65,7 @@ func Test_AuthJwtMiddleware(t *testing.T) {
 
 		r.Use(NewJWT(conf))
 		r.GET("/", func(c *gin.Context) {
-			claims := GetClaims(c)
+			claims := GetClaims(c.Request.Context())
 			require.Contains(t, claims, ClaimName)
 			require.Contains(t, claims, ClaimUsername)
 			require.Contains(t, claims, ClaimId)

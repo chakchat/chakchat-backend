@@ -4,6 +4,8 @@ github.com/bytedance/sonic/loader v0.1.1 h1:c+e5Pt1k/cy5wMveRDyk2X4B9hF4g7an8N3z
 github.com/bytedance/sonic/loader v0.1.1/go.mod h1:ncP89zfokxS5LZrJxl5z0UJcsk4M4yY2JpfqGeCtNLU=
 github.com/chakchat/chakchat-backend/shared/go v0.0.0-20250121130003-302fd23e1140 h1:tuNogIip+aui+SiD0mlo0WiT7zgcXY3OT8qeTvuxYyU=
 github.com/chakchat/chakchat-backend/shared/go v0.0.0-20250121130003-302fd23e1140/go.mod h1:muKqfMzJnRx4TsEPh+hLbE3nUOtPSVI2h7ygbvh+QVY=
+github.com/chakchat/chakchat-backend/shared/go v0.0.0-20250212141726-fa2ba7ab6d90 h1:26XHxQPK50GRLZTRLkJHeWK/SdH/9T53qTtuYO16HrA=
+github.com/chakchat/chakchat-backend/shared/go v0.0.0-20250212141726-fa2ba7ab6d90/go.mod h1:muKqfMzJnRx4TsEPh+hLbE3nUOtPSVI2h7ygbvh+QVY=
 github.com/cloudwego/base64x v0.1.4 h1:jwCgWpFanWmN8xoIUHa2rtzmkd5J2plF/dnLS6Xd/0Y=
 github.com/cloudwego/base64x v0.1.4/go.mod h1:0zlkT4Wn5C6NdauXdJRhSKRlJvmclQ1hhJgA0rcu/8w=
 github.com/cloudwego/iasm v0.2.0 h1:1KNIy1I1H9hNNFEEH3DVnI4UujN+1zjpuk6gwHLTssg=

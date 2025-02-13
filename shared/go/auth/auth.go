@@ -12,7 +12,6 @@ import (
 
 const (
 	headerAuthorization = "Authorization"
-	keyClaims           = "_auth_claims"
 )
 
 // It is a copy of jwt claim names
@@ -21,6 +20,10 @@ const (
 	ClaimUsername = "username"
 	ClaimId       = "sub"
 )
+
+type keyClaimsType int
+
+var keyClaims = keyClaimsType(69)
 
 type Claims map[string]any
 
@@ -62,14 +65,14 @@ func NewJWT(conf *JWTConfig) gin.HandlerFunc {
 			return
 		}
 
-		setClaims(c, Claims(claims))
+		ctx := context.WithValue(
+			c.Request.Context(),
+			keyClaims, Claims(claims),
+		)
+		c.Request = c.Request.WithContext(ctx)
 
 		c.Next()
 	}
-}
-
-func setClaims(c *gin.Context, claims Claims) {
-	c.Set(keyClaims, claims)
 }
 
 func GetClaims(ctx context.Context) Claims {

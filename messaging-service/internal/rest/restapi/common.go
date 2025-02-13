@@ -34,3 +34,12 @@ func SendInternalError(c *gin.Context) {
 	}
 	c.JSON(http.StatusInternalServerError, errResp)
 }
+
+func SendInvalidChatID(c *gin.Context) {
+	SendValidationError(c, []ErrorDetail{
+		{
+			Field:   "fileId",
+			Message: "Invalid fileId query parameter",
+		},
+	})
+}
