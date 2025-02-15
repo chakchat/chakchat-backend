@@ -1,7 +1,0 @@
-{
-  "server.port": 8080,
-  "database.url": "jdbc:postgresql://postgres-db:5432/mydatabase",
-  "database.username": "user",
-  "database.password": "password",
-  "externalServiceUrl": "https://org.example.com"
-}
