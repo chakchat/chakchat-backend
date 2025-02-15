@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package user;
 
-option go_package = ".";
+option go_package = "./userservice";
 
 message UserRequest {
     string phoneNumber = 1;
