@@ -41,7 +41,7 @@ func (s *GroupChatService) CreateGroup(ctx context.Context, req request.CreateGr
 
 	g, err = s.repo.Create(ctx, g)
 	if err != nil {
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	gDto := dto.NewGroupChatDTO(g)
@@ -63,7 +63,7 @@ func (s *GroupChatService) UpdateGroupInfo(ctx context.Context, req request.Upda
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	err = g.UpdateInfo(domain.UserID(req.SenderID), req.Name, req.Description)
@@ -74,7 +74,7 @@ func (s *GroupChatService) UpdateGroupInfo(ctx context.Context, req request.Upda
 
 	g, err = s.repo.Update(ctx, g)
 	if err != nil {
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	gDto := dto.NewGroupChatDTO(g)
@@ -98,7 +98,7 @@ func (s *GroupChatService) DeleteGroup(ctx context.Context, req request.DeleteCh
 		if errors.Is(err, repository.ErrNotFound) {
 			return services.ErrChatNotFound
 		}
-		return errors.Join(services.ErrInternal, err)
+		return err
 	}
 
 	err = g.Delete(domain.UserID(req.SenderID))
@@ -107,7 +107,7 @@ func (s *GroupChatService) DeleteGroup(ctx context.Context, req request.DeleteCh
 	}
 
 	if err := s.repo.Delete(ctx, g.ID); err != nil {
-		return errors.Join(services.ErrInternal, err)
+		return err
 	}
 
 	s.pub.PublishForUsers(
@@ -136,7 +136,7 @@ func (s *GroupChatService) AddMember(ctx context.Context, req request.AddMember)
 
 	g, err = s.repo.Update(ctx, g)
 	if err != nil {
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	gDto := dto.NewGroupChatDTO(g)
@@ -168,7 +168,7 @@ func (s *GroupChatService) DeleteMember(ctx context.Context, req request.DeleteM
 
 	g, err = s.repo.Update(ctx, g)
 	if err != nil {
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	gDto := dto.NewGroupChatDTO(g)

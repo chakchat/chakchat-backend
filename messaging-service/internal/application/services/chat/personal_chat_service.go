@@ -33,7 +33,7 @@ func (s *PersonalChatService) BlockChat(ctx context.Context, req request.BlockCh
 		if errors.Is(err, repository.ErrNotFound) {
 			return services.ErrChatNotFound
 		}
-		return errors.Join(services.ErrInternal, err)
+		return err
 	}
 
 	err = chat.BlockBy(domain.UserID(req.SenderID))
@@ -43,7 +43,7 @@ func (s *PersonalChatService) BlockChat(ctx context.Context, req request.BlockCh
 	}
 
 	if _, err := s.repo.Update(ctx, chat); err != nil {
-		return errors.Join(services.ErrInternal, err)
+		return err
 	}
 
 	s.pub.PublishForUsers(
@@ -62,7 +62,7 @@ func (s *PersonalChatService) UnblockChat(ctx context.Context, req request.Unblo
 		if errors.Is(err, repository.ErrNotFound) {
 			return services.ErrChatNotFound
 		}
-		return errors.Join(services.ErrInternal, err)
+		return err
 	}
 
 	err = chat.UnblockBy(domain.UserID(req.SenderID))
@@ -72,7 +72,7 @@ func (s *PersonalChatService) UnblockChat(ctx context.Context, req request.Unblo
 	}
 
 	if _, err := s.repo.Update(ctx, chat); err != nil {
-		return errors.Join(services.ErrInternal, err)
+		return err
 	}
 
 	s.pub.PublishForUsers(
@@ -100,7 +100,7 @@ func (s *PersonalChatService) CreateChat(ctx context.Context, req request.Create
 
 	chat, err = s.repo.Create(ctx, chat)
 	if err != nil {
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	chatDto := dto.NewPersonalChatDTO(chat)
@@ -120,7 +120,7 @@ func (s *PersonalChatService) GetChatById(ctx context.Context,
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	chatDto := dto.NewPersonalChatDTO(chat)
@@ -133,7 +133,7 @@ func (s *PersonalChatService) DeleteChat(ctx context.Context, req request.Delete
 		if errors.Is(err, repository.ErrNotFound) {
 			return services.ErrChatNotFound
 		}
-		return errors.Join(services.ErrInternal, err)
+		return err
 	}
 
 	err = chat.Delete(domain.UserID(req.SenderID))
@@ -142,7 +142,7 @@ func (s *PersonalChatService) DeleteChat(ctx context.Context, req request.Delete
 	}
 
 	if err := s.repo.Delete(ctx, chat.ID); err != nil {
-		return errors.Join(services.ErrInternal, err)
+		return err
 	}
 
 	s.pub.PublishForUsers(
@@ -159,7 +159,7 @@ func (s *PersonalChatService) validateChatNotExists(ctx context.Context, members
 	_, err := s.repo.FindByMembers(ctx, members)
 
 	if err != nil && err != repository.ErrNotFound {
-		return errors.Join(services.ErrInternal, err)
+		return err
 	}
 
 	if !errors.Is(err, repository.ErrNotFound) {

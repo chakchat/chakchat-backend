@@ -43,7 +43,7 @@ func (s *SecretPersonalChatService) CreateChat(ctx context.Context, req request.
 
 	chat, err = s.repo.Create(ctx, chat)
 	if err != nil {
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	chatDto := dto.NewSecretPersonalChatDTO(chat)
@@ -63,7 +63,7 @@ func (s *SecretPersonalChatService) GetChatById(ctx context.Context, chatId uuid
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	chatDto := dto.NewSecretPersonalChatDTO(chat)
@@ -76,7 +76,7 @@ func (s *SecretPersonalChatService) SetExpiration(ctx context.Context, req reque
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	err = chat.SetExpiration(domain.UserID(req.SenderID), req.Expiration)
@@ -86,7 +86,7 @@ func (s *SecretPersonalChatService) SetExpiration(ctx context.Context, req reque
 
 	chat, err = s.repo.Update(ctx, chat)
 	if err != nil {
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	s.pub.PublishForUsers(
@@ -108,7 +108,7 @@ func (s *SecretPersonalChatService) DeleteChat(ctx context.Context, req request.
 		if errors.Is(err, repository.ErrNotFound) {
 			return services.ErrChatNotFound
 		}
-		return errors.Join(services.ErrInternal, err)
+		return err
 	}
 
 	err = chat.Delete(domain.UserID(req.SenderID))
@@ -117,7 +117,7 @@ func (s *SecretPersonalChatService) DeleteChat(ctx context.Context, req request.
 	}
 
 	if err := s.repo.Delete(ctx, chat.ID); err != nil {
-		return errors.Join(services.ErrInternal, err)
+		return err
 	}
 
 	s.pub.PublishForUsers(
@@ -134,7 +134,7 @@ func (s *SecretPersonalChatService) validateChatNotExists(ctx context.Context, m
 	_, err := s.repo.FindByMembers(ctx, members)
 
 	if err != nil && err != repository.ErrNotFound {
-		return errors.Join(services.ErrInternal, err)
+		return err
 	}
 
 	if !errors.Is(err, repository.ErrNotFound) {

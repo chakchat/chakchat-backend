@@ -37,7 +37,7 @@ func (s *SecretGroupPhotoService) UpdatePhoto(ctx context.Context, req request.U
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	file, err := s.files.GetById(req.FileID)
@@ -45,7 +45,7 @@ func (s *SecretGroupPhotoService) UpdatePhoto(ctx context.Context, req request.U
 		if errors.Is(err, external.ErrFileNotFound) {
 			return nil, services.ErrFileNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	if err := validatePhoto(file); err != nil {
@@ -60,7 +60,7 @@ func (s *SecretGroupPhotoService) UpdatePhoto(ctx context.Context, req request.U
 
 	g, err = s.repo.Update(ctx, g)
 	if err != nil {
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	gDto := dto.NewSecretGroupChatDTO(g)
@@ -84,7 +84,7 @@ func (s *SecretGroupPhotoService) DeletePhoto(ctx context.Context, req request.D
 		if errors.Is(err, external.ErrFileNotFound) {
 			return nil, services.ErrFileNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	err = g.DeletePhoto(domain.UserID(req.SenderID))
@@ -95,7 +95,7 @@ func (s *SecretGroupPhotoService) DeletePhoto(ctx context.Context, req request.D
 
 	g, err = s.repo.Update(ctx, g)
 	if err != nil {
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	gDto := dto.NewSecretGroupChatDTO(g)

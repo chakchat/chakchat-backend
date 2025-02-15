@@ -42,7 +42,7 @@ func (s *GroupFileService) SendFileMessage(ctx context.Context, req request.Send
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	var replyToMessage *domain.Message
@@ -52,7 +52,7 @@ func (s *GroupFileService) SendFileMessage(ctx context.Context, req request.Send
 			if errors.Is(err, repository.ErrNotFound) {
 				return nil, services.ErrMessageNotFound
 			}
-			return nil, errors.Join(services.ErrInternal, err)
+			return nil, err
 		}
 	}
 
@@ -61,7 +61,7 @@ func (s *GroupFileService) SendFileMessage(ctx context.Context, req request.Send
 		if errors.Is(err, external.ErrFileNotFound) {
 			return nil, services.ErrFileNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 	// For now there is no validation of file.
 
@@ -74,7 +74,7 @@ func (s *GroupFileService) SendFileMessage(ctx context.Context, req request.Send
 
 	msg, err = s.updateRepo.CreateFileMessage(ctx, msg)
 	if err != nil {
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	s.pub.PublishForUsers(
