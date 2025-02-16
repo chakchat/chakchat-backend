@@ -2,6 +2,7 @@ package secgroup
 
 import (
 	"slices"
+	"time"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 )
@@ -112,6 +113,14 @@ func (g *SecretGroupChat) DeleteMember(sender domain.UserID, member domain.UserI
 	}
 
 	g.Members = slices.Delete(g.Members, i, i+1)
+	return nil
+}
+
+func (c *SecretGroupChat) SetExpiration(sender domain.UserID, exp *time.Duration) error {
+	if c.Admin != sender {
+		return domain.ErrSenderNotAdmin
+	}
+	c.Exp = exp
 	return nil
 }
 

@@ -181,3 +181,35 @@ func (s *SecretGroupChatService) DeleteMember(ctx context.Context, req request.D
 
 	return &gDto, nil
 }
+
+func (s *SecretGroupChatService) SetExpiration(ctx context.Context, req request.SetExpiration) (*dto.SecretGroupChatDTO, error) {
+	g, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, services.ErrChatNotFound
+		}
+		return nil, err
+	}
+
+	err = g.SetExpiration(domain.UserID(req.SenderID), req.Expiration)
+	if err != nil {
+		return nil, err
+	}
+
+	g, err = s.repo.Update(ctx, g)
+	if err != nil {
+		return nil, err
+	}
+
+	s.pub.PublishForUsers(
+		services.GetReceivingMembers(g.Members[:], domain.UserID(req.SenderID)),
+		events.ExpirationSet{
+			ChatID:     req.ChatID,
+			SenderID:   req.SenderID,
+			Expiration: req.Expiration,
+		},
+	)
+
+	gDto := dto.NewSecretGroupChatDTO(g)
+	return &gDto, nil
+}

@@ -18,6 +18,7 @@ type SecretGroupService interface {
 	DeleteGroup(ctx context.Context, req request.DeleteChat) error
 	AddMember(ctx context.Context, req request.AddMember) (*dto.SecretGroupChatDTO, error)
 	DeleteMember(ctx context.Context, req request.DeleteMember) (*dto.SecretGroupChatDTO, error)
+	SetExpiration(ctx context.Context, req request.SetExpiration) (*dto.SecretGroupChatDTO, error)
 }
 
 type SecretGroupHandler struct {
@@ -163,6 +164,36 @@ func (h *SecretGroupHandler) Delete(c *gin.Context) {
 	}
 
 	restapi.SendSuccess(c, struct{}{})
+}
+
+func (h *SecretGroupHandler) SetExpiration(c *gin.Context) {
+	chatId, err := uuid.Parse(c.Param(paramChatID))
+	if err != nil {
+		restapi.SendInvalidChatID(c)
+		return
+	}
+	userId := getUserID(c.Request.Context())
+
+	req := struct {
+		Expiration *time.Duration `json:"expiration"`
+	}{}
+	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
+		c.Error(err)
+		return
+	}
+
+	chat, err := h.service.SetExpiration(c.Request.Context(), request.SetExpiration{
+		ChatID:     chatId,
+		SenderID:   userId,
+		Expiration: req.Expiration,
+	})
+	if err != nil {
+		resp := errmap.Map(err)
+		c.JSON(resp.Code, resp.Body)
+		return
+	}
+
+	restapi.SendSuccess(c, newSecretGroupResponse(chat))
 }
 
 type secretGroupResponse struct {
