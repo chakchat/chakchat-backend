@@ -25,7 +25,7 @@ func TestTextMessage(t *testing.T) {
 		require.ErrorIs(t, err, ErrUserNotMember)
 
 		_, err = NewTextMessage(chat, user1, string(make([]byte, 3000)), nil)
-		require.ErrorIs(t, err, ErrTooMuchTextRunes)
+		require.ErrorIs(t, err, ErrTooManyTextRunes)
 
 		msg1, err := NewTextMessage(chat, user1, "valid text message", nil)
 		require.NoError(t, err)

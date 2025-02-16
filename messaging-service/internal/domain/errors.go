@@ -20,12 +20,13 @@ var (
 	ErrChatBlocked         = Error{"chat is blocked"}
 	ErrFileTooBig          = Error{"file is too big"}
 	ErrReactionNotFromUser = Error{"the reaction is not from this user"}
-	ErrTooMuchTextRunes    = Error{"too much runes in text"}
+	ErrTooManyTextRunes    = Error{"too many runes in text"}
 	ErrTextEmpty           = Error{"the text is empty"}
 	ErrUserNotSender       = Error{"user is not update's sender"}
 	ErrUpdateNotFromChat   = Error{"update is not from this chat"}
 	ErrUpdateDeleted       = Error{"update is deleted"}
 	ErrAlreadyBlocked      = Error{"chat is already blocked"}
 	ErrAlreadyUnblocked    = Error{"chat is already unblocked"}
-	ErrNotAdmin            = Error{"sender is not admin"}
+	ErrSenderNotAdmin      = Error{"sender is not admin"}
+	ErrUserNotMember       = Error{"user is not member of a chat"}
 )

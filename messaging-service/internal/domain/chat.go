@@ -26,10 +26,6 @@ func NewChatID() ChatID {
 	return ChatID(uuid.New())
 }
 
-var (
-	ErrUserNotMember = errors.New("user is not member of a chat")
-)
-
 type Chat struct {
 	ID        ChatID
 	CreatedAt Timestamp

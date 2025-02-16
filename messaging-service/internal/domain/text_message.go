@@ -104,7 +104,7 @@ func validateText(text string) error {
 		return ErrTextEmpty
 	}
 	if utf8.RuneCountInString(text) > MaxTextRunesCount {
-		return ErrTooMuchTextRunes
+		return ErrTooManyTextRunes
 	}
 	return nil
 }
