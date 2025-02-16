@@ -6,6 +6,7 @@ import (
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/errmap"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/restapi"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -43,7 +44,8 @@ func (h *SecretPersonalChatHandler) CreateChat(c *gin.Context) {
 		MemberID: req.MemberID,
 	})
 	if err != nil {
-		c.Error(err)
+		resp := errmap.Map(err)
+		c.JSON(resp.Code, resp.Body)
 		return
 	}
 
@@ -72,7 +74,8 @@ func (h *SecretPersonalChatHandler) SetExpiration(c *gin.Context) {
 		Expiration: req.Expiration,
 	})
 	if err != nil {
-		c.Error(err)
+		resp := errmap.Map(err)
+		c.JSON(resp.Code, resp.Body)
 		return
 	}
 

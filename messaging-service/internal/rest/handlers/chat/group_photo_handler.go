@@ -5,6 +5,7 @@ import (
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/errmap"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/restapi"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -47,7 +48,8 @@ func (h *GroupPhotoHandler) UpdatePhoto(c *gin.Context) {
 		FileID:   req.PhotoID,
 	})
 	if err != nil {
-		c.Error(err)
+		resp := errmap.Map(err)
+		c.JSON(resp.Code, resp.Body)
 		return
 	}
 
@@ -75,7 +77,8 @@ func (h *GroupPhotoHandler) DeletePhoto(c *gin.Context) {
 		SenderID: userId,
 	})
 	if err != nil {
-		c.Error(err)
+		resp := errmap.Map(err)
+		c.JSON(resp.Code, resp.Body)
 		return
 	}
 

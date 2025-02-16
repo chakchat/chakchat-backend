@@ -5,6 +5,7 @@ import (
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/errmap"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/restapi"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -48,7 +49,8 @@ func (h *GroupChatHandler) CreateGroup(c *gin.Context) {
 		Name:     req.Name,
 	})
 	if err != nil {
-		c.Error(err)
+		resp := errmap.Map(err)
+		c.JSON(resp.Code, resp.Body)
 		return
 	}
 
@@ -79,7 +81,8 @@ func (h *GroupChatHandler) UpdateGroup(c *gin.Context) {
 		Description: req.Description,
 	})
 	if err != nil {
-		c.Error(err)
+		resp := errmap.Map(err)
+		c.JSON(resp.Code, resp.Body)
 		return
 	}
 
@@ -99,7 +102,8 @@ func (h GroupChatHandler) DeleteGroup(c *gin.Context) {
 		SenderID: userId,
 	})
 	if err != nil {
-		c.Error(err)
+		resp := errmap.Map(err)
+		c.JSON(resp.Code, resp.Body)
 		return
 	}
 
@@ -126,7 +130,8 @@ func (h *GroupChatHandler) AddMember(c *gin.Context) {
 		MemberID: memberId,
 	})
 	if err != nil {
-		c.Error(err)
+		resp := errmap.Map(err)
+		c.JSON(resp.Code, resp.Body)
 		return
 	}
 
@@ -153,7 +158,8 @@ func (h *GroupChatHandler) DeleteMember(c *gin.Context) {
 		MemberID: memberId,
 	})
 	if err != nil {
-		c.Error(err)
+		resp := errmap.Map(err)
+		c.JSON(resp.Code, resp.Body)
 		return
 	}
 

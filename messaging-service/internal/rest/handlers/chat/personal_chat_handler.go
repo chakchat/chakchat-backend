@@ -5,6 +5,7 @@ import (
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/errmap"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/restapi"
 	"github.com/chakchat/chakchat-backend/shared/go/auth"
 	"github.com/gin-gonic/gin"
@@ -46,7 +47,8 @@ func (h *PersonalChatHandler) CreateChat(c *gin.Context) {
 		MemberID: req.MemberID,
 	})
 	if err != nil {
-		c.Error(err)
+		resp := errmap.Map(err)
+		c.JSON(resp.Code, resp.Body)
 		return
 	}
 
@@ -66,7 +68,8 @@ func (h *PersonalChatHandler) BlockChat(c *gin.Context) {
 		SenderID: userId,
 	})
 	if err != nil {
-		c.Error(err)
+		resp := errmap.Map(err)
+		c.JSON(resp.Code, resp.Body)
 		return
 	}
 
@@ -86,7 +89,8 @@ func (h *PersonalChatHandler) UnblockChat(c *gin.Context) {
 		SenderID: userId,
 	})
 	if err != nil {
-		c.Error(err)
+		resp := errmap.Map(err)
+		c.JSON(resp.Code, resp.Body)
 		return
 	}
 
@@ -106,7 +110,9 @@ func (h *PersonalChatHandler) DeleteChat(c *gin.Context) {
 		SenderID: userId,
 	})
 	if err != nil {
-		c.Error(err)
+		resp := errmap.Map(err)
+		c.JSON(resp.Code, resp.Body)
+		return
 	}
 
 	restapi.SendSuccess(c, struct{}{})
