@@ -45,7 +45,7 @@ func (s *PersonalUpdateService) SendTextMessage(ctx context.Context, req request
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	var replyToMessage *domain.Message
@@ -55,7 +55,7 @@ func (s *PersonalUpdateService) SendTextMessage(ctx context.Context, req request
 			if errors.Is(err, repository.ErrNotFound) {
 				return nil, services.ErrMessageNotFound
 			}
-			return nil, errors.Join(services.ErrInternal, err)
+			return nil, err
 		}
 	}
 
@@ -72,7 +72,7 @@ func (s *PersonalUpdateService) SendTextMessage(ctx context.Context, req request
 
 	msg, err = s.updateRepo.CreateTextMessage(ctx, msg)
 	if err != nil {
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	s.pub.PublishForUsers(
@@ -96,7 +96,7 @@ func (s *PersonalUpdateService) EditTextMessage(ctx context.Context, req request
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	msg, err := s.updateRepo.FindTextMessage(ctx, domain.ChatID(req.ChatID), domain.UpdateID(req.MessageID))
@@ -104,7 +104,7 @@ func (s *PersonalUpdateService) EditTextMessage(ctx context.Context, req request
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrMessageNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	err = msg.Edit(chat, domain.UserID(req.SenderID), req.NewText)
@@ -125,7 +125,7 @@ func (s *PersonalUpdateService) EditTextMessage(ctx context.Context, req request
 		return nil
 	})
 	if err != nil {
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	s.pub.PublishForUsers(
@@ -161,7 +161,7 @@ func (s *PersonalUpdateService) DeleteMessage(ctx context.Context, req request.D
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrMessageNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	err = msg.Delete(chat, domain.UserID(req.SenderID), domain.DeleteMode(req.DeleteMode))
@@ -181,7 +181,7 @@ func (s *PersonalUpdateService) DeleteMessage(ctx context.Context, req request.D
 		return err
 	})
 	if err != nil {
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	deleted := msg.Deleted[len(msg.Deleted)-1]
@@ -217,7 +217,7 @@ func (s *PersonalUpdateService) SendReaction(ctx context.Context, req request.Se
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrMessageNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	reaction, err := domain.NewReaction(chat, domain.UserID(req.SenderID), msg, domain.ReactionType(req.ReactionType))
@@ -227,7 +227,7 @@ func (s *PersonalUpdateService) SendReaction(ctx context.Context, req request.Se
 
 	reaction, err = s.updateRepo.CreateReaction(ctx, reaction)
 	if err != nil {
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	s.pub.PublishForUsers(
@@ -307,7 +307,7 @@ func (s *PersonalUpdateService) ForwardTextMessage(ctx context.Context, req requ
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	toChat, err := s.pchatRepo.FindById(ctx, domain.ChatID(req.ToChatID))
@@ -315,7 +315,7 @@ func (s *PersonalUpdateService) ForwardTextMessage(ctx context.Context, req requ
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	msg, err := s.updateRepo.FindTextMessage(ctx, domain.ChatID(req.FromChatID), domain.UpdateID(req.MessageID))
@@ -323,7 +323,7 @@ func (s *PersonalUpdateService) ForwardTextMessage(ctx context.Context, req requ
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrMessageNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	forwarded, err := msg.Forward(fromChat, domain.UserID(req.SenderID), toChat)
@@ -333,7 +333,7 @@ func (s *PersonalUpdateService) ForwardTextMessage(ctx context.Context, req requ
 
 	forwarded, err = s.updateRepo.CreateTextMessage(ctx, forwarded)
 	if err != nil {
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	s.pub.PublishForUsers(
@@ -357,7 +357,7 @@ func (s *PersonalUpdateService) ForwardFileMessage(ctx context.Context, req requ
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	toChat, err := s.pchatRepo.FindById(ctx, domain.ChatID(req.ToChatID))
@@ -365,7 +365,7 @@ func (s *PersonalUpdateService) ForwardFileMessage(ctx context.Context, req requ
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	msg, err := s.updateRepo.FindFileMessage(ctx, domain.ChatID(req.FromChatID), domain.UpdateID(req.MessageID))
@@ -373,7 +373,7 @@ func (s *PersonalUpdateService) ForwardFileMessage(ctx context.Context, req requ
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrMessageNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	forwarded, err := msg.Forward(fromChat, domain.UserID(req.SenderID), toChat)
@@ -383,7 +383,7 @@ func (s *PersonalUpdateService) ForwardFileMessage(ctx context.Context, req requ
 
 	forwarded, err = s.updateRepo.CreateFileMessage(ctx, forwarded)
 	if err != nil {
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	s.pub.PublishForUsers(

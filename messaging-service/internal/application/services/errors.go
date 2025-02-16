@@ -1,14 +1,19 @@
 package services
 
-import "errors"
+type Error struct {
+	text string
+}
+
+func (e Error) Error() string {
+	return e.text
+}
 
 var (
-	ErrInternal             = errors.New("service: unknown error")
-	ErrFileNotFound         = errors.New("service: file not found")
-	ErrChatNotFound         = errors.New("service: chat not found")
-	ErrInvalidPhoto         = errors.New("service: invalid photo")
-	ErrChatAlreadyExists    = errors.New("service: chat already exists")
-	ErrMessageNotFound      = errors.New("service: message not found")
-	ErrReactionNotFound     = errors.New("service: reaction not found")
-	ErrSecretUpdateNotFound = errors.New("service: secret update is not found")
+	ErrFileNotFound         = Error{"service: file not found"}
+	ErrChatNotFound         = Error{"service: chat not found"}
+	ErrInvalidPhoto         = Error{"service: invalid photo"}
+	ErrChatAlreadyExists    = Error{"service: chat already exists"}
+	ErrMessageNotFound      = Error{"service: message not found"}
+	ErrReactionNotFound     = Error{"service: reaction not found"}
+	ErrSecretUpdateNotFound = Error{"service: secret update is not found"}
 )

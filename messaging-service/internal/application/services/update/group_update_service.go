@@ -45,7 +45,7 @@ func (s *GroupUpdateService) SendTextMessage(ctx context.Context, req request.Se
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	var replyToMessage *domain.Message
@@ -55,7 +55,7 @@ func (s *GroupUpdateService) SendTextMessage(ctx context.Context, req request.Se
 			if errors.Is(err, repository.ErrNotFound) {
 				return nil, services.ErrMessageNotFound
 			}
-			return nil, errors.Join(services.ErrInternal, err)
+			return nil, err
 		}
 	}
 
@@ -71,7 +71,7 @@ func (s *GroupUpdateService) SendTextMessage(ctx context.Context, req request.Se
 
 	msg, err = s.updateRepo.CreateTextMessage(ctx, msg)
 	if err != nil {
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	s.pub.PublishForUsers(
@@ -95,7 +95,7 @@ func (s *GroupUpdateService) EditTextMessage(ctx context.Context, req request.Ed
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	msg, err := s.updateRepo.FindTextMessage(ctx, domain.ChatID(req.ChatID), domain.UpdateID(req.MessageID))
@@ -103,7 +103,7 @@ func (s *GroupUpdateService) EditTextMessage(ctx context.Context, req request.Ed
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrMessageNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	err = msg.Edit(chat, domain.UserID(req.SenderID), req.NewText)
@@ -124,7 +124,7 @@ func (s *GroupUpdateService) EditTextMessage(ctx context.Context, req request.Ed
 		return nil
 	})
 	if err != nil {
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	s.pub.PublishForUsers(
@@ -157,7 +157,7 @@ func (s *GroupUpdateService) DeleteMessage(ctx context.Context, req request.Dele
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrMessageNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	err = msg.Delete(chat, domain.UserID(req.SenderID), domain.DeleteMode(req.DeleteMode))
@@ -177,7 +177,7 @@ func (s *GroupUpdateService) DeleteMessage(ctx context.Context, req request.Dele
 		return err
 	})
 	if err != nil {
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	deleted := msg.Deleted[len(msg.Deleted)-1]
@@ -213,7 +213,7 @@ func (s *GroupUpdateService) SendReaction(ctx context.Context, req request.SendR
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrMessageNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	reaction, err := domain.NewReaction(chat, domain.UserID(req.SenderID), msg, domain.ReactionType(req.ReactionType))
@@ -223,7 +223,7 @@ func (s *GroupUpdateService) SendReaction(ctx context.Context, req request.SendR
 
 	reaction, err = s.updateRepo.CreateReaction(ctx, reaction)
 	if err != nil {
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	s.pub.PublishForUsers(
@@ -303,7 +303,7 @@ func (s *GroupUpdateService) ForwardTextMessage(ctx context.Context, req request
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	toChat, err := s.groupRepo.FindById(ctx, domain.ChatID(req.ToChatID))
@@ -311,7 +311,7 @@ func (s *GroupUpdateService) ForwardTextMessage(ctx context.Context, req request
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	msg, err := s.updateRepo.FindTextMessage(ctx, domain.ChatID(req.FromChatID), domain.UpdateID(req.MessageID))
@@ -319,7 +319,7 @@ func (s *GroupUpdateService) ForwardTextMessage(ctx context.Context, req request
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrMessageNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	forwarded, err := msg.Forward(fromChat, domain.UserID(req.SenderID), toChat)
@@ -329,7 +329,7 @@ func (s *GroupUpdateService) ForwardTextMessage(ctx context.Context, req request
 
 	forwarded, err = s.updateRepo.CreateTextMessage(ctx, forwarded)
 	if err != nil {
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	s.pub.PublishForUsers(
@@ -353,7 +353,7 @@ func (s *GroupUpdateService) ForwardFileMessage(ctx context.Context, req request
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	toChat, err := s.groupRepo.FindById(ctx, domain.ChatID(req.ToChatID))
@@ -361,7 +361,7 @@ func (s *GroupUpdateService) ForwardFileMessage(ctx context.Context, req request
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	msg, err := s.updateRepo.FindFileMessage(ctx, domain.ChatID(req.FromChatID), domain.UpdateID(req.MessageID))
@@ -369,7 +369,7 @@ func (s *GroupUpdateService) ForwardFileMessage(ctx context.Context, req request
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrMessageNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	forwarded, err := msg.Forward(fromChat, domain.UserID(req.SenderID), toChat)
@@ -379,7 +379,7 @@ func (s *GroupUpdateService) ForwardFileMessage(ctx context.Context, req request
 
 	forwarded, err = s.updateRepo.CreateFileMessage(ctx, forwarded)
 	if err != nil {
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	s.pub.PublishForUsers(

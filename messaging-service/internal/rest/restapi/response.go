@@ -12,6 +12,8 @@ const (
 
 	ErrTypeForbidden    = "forbidden"
 	ErrTypeInvalidParam = "invalid_param"
+
+	ErrTypeAdminNotMember = "admin_not_member"
 )
 
 type ErrorDetail struct {

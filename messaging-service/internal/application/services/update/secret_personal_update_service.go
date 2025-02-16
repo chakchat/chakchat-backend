@@ -42,7 +42,7 @@ func (s *SecretPersonalUpdateService) SendSecretUpdate(ctx context.Context, req 
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	update, err := domain.NewSecretUpdate(chat, domain.UserID(req.SenderID), domain.SecretData{
@@ -56,7 +56,7 @@ func (s *SecretPersonalUpdateService) SendSecretUpdate(ctx context.Context, req 
 
 	update, err = s.secretUpdateRepo.CreateSecretUpdate(ctx, update)
 	if err != nil {
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	s.pub.PublishForUsers(
@@ -82,7 +82,7 @@ func (s *SecretPersonalUpdateService) DeleteSecretUpdate(ctx context.Context, re
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	update, err := s.secretUpdateRepo.FindSecretUpdate(ctx, domain.ChatID(req.ChatID), domain.UpdateID(req.SecretUpdateID))
@@ -90,7 +90,7 @@ func (s *SecretPersonalUpdateService) DeleteSecretUpdate(ctx context.Context, re
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrSecretUpdateNotFound
 		}
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	err = update.Delete(chat, domain.UserID(req.SenderID))
@@ -113,7 +113,7 @@ func (s *SecretPersonalUpdateService) DeleteSecretUpdate(ctx context.Context, re
 		return nil
 	})
 	if err != nil {
-		return nil, errors.Join(services.ErrInternal, err)
+		return nil, err
 	}
 
 	deleted := update.Deleted[len(update.Deleted)-1]
