@@ -27,7 +27,7 @@ func NewUserStorage(db *gorm.DB) *UserStorage {
 	return &UserStorage{db: db}
 }
 
-func (s *UserStorage) GetUser(ctx context.Context, phone string) (*User, error) {
+func (s *UserStorage) GetUserByPhone(ctx context.Context, phone string) (*User, error) {
 	var user User
 	if err := s.db.WithContext(ctx).Where(&User{Phone: phone}).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -46,7 +46,7 @@ func (s *UserStorage) GetUser(ctx context.Context, phone string) (*User, error) 
 	}, nil
 }
 
-func (s *UserStorage) CreateUser(ctx context.Context, user *User) (*User, error) {
+func (s *UserStorage) CreateUser(ctx context.Context, user *User) (*User, bool, error) {
 	var newUser User = User{
 		ID:          user.ID,
 		Username:    user.Username,
@@ -59,14 +59,14 @@ func (s *UserStorage) CreateUser(ctx context.Context, user *User) (*User, error)
 
 	if err := s.db.WithContext(ctx).First(&user).Error; err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, err
+			return nil, false, err
 		}
 	} else {
-		return nil, gorm.ErrDuplicatedKey
+		return nil, true, gorm.ErrDuplicatedKey
 	}
 
 	if err := s.db.Create(&newUser).Error; err != nil {
-		return nil, err
+		return nil, false, err
 	}
-	return &newUser, nil
+	return &newUser, false, nil
 }
