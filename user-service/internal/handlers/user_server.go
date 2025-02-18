@@ -20,9 +20,8 @@ func NewUserServer(userService services.UserService) *UserServer {
 }
 
 func (s *UserServer) GetUser(ctx context.Context, req *pb.UserRequest) (*pb.UserResponse, error) {
-	phone := req.PhoneNumber
 
-	user, err := s.userService.GetUser(ctx, phone)
+	user, err := s.userService.GetUser(ctx, req.PhoneNumber)
 	if err != nil {
 		if errors.Is(err, services.ErrNotFound) {
 			return &pb.UserResponse{
@@ -42,10 +41,9 @@ func (s *UserServer) GetUser(ctx context.Context, req *pb.UserRequest) (*pb.User
 }
 
 func (s *UserServer) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
-	name, username, phone := req.Name, req.Username, req.PhoneNumber
-	matchedPhone, _ := regexp.MatchString(`^\+79\d{9}$`, phone)
-	matchedUsername, _ := regexp.MatchString(`^[a-z][_a-z0-9]{2,19}$`, username)
-	matchedName := len(name) <= 50 && len(name) > 0
+	matchedPhone, _ := regexp.MatchString(`^\+79\d{9}$`, req.PhoneNumber)
+	matchedUsername, _ := regexp.MatchString(`^[a-z][_a-z0-9]{2,19}$`, req.Username)
+	matchedName := len(req.Name) <= 50 && len(req.Name) > 0
 	if !matchedPhone || !matchedUsername || !matchedName {
 		return &pb.CreateUserResponse{
 			Status: pb.CreateUserStatus_VALIDATION_FAILED,
@@ -53,9 +51,9 @@ func (s *UserServer) CreateUser(ctx context.Context, req *pb.CreateUserRequest) 
 	}
 
 	user, err := s.userService.CreateUser(ctx, &storage.User{
-		Name:     name,
-		Username: username,
-		Phone:    phone,
+		Name:     req.Name,
+		Username: req.Username,
+		Phone:    req.PhoneNumber,
 	})
 
 	if err != nil {
@@ -63,11 +61,10 @@ func (s *UserServer) CreateUser(ctx context.Context, req *pb.CreateUserRequest) 
 			return &pb.CreateUserResponse{
 				Status: pb.CreateUserStatus_ALREADY_EXISTS,
 			}, nil
-		} else {
-			return &pb.CreateUserResponse{
-				Status: pb.CreateUserStatus_CREATE_FAILED,
-			}, nil
 		}
+		return &pb.CreateUserResponse{
+			Status: pb.CreateUserStatus_CREATE_FAILED,
+		}, nil
 	}
 	return &pb.CreateUserResponse{
 		Status:   pb.CreateUserStatus_CREATED,
