@@ -45,6 +45,7 @@ DerivedData/
 *.xcuserstate
 
 # Swift Package Manager
+.idea/
 .build/
 .swiftpm/xcode/
 
