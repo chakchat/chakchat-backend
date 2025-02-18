@@ -4,7 +4,7 @@
 // - protoc             v3.17.3
 // source: user.proto
 
-package userservice
+package grpcservice
 
 import (
 	context "context"
