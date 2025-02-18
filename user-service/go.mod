@@ -1,4 +1,4 @@
-module user-service
+module github.com/chakchat/chakchat-backend/user-service
 
 go 1.24.0
 

@@ -9,6 +9,9 @@ import (
 	"gorm.io/gorm"
 )
 
+var ErrNotFound = errors.New("not found")
+var ErrAlreadyExists = errors.New("already exists")
+
 type User struct {
 	ID          uuid.UUID `gorm:"primaryKey"`
 	Username    string
@@ -31,7 +34,7 @@ func (s *UserStorage) GetUserByPhone(ctx context.Context, phone string) (*User, 
 	var user User
 	if err := s.db.WithContext(ctx).Where(&User{Phone: phone}).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
+			return nil, ErrNotFound
 		}
 		return nil, err
 	}
@@ -46,27 +49,27 @@ func (s *UserStorage) GetUserByPhone(ctx context.Context, phone string) (*User, 
 	}, nil
 }
 
-func (s *UserStorage) CreateUser(ctx context.Context, user *User) (*User, bool, error) {
+func (s *UserStorage) CreateUser(ctx context.Context, user *User) (*User, error) {
 	var newUser User = User{
-		ID:          user.ID,
+		ID:          uuid.New(),
 		Username:    user.Username,
 		Name:        user.Name,
 		Phone:       user.Phone,
 		DateOfBirth: user.DateOfBirth,
 		PhotoURL:    user.PhotoURL,
-		CreatedAt:   user.CreatedAt,
+		CreatedAt:   time.Now().Unix(),
 	}
 
 	if err := s.db.WithContext(ctx).First(&user).Error; err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, false, err
+			return nil, err
 		}
 	} else {
-		return nil, true, gorm.ErrDuplicatedKey
+		return nil, ErrAlreadyExists
 	}
 
 	if err := s.db.Create(&newUser).Error; err != nil {
-		return nil, false, err
+		return nil, err
 	}
-	return &newUser, false, nil
+	return &newUser, nil
 }
