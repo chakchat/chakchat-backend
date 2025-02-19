@@ -20,7 +20,7 @@ type UserService struct {
 	userRepo UserRepository
 }
 
-func NewGetFileService(userHandler UserRepository) *UserService {
+func NewGetUserService(userHandler UserRepository) *UserService {
 	return &UserService{
 		userRepo: userHandler,
 	}
