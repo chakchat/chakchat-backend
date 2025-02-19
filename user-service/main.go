@@ -18,7 +18,7 @@ import (
 type Config struct {
 	DB struct {
 		DSN string `mapstructure:"dsn"`
-	} `mapstructure:"bd"`
+	} `mapstructure:"db"`
 }
 
 func loadConfig(file string) *Config {
