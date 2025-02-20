@@ -19,12 +19,17 @@ type Config struct {
 	DB struct {
 		DSN string `mapstructure:"dsn"`
 	} `mapstructure:"db"`
+
+	Server struct {
+		GRPCPort string `mapstructure:"port"`
+	} `mapstructure:"server"`
 }
 
 func loadConfig(file string) *Config {
 	viper.AutomaticEnv()
 
 	viper.BindEnv("db.dsn", "DB_DSN")
+	viper.BindEnv("server.port", "SERVER_PORT")
 
 	viper.SetConfigFile(file)
 	if err := viper.ReadInConfig(); err != nil {

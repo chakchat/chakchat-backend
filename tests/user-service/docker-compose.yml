@@ -1,25 +1,27 @@
+version: '3.8'
 services:
-  test:
+   test:
     build:
       context: ./service-test
     environment:
-      - USER_SERVICE_ADDR=user-service:50051 # TODO: Pass your user-service address here
+      - USER_SERVICE_ADDR=grpc:50051 # TODO: Pass your user-service address here
+      - DB_DSN=postgres://user:secret@postgres:5432/userdb?sslmode=disable
     depends_on:
-      - user-service
-  
-  #TODO: configure user-service lower:
-  user-service:
+      - postgres
+   user-service:
     build:
       context: ../../user-service # It is built using ../../user-service/Dockerfile
     environment:
-      - SOME_ENV_VAR=DELETE_ME
+    - DB_DSN=postgres://user:secret@postgres:5432/userdb?sslmode=disable
     depends_on:
       - postgres
-
-  postgres:
+    volumes:
+      - ./user-service-config.yml:/app/config.yml
+   postgres:
     image: postgres:15.3
     environment:
-      POSTGRES_USER: #TODO: Pass your postgres user here
-      POSTGRES_PASSWORD: #TODO: Pass your postgres password here
-      POSTGRES_DB: #TODO: Pass your postgres database name here
-    # Do not persist data in the container. (Don't add a volume)
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: userdb
+    ports:
+      - "5432:5432"

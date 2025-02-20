@@ -1,6 +1,6 @@
 module github.com/chakchat/chakchat-backend/user-service
 
-go 1.24.0
+go 1.24
 
 require (
 	google.golang.org/grpc v1.70.0
