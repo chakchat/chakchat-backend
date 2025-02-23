@@ -41,7 +41,7 @@ func (s *UserServer) GetUser(ctx context.Context, req *pb.UserRequest) (*pb.User
 }
 
 func (s *UserServer) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
-	matchedPhone, _ := regexp.MatchString(`^\+79\d{9}$`, req.PhoneNumber)
+	matchedPhone, _ := regexp.MatchString(`^[79]9\d{9}$`, req.PhoneNumber)
 	matchedUsername, _ := regexp.MatchString(`^[a-z][_a-z0-9]{2,19}$`, req.Username)
 	matchedName := len(req.Name) <= 50 && len(req.Name) > 0
 	if !matchedPhone || !matchedUsername || !matchedName {
