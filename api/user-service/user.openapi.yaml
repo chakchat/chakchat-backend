@@ -496,7 +496,7 @@ components:
           format: url
           nullable: true
           description: User photo url. May be null if it is not set.
-        dateOfBirth:
+        date_of_birth:
           type: string
           format: date
           nullable: true
