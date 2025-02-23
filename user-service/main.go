@@ -21,7 +21,7 @@ type Config struct {
 	} `mapstructure:"db"`
 
 	Server struct {
-		GRPCPort string `mapstructure:"port"`
+		GRPCPort string `mapstructure:"grpc-port"`
 	} `mapstructure:"server"`
 }
 

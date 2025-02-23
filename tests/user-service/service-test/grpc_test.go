@@ -5,6 +5,7 @@ import (
 	"os"
 	"test/userservice"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
@@ -13,6 +14,7 @@ import (
 )
 
 func TestGrpc(t *testing.T) {
+	time.Sleep(time.Second)
 	addr := os.Getenv("USER_SERVICE_ADDR")
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
