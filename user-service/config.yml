@@ -1,0 +1,5 @@
+server:
+  grpc-port: "50051" 
+
+db:
+  dsn: "postgres://user:secret@postgres:5432/userdb?sslmode=disable" 

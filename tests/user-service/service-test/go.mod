@@ -1,6 +1,6 @@
 module test
 
-go 1.23.1
+go 1.24
 
 require (
 	github.com/chakchat/chakchat-backend/shared/go v0.0.0-20250223145144-ba994bff66e7

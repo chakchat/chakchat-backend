@@ -5,6 +5,7 @@ import (
 	"os"
 	"test/userservice"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
@@ -78,7 +79,7 @@ func TestGrpc(t *testing.T) {
 	}
 	{
 		resp, err := client.GetUser(context.Background(), &userservice.UserRequest{
-			PhoneNumber: "790123456789",
+			PhoneNumber: "79012345678",
 		})
 		require.NoError(t, err, "gRPC call failed")
 
