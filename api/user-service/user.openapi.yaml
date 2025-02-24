@@ -107,8 +107,7 @@ paths:
           schema:
             type: string
             nullable: true
-        - name: page
-          description: Page number (starting with 1). Default is 1.
+        - name: offset
           in: query
           required: false
           schema:

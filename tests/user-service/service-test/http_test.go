@@ -19,11 +19,11 @@ import (
 )
 
 const (
-	EnvHTTPAddr       = "USER_SERVICE_HTTP_ADDR"
-	EnvPrivateKeyPath = "/app/keys/rsa"
+	EnvHTTPAddr    = "USER_SERVICE_HTTP_ADDR"
+	PrivateKeyPath = "/app/keys/rsa"
 )
 
-func TestHTTP_GetByID(t *testing.T) {
+func TestHTTP_GetUser(t *testing.T) {
 	baseUrl := getURL(t)
 
 	type Response struct {
@@ -37,7 +37,7 @@ func TestHTTP_GetByID(t *testing.T) {
 		} `json:"data"`
 	}
 
-	requestFunc := func(userId uuid.UUID) (*http.Response, Response) {
+	requestFunc := func(path string) (*http.Response, Response) {
 		username, _ := getUniqueUser()
 		jwt := genJWT(t, JWTModeValid, jwt.Claims{
 			jwt.ClaimName:     "Bob",
@@ -47,7 +47,7 @@ func TestHTTP_GetByID(t *testing.T) {
 
 		req, err := http.NewRequest(
 			http.MethodGet,
-			baseUrl+"/user/"+userId.String(),
+			baseUrl+path,
 			bytes.NewReader(nil),
 		)
 		require.NoError(t, err)
@@ -70,32 +70,64 @@ func TestHTTP_GetByID(t *testing.T) {
 		return resp, body
 	}
 
-	t.Run("NotFound", func(t *testing.T) {
-		resp, body := requestFunc(uuid.New())
-		require.Equal(t, http.StatusNotFound, resp.StatusCode)
-		require.Equal(t, "user_not_found", body.ErrorType)
+	t.Run("ByID", func(t *testing.T) {
+		t.Run("NotFound", func(t *testing.T) {
+			resp, body := requestFunc("/users/" + uuid.NewString())
+			require.Equal(t, http.StatusNotFound, resp.StatusCode)
+			require.Equal(t, "user_not_found", body.ErrorType)
+		})
+
+		t.Run("Success", func(t *testing.T) {
+			username, phone := getUniqueUser()
+
+			grpcClient, closeFunc := connectGRPC(t)
+			defer closeFunc()
+
+			createResp, err := grpcClient.CreateUser(context.Background(), &userservice.CreateUserRequest{
+				PhoneNumber: phone,
+				Name:        username,
+				Username:    username,
+			})
+			require.NoError(t, err)
+			require.Equal(t, userservice.CreateUserStatus_CREATED, createResp.Status)
+
+			resp, body := requestFunc("/users/" + createResp.UserId.Value)
+			require.Equal(t, http.StatusOK, resp.StatusCode)
+			require.Equal(t, phone, body.Data.Phone)
+			require.Equal(t, username, body.Data.Username)
+			require.Equal(t, username, body.Data.Name)
+			require.Equal(t, createResp.UserId.Value, body.Data.Id.String())
+		})
 	})
 
-	t.Run("Success", func(t *testing.T) {
-		username, phone := getUniqueUser()
-
-		grpcClient, closeFunc := connectGRPC(t)
-		defer closeFunc()
-
-		createResp, err := grpcClient.CreateUser(context.Background(), &userservice.CreateUserRequest{
-			PhoneNumber: phone,
-			Name:        username,
-			Username:    username,
+	t.Run("ByUsername", func(t *testing.T) {
+		t.Run("NotFound", func(t *testing.T) {
+			resp, body := requestFunc("/users/username/" + uuid.NewString())
+			require.Equal(t, http.StatusNotFound, resp.StatusCode)
+			require.Equal(t, "user_not_found", body.ErrorType)
 		})
-		require.NoError(t, err)
-		require.Equal(t, userservice.CreateUserStatus_CREATED, createResp.Status)
 
-		resp, body := requestFunc(uuid.MustParse(createResp.UserId.Value))
-		require.Equal(t, http.StatusOK, resp.StatusCode)
-		require.Equal(t, phone, body.Data.Phone)
-		require.Equal(t, username, body.Data.Username)
-		require.Equal(t, username, body.Data.Name)
-		require.Equal(t, createResp.UserId.Value, body.Data.Id.String())
+		t.Run("Success", func(t *testing.T) {
+			username, phone := getUniqueUser()
+
+			grpcClient, closeFunc := connectGRPC(t)
+			defer closeFunc()
+
+			createResp, err := grpcClient.CreateUser(context.Background(), &userservice.CreateUserRequest{
+				PhoneNumber: phone,
+				Name:        username,
+				Username:    username,
+			})
+			require.NoError(t, err)
+			require.Equal(t, userservice.CreateUserStatus_CREATED, createResp.Status)
+
+			resp, body := requestFunc("/users/username/" + username)
+			require.Equal(t, http.StatusOK, resp.StatusCode)
+			require.Equal(t, phone, body.Data.Phone)
+			require.Equal(t, username, body.Data.Username)
+			require.Equal(t, username, body.Data.Name)
+			require.Equal(t, createResp.UserId.Value, body.Data.Id.String())
+		})
 	})
 }
 
@@ -124,9 +156,9 @@ func genJWT(t *testing.T, mode int, claims jwt.Claims) jwt.Token {
 	if jwtPrivateKey != nil {
 		copy(jwtPrivateKey, key)
 	} else {
-		key, err := os.ReadFile(EnvPrivateKeyPath)
+		key, err := os.ReadFile(PrivateKeyPath)
 		if err != nil {
-			t.Fatalf("Cannot read %s file: %s", EnvPrivateKeyPath, err)
+			t.Fatalf("Cannot read %s file: %s", PrivateKeyPath, err)
 		}
 		jwtPrivateKey = key
 	}
