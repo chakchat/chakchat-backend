@@ -107,8 +107,7 @@ paths:
           schema:
             type: string
             nullable: true
-        - name: page
-          description: Page number (starting with 1). Default is 1.
+        - name: offset
           in: query
           required: false
           schema:
@@ -496,7 +495,7 @@ components:
           format: url
           nullable: true
           description: User photo url. May be null if it is not set.
-        dateOfBirth:
+        date_of_birth:
           type: string
           format: date
           nullable: true

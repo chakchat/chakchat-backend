@@ -13,14 +13,13 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+const (
+	EnvGRPCAddr = "USER_SERVICE_ADDR"
+)
+
 func TestGrpc(t *testing.T) {
-	time.Sleep(time.Second)
-	addr := os.Getenv("USER_SERVICE_ADDR")
-	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		t.Fatalf("Connecting to UserService failed: %s", err)
-	}
-	client := userservice.NewUserServiceClient(conn)
+	client, closeFunc := connectGRPC(t)
+	defer closeFunc()
 
 	{
 		resp, err := client.CreateUser(context.Background(), &userservice.CreateUserRequest{
@@ -105,4 +104,14 @@ func TestGrpc(t *testing.T) {
 
 		require.Equal(t, userservice.UserResponseStatus_NOT_FOUND, resp.Status)
 	}
+}
+
+func connectGRPC(t *testing.T) (userservice.UserServiceClient, func() error) {
+	addr := os.Getenv(EnvGRPCAddr)
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		t.Fatalf("Connecting to UserService failed: %s", err)
+	}
+	client := userservice.NewUserServiceClient(conn)
+	return client, conn.Close
 }
