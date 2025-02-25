@@ -196,7 +196,7 @@ func initTracer() (*sdktrace.TracerProvider, error) {
 	res, err := resource.New(
 		context.Background(),
 		resource.WithAttributes(
-			semconv.ServiceNameKey.String("backend-service"),
+			semconv.ServiceNameKey.String("backend-services"),
 		),
 	)
 	if err != nil {
