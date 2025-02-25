@@ -16,7 +16,7 @@ type User struct {
 	ID          uuid.UUID `gorm:"primaryKey"`
 	Username    string
 	Name        string
-	Phone       string
+	Phone       *string
 	DateOfBirth *time.Time
 	PhotoURL    string //'' if no photo
 	CreatedAt   int64
@@ -32,7 +32,7 @@ func NewUserStorage(db *gorm.DB) *UserStorage {
 
 func (s *UserStorage) GetUserByPhone(ctx context.Context, phone string) (*User, error) {
 	var user User
-	if err := s.db.WithContext(ctx).Where(&User{Phone: phone}).First(&user).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where(&User{Phone: &phone}).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrNotFound
 		}
@@ -48,6 +48,50 @@ func (s *UserStorage) GetUserByPhone(ctx context.Context, phone string) (*User, 
 		CreatedAt:   user.CreatedAt,
 	}, nil
 }
+
+func (s *UserStorage) GetUserById(ctx context.Context, id uuid.UUID) (*User, error) {
+	var user User
+	if err := s.db.WithContext(ctx).First(&user, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+
+	return &User{
+		ID:          user.ID,
+		Username:    user.Username,
+		Name:        user.Name,
+		Phone:       user.Phone,
+		DateOfBirth: user.DateOfBirth,
+		PhotoURL:    user.PhotoURL,
+		CreatedAt:   user.CreatedAt,
+	}, nil
+}
+
+func (s *UserStorage) GetUserByUsername(ctx context.Context, username string) (*User, error) {
+	var user User
+	if err := s.db.WithContext(ctx).Where(&User{Username: username}).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &User{
+		ID:          user.ID,
+		Username:    user.Username,
+		Name:        user.Name,
+		Phone:       user.Phone,
+		DateOfBirth: user.DateOfBirth,
+		PhotoURL:    user.PhotoURL,
+		CreatedAt:   user.CreatedAt,
+	}, nil
+}
+
+// func (s *UserStorage) GetUsersByCriteria(ctx context.Context) ([]*User, error) {
+// 	users := new([]*User)
+// 	s.db.WithContext(ctx).Find(&users)
+// }
 
 func (s *UserStorage) CreateUser(ctx context.Context, user *User) (*User, error) {
 	var newUser User = User{
