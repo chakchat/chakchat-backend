@@ -58,15 +58,7 @@ func (g *GetUserService) GetUserByID(ctx context.Context, ownerId uuid.UUID, tar
 		user.DateOfBirth = nil
 	}
 
-	return &models.User{
-		ID:          user.ID,
-		Username:    user.Username,
-		Name:        user.Name,
-		Phone:       user.Phone,
-		DateOfBirth: user.DateOfBirth,
-		PhotoURL:    user.PhotoURL,
-		CreatedAt:   user.CreatedAt,
-	}, nil
+	return user, nil
 }
 
 func (g *GetUserService) GetUserByUsername(ctx context.Context, ownerId uuid.UUID, username string) (*models.User, error) {
@@ -94,15 +86,7 @@ func (g *GetUserService) GetUserByUsername(ctx context.Context, ownerId uuid.UUI
 		user.DateOfBirth = nil
 	}
 
-	return &models.User{
-		ID:          user.ID,
-		Username:    user.Username,
-		Name:        user.Name,
-		Phone:       user.Phone,
-		DateOfBirth: user.DateOfBirth,
-		PhotoURL:    user.PhotoURL,
-		CreatedAt:   user.CreatedAt,
-	}, nil
+	return user, nil
 }
 
 func (g *GetUserService) GetUsersByCriteria(ctx context.Context, req storage.SearchUsersRequest) (*storage.SearchUsersResponse, error) {

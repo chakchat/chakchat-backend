@@ -36,15 +36,7 @@ func (s *UserService) GetUser(ctx context.Context, phone string) (*models.User, 
 		return nil, err
 	}
 
-	return &models.User{
-		ID:          user.ID,
-		Username:    user.Username,
-		Name:        user.Name,
-		Phone:       user.Phone,
-		DateOfBirth: user.DateOfBirth,
-		PhotoURL:    user.PhotoURL,
-		CreatedAt:   user.CreatedAt,
-	}, nil
+	return user, nil
 }
 
 func (s *UserService) CreateUser(ctx context.Context, user *models.User) (*models.User, error) {
