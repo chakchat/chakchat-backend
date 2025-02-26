@@ -28,9 +28,8 @@ func SendValidationError(c *gin.Context, errors []ErrorDetail) {
 }
 
 func SendInternalError(c *gin.Context) {
-	errResp := ErrorResponse{
+	c.JSON(http.StatusInternalServerError, ErrorResponse{
 		ErrorType:    ErrTypeInternal,
 		ErrorMessage: "Internal Server Error",
-	}
-	c.JSON(http.StatusInternalServerError, errResp)
+	})
 }
