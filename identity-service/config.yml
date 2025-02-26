@@ -22,7 +22,7 @@ internal_token:
 invalidated_token_storage:
   exp: 4m # A little bit longer than refresh_token.lifetime
 userservice:
-  grpc_addr: user-service-stub:9090
+  grpc_addr: user-service:5051
 redis:
   addr: identity-redis:6379
   password: secret
