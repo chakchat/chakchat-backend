@@ -53,7 +53,7 @@ func (s *UserServer) CreateUser(ctx context.Context, req *pb.CreateUserRequest) 
 	user, err := s.userService.CreateUser(ctx, &storage.User{
 		Name:     req.Name,
 		Username: req.Username,
-		Phone:    &req.PhoneNumber,
+		Phone:    req.PhoneNumber,
 	})
 
 	if err != nil {

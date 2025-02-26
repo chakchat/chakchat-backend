@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/chakchat/chakchat-backend/user-service/internal/models"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -13,26 +14,13 @@ var ErrNotFound = errors.New("not found")
 var ErrAlreadyExists = errors.New("already exists")
 
 type User struct {
-	ID          uuid.UUID  `gorm:"primaryKey" json:"id"`
-	Username    string     `json:"name"`
-	Name        string     `json:"username"`
-	Phone       *string    `json:"phone,omitempty"`
-	DateOfBirth *time.Time `json:"dateOfBirth,omitempty"`
-	PhotoURL    string     `json:"photo"`
+	ID          uuid.UUID `gorm:"primaryKey"`
+	Username    string
+	Name        string
+	Phone       string
+	DateOfBirth *time.Time
+	PhotoURL    string
 	CreatedAt   int64
-}
-
-type SearchUsersRequest struct {
-	Name     *string
-	Username *string
-	Offset   *int
-	Limit    *int
-}
-
-type SearchUsersResponse struct {
-	Users []User `json:"users"`
-	Page  int
-	Count int
 }
 
 type UserStorage struct {
@@ -45,7 +33,7 @@ func NewUserStorage(db *gorm.DB) *UserStorage {
 
 func (s *UserStorage) GetUserByPhone(ctx context.Context, phone string) (*User, error) {
 	var user User
-	if err := s.db.WithContext(ctx).Where(&User{Phone: &phone}).First(&user).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where(&User{Phone: phone}).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrNotFound
 		}
@@ -62,7 +50,7 @@ func (s *UserStorage) GetUserByPhone(ctx context.Context, phone string) (*User, 
 	}, nil
 }
 
-func (s *UserStorage) GetUserById(ctx context.Context, id uuid.UUID) (*User, error) {
+func (s *UserStorage) GetUserById(ctx context.Context, id uuid.UUID) (*models.User, error) {
 	var user User
 	if err := s.db.WithContext(ctx).First(&user, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -71,18 +59,18 @@ func (s *UserStorage) GetUserById(ctx context.Context, id uuid.UUID) (*User, err
 		return nil, err
 	}
 
-	return &User{
+	return &models.User{
 		ID:          user.ID,
 		Username:    user.Username,
 		Name:        user.Name,
-		Phone:       user.Phone,
+		Phone:       &user.Phone,
 		DateOfBirth: user.DateOfBirth,
 		PhotoURL:    user.PhotoURL,
 		CreatedAt:   user.CreatedAt,
 	}, nil
 }
 
-func (s *UserStorage) GetUserByUsername(ctx context.Context, username string) (*User, error) {
+func (s *UserStorage) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
 	var user User
 	if err := s.db.WithContext(ctx).Where(&User{Username: username}).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -90,19 +78,19 @@ func (s *UserStorage) GetUserByUsername(ctx context.Context, username string) (*
 		}
 		return nil, err
 	}
-	return &User{
+	return &models.User{
 		ID:          user.ID,
 		Username:    user.Username,
 		Name:        user.Name,
-		Phone:       user.Phone,
+		Phone:       &user.Phone,
 		DateOfBirth: user.DateOfBirth,
 		PhotoURL:    user.PhotoURL,
 		CreatedAt:   user.CreatedAt,
 	}, nil
 }
 
-func (s *UserStorage) GetUsersByCriteria(ctx context.Context, req SearchUsersRequest) (*SearchUsersResponse, error) {
-	var users []User
+func (s *UserStorage) GetUsersByCriteria(ctx context.Context, req models.SearchUsersRequest) (*models.SearchUsersResponse, error) {
+	var users []models.User
 	query := s.db.WithContext(ctx).Model(&users)
 
 	if req.Name != nil {
@@ -144,10 +132,10 @@ func (s *UserStorage) GetUsersByCriteria(ctx context.Context, req SearchUsersReq
 		return nil, err
 	}
 
-	return &SearchUsersResponse{
-		Users: users,
-		Page:  offset/limit + 1,
-		Count: int(count),
+	return &models.SearchUsersResponse{
+		Users:  users,
+		Offset: offset/limit + 1,
+		Count:  int(count),
 	}, nil
 }
 

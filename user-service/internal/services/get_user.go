@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/chakchat/chakchat-backend/user-service/internal/models"
 	"github.com/chakchat/chakchat-backend/user-service/internal/storage"
 	"github.com/google/uuid"
 )
@@ -11,9 +12,9 @@ import (
 var ErrNoCriteriaCpecified = errors.New("invalid input")
 
 type GetUserRepository interface {
-	GetUserById(ctx context.Context, id uuid.UUID) (*storage.User, error)
-	GetUserByUsername(ctx context.Context, username string) (*storage.User, error)
-	GetUsersByCriteria(ctx context.Context, req storage.SearchUsersRequest) (*storage.SearchUsersResponse, error)
+	GetUserById(ctx context.Context, id uuid.UUID) (*models.User, error)
+	GetUserByUsername(ctx context.Context, username string) (*models.User, error)
+	GetUsersByCriteria(ctx context.Context, req models.SearchUsersRequest) (*models.SearchUsersResponse, error)
 }
 
 type GetRestrictionRepository interface {
@@ -32,7 +33,7 @@ func NewGetService(getter GetUserRepository, restrictions GetRestrictionReposito
 	}
 }
 
-func (g *GetUserService) GetUserByID(ctx context.Context, ownerId uuid.UUID, targetId uuid.UUID) (*storage.User, error) {
+func (g *GetUserService) GetUserByID(ctx context.Context, ownerId uuid.UUID, targetId uuid.UUID) (*models.User, error) {
 	user, err := g.getUserRepo.GetUserById(ctx, ownerId)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
@@ -57,7 +58,7 @@ func (g *GetUserService) GetUserByID(ctx context.Context, ownerId uuid.UUID, tar
 		user.DateOfBirth = nil
 	}
 
-	return &storage.User{
+	return &models.User{
 		ID:          user.ID,
 		Username:    user.Username,
 		Name:        user.Name,
@@ -68,7 +69,7 @@ func (g *GetUserService) GetUserByID(ctx context.Context, ownerId uuid.UUID, tar
 	}, nil
 }
 
-func (g *GetUserService) GetUserByUsername(ctx context.Context, ownerId uuid.UUID, username string) (*storage.User, error) {
+func (g *GetUserService) GetUserByUsername(ctx context.Context, ownerId uuid.UUID, username string) (*models.User, error) {
 	user, err := g.getUserRepo.GetUserByUsername(ctx, username)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
@@ -93,7 +94,7 @@ func (g *GetUserService) GetUserByUsername(ctx context.Context, ownerId uuid.UUI
 		user.DateOfBirth = nil
 	}
 
-	return &storage.User{
+	return &models.User{
 		ID:          user.ID,
 		Username:    user.Username,
 		Name:        user.Name,
@@ -104,7 +105,7 @@ func (g *GetUserService) GetUserByUsername(ctx context.Context, ownerId uuid.UUI
 	}, nil
 }
 
-func (g *GetUserService) GetUsersByCriteria(ctx context.Context, req storage.SearchUsersRequest) (*storage.SearchUsersResponse, error) {
+func (g *GetUserService) GetUsersByCriteria(ctx context.Context, req models.SearchUsersRequest) (*models.SearchUsersResponse, error) {
 	if req.Name == nil && req.Username == nil {
 		return nil, ErrNoCriteriaCpecified
 	}
@@ -115,11 +116,7 @@ func (g *GetUserService) GetUsersByCriteria(ctx context.Context, req storage.Sea
 		}
 		return nil, err
 	}
-	return &storage.SearchUsersResponse{
-		Users: resp.Users,
-		Page:  resp.Page,
-		Count: resp.Count,
-	}, nil
+	return resp, nil
 }
 
 func canView(ownerId uuid.UUID, restr storage.FieldRestriction) bool {
@@ -127,10 +124,10 @@ func canView(ownerId uuid.UUID, restr storage.FieldRestriction) bool {
 	case "everyone":
 		return true
 	case "only_me":
-		return ownerId == restr.SpecifiedUsers[0]
+		return ownerId == restr.SpecifiedUsers[0].ID
 	case "specified":
 		for _, id := range restr.SpecifiedUsers {
-			if id == ownerId {
+			if id.ID == ownerId {
 				return true
 			}
 		}
