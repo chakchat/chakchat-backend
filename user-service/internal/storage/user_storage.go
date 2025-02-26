@@ -42,15 +42,7 @@ func (s *UserStorage) GetUserByPhone(ctx context.Context, phone string) (*models
 		}
 		return nil, err
 	}
-	return &models.User{
-		ID:          user.ID,
-		Username:    user.Username,
-		Name:        user.Name,
-		Phone:       user.Phone,
-		DateOfBirth: user.DateOfBirth,
-		PhotoURL:    user.PhotoURL,
-		CreatedAt:   user.CreatedAt,
-	}, nil
+	return &user, nil
 }
 
 func (s *UserStorage) GetUserById(ctx context.Context, id uuid.UUID) (*models.User, error) {
@@ -62,15 +54,7 @@ func (s *UserStorage) GetUserById(ctx context.Context, id uuid.UUID) (*models.Us
 		return nil, err
 	}
 
-	return &models.User{
-		ID:          user.ID,
-		Username:    user.Username,
-		Name:        user.Name,
-		Phone:       user.Phone,
-		DateOfBirth: user.DateOfBirth,
-		PhotoURL:    user.PhotoURL,
-		CreatedAt:   user.CreatedAt,
-	}, nil
+	return &user, nil
 }
 
 func (s *UserStorage) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
@@ -81,15 +65,7 @@ func (s *UserStorage) GetUserByUsername(ctx context.Context, username string) (*
 		}
 		return nil, err
 	}
-	return &models.User{
-		ID:          user.ID,
-		Username:    user.Username,
-		Name:        user.Name,
-		Phone:       user.Phone,
-		DateOfBirth: user.DateOfBirth,
-		PhotoURL:    user.PhotoURL,
-		CreatedAt:   user.CreatedAt,
-	}, nil
+	return &user, nil
 }
 
 func (s *UserStorage) GetUsersByCriteria(ctx context.Context, req SearchUsersRequest) (*SearchUsersResponse, error) {
