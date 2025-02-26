@@ -17,7 +17,13 @@ type UserRestrictions struct {
 type FieldRestriction struct {
 	ID             uuid.UUID `gorm:"primaryKey"`
 	OpenTo         string
-	SpecifiedUsers []User `gorm:"foreignKey:ID"`
+	SpecifiedUsers []FieldRestrictionUser `gorm:"foreignKey:UserID"`
+}
+
+type FieldRestrictionUser struct {
+	ID                 uuid.UUID `gorm:"primaryKey"`
+	FieldRestrictionId uuid.UUID
+	UserID             uuid.UUID
 }
 
 type RestrictionStorage struct {
