@@ -26,13 +26,6 @@ type User struct {
 	CreatedAt   int64
 }
 
-type SearchUsersRequest struct {
-	Name     *string
-	Username *string
-	Offset   *int
-	Limit    *int
-}
-
 type SearchUsersResponse struct {
 	Users  []User `json:"users"`
 	Offset int    `json:"offset"`
@@ -231,7 +224,9 @@ func (s *GetUserHandler) GetUsersByCriteria() gin.HandlerFunc {
 			})
 		}
 		restapi.SendSuccess(c, SearchUsersResponse{
-			Users: users,
-		}.Users)
+			Users:  users,
+			Offset: response.Offset,
+			Count:  response.Count,
+		})
 	}
 }
