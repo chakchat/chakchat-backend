@@ -60,12 +60,27 @@ services:
       - REDIS_PASSWORD=secret
     restart: on-failure
       
-  # Stubs
-  user-service-stub:
-    build:
-      context: stubs/user-service-stub
+  # User service
+  user-service:
+    build: 
+      context: user-service
       dockerfile: Dockerfile
+    environment:
+        - DB_DSN=postgres://user:secret@user-postgres:5432/userdb?sslmode=disable
+    depends_on:
+        - user-postgres
+    volumes:
+        - ./user-service/config.yml:/app/config.yml
     restart: on-failure
+  user-postgres:
+    image: postgres:latest
+    environment:
+        POSTGRES_USER: user
+        POSTGRES_PASSWORD: secret
+        POSTGRES_DB: userdb
+    restart: on-failure
+
+  # Stubs
   sms-service-stub:
     build:
       context: stubs/sms-service-stub
