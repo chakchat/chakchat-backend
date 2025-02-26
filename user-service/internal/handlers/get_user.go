@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"time"
@@ -15,13 +14,23 @@ import (
 	"github.com/google/uuid"
 )
 
-type GetUserService interface {
-	GetUserById(ctx context.Context, ownerId uuid.UUID, targetId uuid.UUID) (*storage.User, error)
-	GetUserByUsername(ctx context.Context, ownerId uuid.UUID, username string) (*storage.User, error)
-	GetUsersByCriteria(ctx context.Context, req storage.SearchUsersRequest) (*storage.SearchUsersResponse, error)
+// type GetUserServer interface {
+// 	GetUserById(ctx context.Context, ownerId uuid.UUID, targetId uuid.UUID) (*storage.User, error)
+// 	GetUserByUsername(ctx context.Context, ownerId uuid.UUID, username string) (*storage.User, error)
+// 	GetUsersByCriteria(ctx context.Context, req storage.SearchUsersRequest) (*storage.SearchUsersResponse, error)
+// }
+
+type GetUser struct {
+	service services.GetUserService
 }
 
-func GetUserById(service GetUserService) gin.HandlerFunc {
+func NewGetUserService(service services.GetUserService) *GetUser {
+	return &GetUser{
+		service: service,
+	}
+}
+
+func (s *GetUser) GetUserById() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims := auth.GetClaims(c.Request.Context())
 		if claims == nil {
@@ -62,7 +71,7 @@ func GetUserById(service GetUserService) gin.HandlerFunc {
 			return
 		}
 
-		user, err := service.GetUserById(c.Request.Context(), ownerId, userTarget)
+		user, err := s.service.GetUserByID(c.Request.Context(), ownerId, userTarget)
 		if err != nil {
 			if err == services.ErrNotFound {
 				c.JSON(http.StatusNotFound, restapi.ErrorResponse{
@@ -87,7 +96,7 @@ func GetUserById(service GetUserService) gin.HandlerFunc {
 	}
 }
 
-func GetUserByUsername(service GetUserService) gin.HandlerFunc {
+func (s *GetUser) GetUserByUsername() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims := auth.GetClaims(c.Request.Context())
 		if claims == nil {
@@ -118,7 +127,7 @@ func GetUserByUsername(service GetUserService) gin.HandlerFunc {
 		}
 
 		var req getUserByUsernameRequest
-		user, err := service.GetUserByUsername(c.Request.Context(), ownerId, req.Username)
+		user, err := s.service.GetUserByUsername(c.Request.Context(), ownerId, req.Username)
 
 		if err != nil {
 			if err == services.ErrNotFound {
@@ -144,7 +153,7 @@ func GetUserByUsername(service GetUserService) gin.HandlerFunc {
 	}
 }
 
-func GetUsersByCriteria(service GetUserService) gin.HandlerFunc {
+func (s *GetUser) GetUsersByCriteria() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req storage.SearchUsersRequest
 		if err := c.ShouldBindQuery(&req); err != nil {
@@ -155,7 +164,7 @@ func GetUsersByCriteria(service GetUserService) gin.HandlerFunc {
 			return
 		}
 
-		response, err := service.GetUsersByCriteria(c.Request.Context(), req)
+		response, err := s.service.GetUsersByCriteria(c.Request.Context(), req)
 		if err != nil {
 			if errors.Is(err, services.ErrNoCriteriaCpecified) {
 				c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
