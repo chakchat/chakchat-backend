@@ -27,9 +27,5 @@ func (s *RestrictionStorage) GetRestriction(ctx context.Context, id uuid.UUID) (
 		}
 		return nil, err
 	}
-	return &models.UserRestrictions{
-		UserId:      restrictions.UserId,
-		Phone:       restrictions.Phone,
-		DateOfBirth: restrictions.DateOfBirth,
-	}, nil
+	return &restrictions, nil
 }
