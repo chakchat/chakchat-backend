@@ -9,7 +9,7 @@ import (
 	"github.com/chakchat/chakchat-backend/user-service/internal/services"
 	"github.com/chakchat/chakchat-backend/user-service/internal/storage"
 
-	"github.com/chakchat/chakchat-backend/user-service/restapi"
+	"github.com/chakchat/chakchat-backend/user-service/internal/restapi"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
