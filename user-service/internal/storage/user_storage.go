@@ -21,7 +21,7 @@ type SearchUsersRequest struct {
 }
 
 type SearchUsersResponse struct {
-	Users  []models.User `json:"users"`
+	Users  []models.User
 	Offset int
 	Count  int
 }

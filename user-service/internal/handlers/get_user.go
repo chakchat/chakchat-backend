@@ -65,7 +65,7 @@ func (s *GetUserHandler) GetUserById() gin.HandlerFunc {
 		if claims[auth.ClaimId] == nil {
 			c.JSON(http.StatusUnauthorized, restapi.ErrorResponse{
 				ErrorType:    restapi.ErrTypeUnautorized,
-				ErrorMessage: "Input is invalid",
+				ErrorMessage: "Invalid JWT token",
 			})
 			return
 		}
@@ -73,7 +73,7 @@ func (s *GetUserHandler) GetUserById() gin.HandlerFunc {
 		if !ok {
 			c.JSON(http.StatusUnauthorized, restapi.ErrorResponse{
 				ErrorType:    restapi.ErrTypeUnautorized,
-				ErrorMessage: "Input is invalid",
+				ErrorMessage: "Invalid JWT token",
 			})
 			return
 		}
