@@ -79,6 +79,8 @@ services:
         POSTGRES_PASSWORD: secret
         POSTGRES_DB: userdb
     restart: on-failure
+    volumes:
+      - user_postgres_data:/var/lib/postgresql/data
 
   # Stubs
   sms-service-stub:
@@ -104,3 +106,4 @@ volumes:
   file_storage_redis_data:
   file_storage_postgres_data:
   identity_redis_data:
+  user_postgres_data:
