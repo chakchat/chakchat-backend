@@ -6,6 +6,7 @@ const (
 	ErrTypeInternal         = "internal"
 	ErrTypeInvalidJson      = "invalid_json"
 	ErrTypeValidationFailed = "validation_failed"
+	ErrTypeBadRequest       = "invalid_input"
 )
 
 type ErrorDetail struct {

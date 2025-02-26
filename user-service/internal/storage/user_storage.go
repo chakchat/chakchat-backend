@@ -13,13 +13,26 @@ var ErrNotFound = errors.New("not found")
 var ErrAlreadyExists = errors.New("already exists")
 
 type User struct {
-	ID          uuid.UUID `gorm:"primaryKey"`
-	Username    string
-	Name        string
-	Phone       *string
-	DateOfBirth *time.Time
-	PhotoURL    string //'' if no photo
+	ID          uuid.UUID  `gorm:"primaryKey" json:"id"`
+	Username    string     `json:"name"`
+	Name        string     `json:"username"`
+	Phone       *string    `json:"phone,omitempty"`
+	DateOfBirth *time.Time `json:"dateOfBirth,omitempty"`
+	PhotoURL    string     `json:"photo"`
 	CreatedAt   int64
+}
+
+type SearchUsersRequest struct {
+	Name     *string
+	Username *string
+	Offset   *int
+	Limit    *int
+}
+
+type SearchUsersResponse struct {
+	Users []User `json:"users"`
+	Page  int
+	Count int
 }
 
 type UserStorage struct {
@@ -88,10 +101,55 @@ func (s *UserStorage) GetUserByUsername(ctx context.Context, username string) (*
 	}, nil
 }
 
-// func (s *UserStorage) GetUsersByCriteria(ctx context.Context) ([]*User, error) {
-// 	users := new([]*User)
-// 	s.db.WithContext(ctx).Find(&users)
-// }
+func (s *UserStorage) GetUsersByCriteria(ctx context.Context, req SearchUsersRequest) (*SearchUsersResponse, error) {
+	var users []User
+	query := s.db.WithContext(ctx).Model(&users)
+
+	if req.Name != nil {
+		query = query.Where(&User{Name: *req.Name})
+		if err := query.Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, ErrNotFound
+			}
+			return nil, err
+		}
+	}
+
+	if req.Username != nil {
+		query = query.Where(&User{Username: *req.Username})
+		if err := query.Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, ErrNotFound
+			}
+			return nil, err
+		}
+	}
+
+	offset := 0
+	if req.Offset != nil {
+		offset = *req.Offset
+	}
+
+	limit := 10
+	if req.Limit != nil {
+		limit = *req.Limit
+	}
+
+	var count int64
+	if err := query.Count(&count).Error; err != nil {
+		return nil, err
+	}
+
+	if err := query.Offset(offset).Limit(limit).Find(&users).Error; err != nil {
+		return nil, err
+	}
+
+	return &SearchUsersResponse{
+		Users: users,
+		Page:  offset/limit + 1,
+		Count: int(count),
+	}, nil
+}
 
 func (s *UserStorage) CreateUser(ctx context.Context, user *User) (*User, error) {
 	var newUser User = User{

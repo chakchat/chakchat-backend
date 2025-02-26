@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 type GetUserService interface {
 	GetUserById(ctx context.Context, ownerId uuid.UUID, targetId uuid.UUID) (*storage.User, error)
 	GetUserByUsername(ctx context.Context, ownerId uuid.UUID, username string) (*storage.User, error)
+	GetUsersByCriteria(ctx context.Context, req storage.SearchUsersRequest) (*storage.SearchUsersResponse, error)
 }
 
 func GetUserById(service GetUserService) gin.HandlerFunc {
@@ -139,6 +141,44 @@ func GetUserByUsername(service GetUserService) gin.HandlerFunc {
 			DateOfBirth: user.DateOfBirth,
 			PhotoURL:    user.PhotoURL,
 		})
+	}
+}
+
+func GetUsersByCriteria(service GetUserService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req storage.SearchUsersRequest
+		if err := c.ShouldBindQuery(&req); err != nil {
+			c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
+				ErrorType:    restapi.ErrTypeInvalidJson,
+				ErrorMessage: "Invalid query parameters",
+			})
+			return
+		}
+
+		response, err := service.GetUsersByCriteria(c.Request.Context(), req)
+		if err != nil {
+			if errors.Is(err, services.ErrNoCriteriaCpecified) {
+				c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
+					ErrorType:    restapi.ErrTypeBadRequest,
+					ErrorMessage: "Input is invalid",
+				})
+				return
+			}
+			if errors.Is(err, services.ErrNotFound) {
+				c.JSON(http.StatusNotFound, restapi.ErrorResponse{
+					ErrorType:    restapi.ErrTypeNotFound,
+					ErrorMessage: "User not found",
+				})
+				return
+			}
+			c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
+				ErrorType:    restapi.ErrTypeInternal,
+				ErrorMessage: "Failed",
+			})
+		}
+		restapi.SendSuccess(c, storage.SearchUsersResponse{
+			Users: response.Users,
+		}.Users)
 	}
 }
 

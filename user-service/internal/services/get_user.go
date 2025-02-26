@@ -8,9 +8,12 @@ import (
 	"github.com/google/uuid"
 )
 
+var ErrNoCriteriaCpecified = errors.New("invalid input")
+
 type GetUserRepository interface {
 	GetUserById(ctx context.Context, id uuid.UUID) (*storage.User, error)
 	GetUserByUsername(ctx context.Context, username string) (*storage.User, error)
+	GetUsersByCriteria(ctx context.Context, req storage.SearchUsersRequest) (*storage.SearchUsersResponse, error)
 }
 
 type GetRestrictionRepository interface {
@@ -98,6 +101,24 @@ func (g *GetUserService) GetUserByUsername(ctx context.Context, ownerId uuid.UUI
 		DateOfBirth: user.DateOfBirth,
 		PhotoURL:    user.PhotoURL,
 		CreatedAt:   user.CreatedAt,
+	}, nil
+}
+
+func (g *GetUserService) GetUsersByCriteria(ctx context.Context, req storage.SearchUsersRequest) (*storage.SearchUsersResponse, error) {
+	if req.Name == nil && req.Username == nil {
+		return nil, ErrNoCriteriaCpecified
+	}
+	resp, err := g.getUserRepo.GetUsersByCriteria(ctx, req)
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &storage.SearchUsersResponse{
+		Users: resp.Users,
+		Page:  resp.Page,
+		Count: resp.Count,
 	}, nil
 }
 
