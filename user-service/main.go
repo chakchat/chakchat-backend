@@ -7,6 +7,7 @@ import (
 
 	"github.com/chakchat/chakchat-backend/user-service/internal/grpcservice"
 	"github.com/chakchat/chakchat-backend/user-service/internal/handlers"
+	"github.com/chakchat/chakchat-backend/user-service/internal/models"
 	"github.com/chakchat/chakchat-backend/user-service/internal/services"
 	"github.com/chakchat/chakchat-backend/user-service/internal/storage"
 	"github.com/spf13/viper"
@@ -83,7 +84,7 @@ func connectDB() (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
-	if err := db.AutoMigrate(&storage.User{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}); err != nil {
 		return nil, fmt.Errorf("failed to auto-migrate database: %w", err)
 	}
 	return db, nil

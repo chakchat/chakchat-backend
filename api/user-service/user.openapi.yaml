@@ -364,13 +364,13 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/UserProfile"
-        page:
+        offset:
           type: integer
         count:
           type: integer
       required:
         - users
-        - page
+        - offset
         - count
     ErrorResponseWithDetails:
       type: object

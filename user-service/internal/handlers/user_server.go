@@ -6,8 +6,8 @@ import (
 	"regexp"
 
 	pb "github.com/chakchat/chakchat-backend/user-service/internal/grpcservice"
+	"github.com/chakchat/chakchat-backend/user-service/internal/models"
 	"github.com/chakchat/chakchat-backend/user-service/internal/services"
-	"github.com/chakchat/chakchat-backend/user-service/internal/storage"
 )
 
 type UserServer struct {
@@ -50,7 +50,7 @@ func (s *UserServer) CreateUser(ctx context.Context, req *pb.CreateUserRequest) 
 		}, nil
 	}
 
-	user, err := s.userService.CreateUser(ctx, &storage.User{
+	user, err := s.userService.CreateUser(ctx, &models.User{
 		Name:     req.Name,
 		Username: req.Username,
 		Phone:    req.PhoneNumber,
