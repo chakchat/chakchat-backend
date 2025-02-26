@@ -4,20 +4,49 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/chakchat/chakchat-backend/shared/go/auth"
 	"github.com/chakchat/chakchat-backend/user-service/internal/models"
 	"github.com/chakchat/chakchat-backend/user-service/internal/services"
+	"github.com/chakchat/chakchat-backend/user-service/internal/storage"
 
 	"github.com/chakchat/chakchat-backend/user-service/internal/restapi"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
+type User struct {
+	ID          uuid.UUID  `json:"id"`
+	Username    string     `json:"name"`
+	Name        string     `json:"username"`
+	Phone       *string    `json:"phone,omitempty"`
+	DateOfBirth *time.Time `json:"dateOfBirth,omitempty"`
+	PhotoURL    string     `json:"photo"`
+	CreatedAt   int64
+}
+
+type SearchUsersRequest struct {
+	Name     *string
+	Username *string
+	Offset   *int
+	Limit    *int
+}
+
+type SearchUsersResponse struct {
+	Users  []User `json:"users"`
+	Offset int
+	Count  int
+}
+
+type GetUserByUsernameRequest struct {
+	Username string `json:"username"`
+}
+
 type GetUserServer interface {
 	GetUserById(ctx context.Context, ownerId uuid.UUID, targetId uuid.UUID) (*models.User, error)
 	GetUserByUsername(ctx context.Context, ownerId uuid.UUID, username string) (*models.User, error)
-	GetUsersByCriteria(ctx context.Context, req models.SearchUsersRequest) (*models.SearchUsersResponse, error)
+	GetUsersByCriteria(ctx context.Context, req SearchUsersRequest) (*storage.SearchUsersResponse, error)
 }
 
 type GetUserHandler struct {
@@ -90,11 +119,11 @@ func (s *GetUserHandler) GetUserById() gin.HandlerFunc {
 			return
 		}
 
-		restapi.SendSuccess(c, models.UserResponse{
+		restapi.SendSuccess(c, User{
 			ID:          user.ID,
 			Username:    user.Username,
 			Name:        user.Name,
-			Phone:       user.Phone,
+			Phone:       &user.Phone,
 			DateOfBirth: user.DateOfBirth,
 			PhotoURL:    user.PhotoURL,
 		})
@@ -131,7 +160,7 @@ func (s *GetUserHandler) GetUserByUsername() gin.HandlerFunc {
 			return
 		}
 
-		var req models.GetUserByUsernameRequest
+		var req GetUserByUsernameRequest
 		user, err := s.service.GetUserByUsername(c.Request.Context(), ownerId, req.Username)
 
 		if err != nil {
@@ -147,11 +176,11 @@ func (s *GetUserHandler) GetUserByUsername() gin.HandlerFunc {
 			return
 		}
 
-		restapi.SendSuccess(c, models.UserResponse{
+		restapi.SendSuccess(c, User{
 			ID:          user.ID,
 			Username:    user.Username,
 			Name:        user.Name,
-			Phone:       user.Phone,
+			Phone:       &user.Phone,
 			DateOfBirth: user.DateOfBirth,
 			PhotoURL:    user.PhotoURL,
 		})
@@ -160,7 +189,7 @@ func (s *GetUserHandler) GetUserByUsername() gin.HandlerFunc {
 
 func (s *GetUserHandler) GetUsersByCriteria() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var req models.SearchUsersRequest
+		var req SearchUsersRequest
 		if err := c.ShouldBindQuery(&req); err != nil {
 			c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
 				ErrorType:    restapi.ErrTypeInvalidJson,
@@ -190,8 +219,19 @@ func (s *GetUserHandler) GetUsersByCriteria() gin.HandlerFunc {
 				ErrorMessage: "Failed",
 			})
 		}
-		restapi.SendSuccess(c, models.SearchUsersResponse{
-			Users: response.Users,
+		var users []User
+		for _, user := range response.Users {
+			users = append(users, User{
+				ID:          user.ID,
+				Username:    user.Username,
+				Name:        user.Name,
+				Phone:       &user.Phone,
+				DateOfBirth: user.DateOfBirth,
+				PhotoURL:    user.PhotoURL,
+			})
+		}
+		restapi.SendSuccess(c, SearchUsersResponse{
+			Users: users,
 		}.Users)
 	}
 }

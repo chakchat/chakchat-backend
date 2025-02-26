@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/chakchat/chakchat-backend/user-service/internal/models"
 	"github.com/chakchat/chakchat-backend/user-service/internal/storage"
 )
 
@@ -12,8 +13,8 @@ var ErrAlreadyExists = errors.New("already exists")
 
 type UserRepository interface {
 	// Returns NotFound error if not found.
-	GetUserByPhone(ctx context.Context, phone string) (*storage.User, error)
-	CreateUser(ctx context.Context, user *storage.User) (*storage.User, error)
+	GetUserByPhone(ctx context.Context, phone string) (*models.User, error)
+	CreateUser(ctx context.Context, user *models.User) (*models.User, error)
 }
 
 type UserService struct {
@@ -26,7 +27,7 @@ func NewGetUserService(userHandler UserRepository) *UserService {
 	}
 }
 
-func (s *UserService) GetUser(ctx context.Context, phone string) (*storage.User, error) {
+func (s *UserService) GetUser(ctx context.Context, phone string) (*models.User, error) {
 	user, err := s.userRepo.GetUserByPhone(ctx, phone)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
@@ -35,7 +36,7 @@ func (s *UserService) GetUser(ctx context.Context, phone string) (*storage.User,
 		return nil, err
 	}
 
-	return &storage.User{
+	return &models.User{
 		ID:          user.ID,
 		Username:    user.Username,
 		Name:        user.Name,
@@ -46,7 +47,7 @@ func (s *UserService) GetUser(ctx context.Context, phone string) (*storage.User,
 	}, nil
 }
 
-func (s *UserService) CreateUser(ctx context.Context, user *storage.User) (*storage.User, error) {
+func (s *UserService) CreateUser(ctx context.Context, user *models.User) (*models.User, error) {
 	newUser, err := s.userRepo.CreateUser(ctx, user)
 	if errors.Is(err, storage.ErrAlreadyExists) {
 		return nil, ErrAlreadyExists

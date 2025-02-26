@@ -4,27 +4,10 @@ import (
 	"context"
 	"errors"
 
+	"github.com/chakchat/chakchat-backend/user-service/internal/models"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
-
-type UserRestrictions struct {
-	UserId      uuid.UUID        `gorm:"primaryKey"`
-	Phone       FieldRestriction `gorm:"embedded"`
-	DateOfBirth FieldRestriction `gorm:"embedded"`
-}
-
-type FieldRestriction struct {
-	ID             uuid.UUID `gorm:"primaryKey"`
-	OpenTo         string
-	SpecifiedUsers []FieldRestrictionUser `gorm:"foreignKey:UserID"`
-}
-
-type FieldRestrictionUser struct {
-	ID                 uuid.UUID `gorm:"primaryKey"`
-	FieldRestrictionId uuid.UUID
-	UserID             uuid.UUID
-}
 
 type RestrictionStorage struct {
 	db *gorm.DB
@@ -36,15 +19,15 @@ func NewRestrictionStorage(db *gorm.DB) *RestrictionStorage {
 	}
 }
 
-func (s *RestrictionStorage) GetRestriction(ctx context.Context, id uuid.UUID) (*UserRestrictions, error) {
-	var restrictions UserRestrictions
+func (s *RestrictionStorage) GetRestriction(ctx context.Context, id uuid.UUID) (*models.UserRestrictions, error) {
+	var restrictions models.UserRestrictions
 	if err := s.db.WithContext(ctx).First(&restrictions, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrNotFound
 		}
 		return nil, err
 	}
-	return &UserRestrictions{
+	return &models.UserRestrictions{
 		UserId:      restrictions.UserId,
 		Phone:       restrictions.Phone,
 		DateOfBirth: restrictions.DateOfBirth,

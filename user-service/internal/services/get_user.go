@@ -14,11 +14,11 @@ var ErrNoCriteriaCpecified = errors.New("invalid input")
 type GetUserRepository interface {
 	GetUserById(ctx context.Context, id uuid.UUID) (*models.User, error)
 	GetUserByUsername(ctx context.Context, username string) (*models.User, error)
-	GetUsersByCriteria(ctx context.Context, req models.SearchUsersRequest) (*models.SearchUsersResponse, error)
+	GetUsersByCriteria(ctx context.Context, req storage.SearchUsersRequest) (*storage.SearchUsersResponse, error)
 }
 
 type GetRestrictionRepository interface {
-	GetRestriction(ctx context.Context, id uuid.UUID) (*storage.UserRestrictions, error)
+	GetRestriction(ctx context.Context, id uuid.UUID) (*models.UserRestrictions, error)
 }
 
 type GetUserService struct {
@@ -51,7 +51,7 @@ func (g *GetUserService) GetUserByID(ctx context.Context, ownerId uuid.UUID, tar
 	}
 
 	if !canView(ownerId, restr.Phone) {
-		user.Phone = nil
+		user.Phone = ""
 	}
 
 	if !canView(ownerId, restr.DateOfBirth) {
@@ -87,7 +87,7 @@ func (g *GetUserService) GetUserByUsername(ctx context.Context, ownerId uuid.UUI
 	}
 
 	if !canView(ownerId, restr.Phone) {
-		user.Phone = nil
+		user.Phone = ""
 	}
 
 	if !canView(ownerId, restr.DateOfBirth) {
@@ -105,7 +105,7 @@ func (g *GetUserService) GetUserByUsername(ctx context.Context, ownerId uuid.UUI
 	}, nil
 }
 
-func (g *GetUserService) GetUsersByCriteria(ctx context.Context, req models.SearchUsersRequest) (*models.SearchUsersResponse, error) {
+func (g *GetUserService) GetUsersByCriteria(ctx context.Context, req storage.SearchUsersRequest) (*storage.SearchUsersResponse, error) {
 	if req.Name == nil && req.Username == nil {
 		return nil, ErrNoCriteriaCpecified
 	}
@@ -119,7 +119,7 @@ func (g *GetUserService) GetUsersByCriteria(ctx context.Context, req models.Sear
 	return resp, nil
 }
 
-func canView(ownerId uuid.UUID, restr storage.FieldRestriction) bool {
+func canView(ownerId uuid.UUID, restr models.FieldRestriction) bool {
 	switch restr.OpenTo {
 	case "everyone":
 		return true

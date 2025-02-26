@@ -13,14 +13,17 @@ import (
 var ErrNotFound = errors.New("not found")
 var ErrAlreadyExists = errors.New("already exists")
 
-type User struct {
-	ID          uuid.UUID `gorm:"primaryKey"`
-	Username    string
-	Name        string
-	Phone       string
-	DateOfBirth *time.Time
-	PhotoURL    string
-	CreatedAt   int64
+type SearchUsersRequest struct {
+	Name     *string
+	Username *string
+	Offset   *int
+	Limit    *int
+}
+
+type SearchUsersResponse struct {
+	Users  []models.User
+	Offset int
+	Count  int
 }
 
 type UserStorage struct {
@@ -31,15 +34,15 @@ func NewUserStorage(db *gorm.DB) *UserStorage {
 	return &UserStorage{db: db}
 }
 
-func (s *UserStorage) GetUserByPhone(ctx context.Context, phone string) (*User, error) {
-	var user User
-	if err := s.db.WithContext(ctx).Where(&User{Phone: phone}).First(&user).Error; err != nil {
+func (s *UserStorage) GetUserByPhone(ctx context.Context, phone string) (*models.User, error) {
+	var user models.User
+	if err := s.db.WithContext(ctx).Where(&models.User{Phone: phone}).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrNotFound
 		}
 		return nil, err
 	}
-	return &User{
+	return &models.User{
 		ID:          user.ID,
 		Username:    user.Username,
 		Name:        user.Name,
@@ -51,7 +54,7 @@ func (s *UserStorage) GetUserByPhone(ctx context.Context, phone string) (*User, 
 }
 
 func (s *UserStorage) GetUserById(ctx context.Context, id uuid.UUID) (*models.User, error) {
-	var user User
+	var user models.User
 	if err := s.db.WithContext(ctx).First(&user, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrNotFound
@@ -63,7 +66,7 @@ func (s *UserStorage) GetUserById(ctx context.Context, id uuid.UUID) (*models.Us
 		ID:          user.ID,
 		Username:    user.Username,
 		Name:        user.Name,
-		Phone:       &user.Phone,
+		Phone:       user.Phone,
 		DateOfBirth: user.DateOfBirth,
 		PhotoURL:    user.PhotoURL,
 		CreatedAt:   user.CreatedAt,
@@ -71,8 +74,8 @@ func (s *UserStorage) GetUserById(ctx context.Context, id uuid.UUID) (*models.Us
 }
 
 func (s *UserStorage) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
-	var user User
-	if err := s.db.WithContext(ctx).Where(&User{Username: username}).First(&user).Error; err != nil {
+	var user models.User
+	if err := s.db.WithContext(ctx).Where(&models.User{Username: username}).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrNotFound
 		}
@@ -82,19 +85,19 @@ func (s *UserStorage) GetUserByUsername(ctx context.Context, username string) (*
 		ID:          user.ID,
 		Username:    user.Username,
 		Name:        user.Name,
-		Phone:       &user.Phone,
+		Phone:       user.Phone,
 		DateOfBirth: user.DateOfBirth,
 		PhotoURL:    user.PhotoURL,
 		CreatedAt:   user.CreatedAt,
 	}, nil
 }
 
-func (s *UserStorage) GetUsersByCriteria(ctx context.Context, req models.SearchUsersRequest) (*models.SearchUsersResponse, error) {
+func (s *UserStorage) GetUsersByCriteria(ctx context.Context, req SearchUsersRequest) (*SearchUsersResponse, error) {
 	var users []models.User
 	query := s.db.WithContext(ctx).Model(&users)
 
 	if req.Name != nil {
-		query = query.Where(&User{Name: *req.Name})
+		query = query.Where(&models.User{Name: *req.Name})
 		if err := query.Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return nil, ErrNotFound
@@ -104,7 +107,7 @@ func (s *UserStorage) GetUsersByCriteria(ctx context.Context, req models.SearchU
 	}
 
 	if req.Username != nil {
-		query = query.Where(&User{Username: *req.Username})
+		query = query.Where(&models.User{Username: *req.Username})
 		if err := query.Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return nil, ErrNotFound
@@ -132,15 +135,15 @@ func (s *UserStorage) GetUsersByCriteria(ctx context.Context, req models.SearchU
 		return nil, err
 	}
 
-	return &models.SearchUsersResponse{
+	return &SearchUsersResponse{
 		Users:  users,
 		Offset: offset/limit + 1,
 		Count:  int(count),
 	}, nil
 }
 
-func (s *UserStorage) CreateUser(ctx context.Context, user *User) (*User, error) {
-	var newUser User = User{
+func (s *UserStorage) CreateUser(ctx context.Context, user *models.User) (*models.User, error) {
+	var newUser models.User = models.User{
 		ID:          uuid.New(),
 		Username:    user.Username,
 		Name:        user.Name,
