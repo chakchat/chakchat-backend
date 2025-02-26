@@ -3,11 +3,10 @@ package handlers
 import (
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/chakchat/chakchat-backend/shared/go/auth"
+	"github.com/chakchat/chakchat-backend/user-service/internal/models"
 	"github.com/chakchat/chakchat-backend/user-service/internal/services"
-	"github.com/chakchat/chakchat-backend/user-service/internal/storage"
 
 	"github.com/chakchat/chakchat-backend/user-service/internal/restapi"
 	"github.com/gin-gonic/gin"
@@ -36,6 +35,13 @@ func (s *GetUser) GetUserById() gin.HandlerFunc {
 		if claims == nil {
 			c.JSON(http.StatusUnauthorized, restapi.ErrorResponse{
 				ErrorType:    restapi.ErrTypeUnautorized,
+				ErrorMessage: "Invalid JWT token",
+			})
+			return
+		}
+		if claims[auth.ClaimId] == nil {
+			c.JSON(http.StatusUnauthorized, restapi.ErrorResponse{
+				ErrorType:    restapi.ErrTypeUnautorized,
 				ErrorMessage: "Input is invalid",
 			})
 			return
@@ -51,11 +57,9 @@ func (s *GetUser) GetUserById() gin.HandlerFunc {
 
 		ownerId, err := uuid.Parse(userOwner)
 		if err != nil {
-			restapi.SendValidationError(c, []restapi.ErrorDetail{
-				{
-					Field:   "UserId",
-					Message: "Invalid UserId query parameter",
-				},
+			c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
+				ErrorType:    restapi.ErrTypeUnautorized,
+				ErrorMessage: "Yout JWT token is invalid",
 			})
 			return
 		}
@@ -85,7 +89,7 @@ func (s *GetUser) GetUserById() gin.HandlerFunc {
 			return
 		}
 
-		restapi.SendSuccess(c, userResponse{
+		restapi.SendSuccess(c, models.UserResponse{
 			ID:          user.ID,
 			Username:    user.Username,
 			Name:        user.Name,
@@ -126,7 +130,7 @@ func (s *GetUser) GetUserByUsername() gin.HandlerFunc {
 			return
 		}
 
-		var req getUserByUsernameRequest
+		var req models.GetUserByUsernameRequest
 		user, err := s.service.GetUserByUsername(c.Request.Context(), ownerId, req.Username)
 
 		if err != nil {
@@ -142,7 +146,7 @@ func (s *GetUser) GetUserByUsername() gin.HandlerFunc {
 			return
 		}
 
-		restapi.SendSuccess(c, userResponse{
+		restapi.SendSuccess(c, models.UserResponse{
 			ID:          user.ID,
 			Username:    user.Username,
 			Name:        user.Name,
@@ -155,7 +159,7 @@ func (s *GetUser) GetUserByUsername() gin.HandlerFunc {
 
 func (s *GetUser) GetUsersByCriteria() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var req storage.SearchUsersRequest
+		var req models.SearchUsersRequest
 		if err := c.ShouldBindQuery(&req); err != nil {
 			c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
 				ErrorType:    restapi.ErrTypeInvalidJson,
@@ -185,21 +189,8 @@ func (s *GetUser) GetUsersByCriteria() gin.HandlerFunc {
 				ErrorMessage: "Failed",
 			})
 		}
-		restapi.SendSuccess(c, storage.SearchUsersResponse{
+		restapi.SendSuccess(c, models.SearchUsersResponse{
 			Users: response.Users,
 		}.Users)
 	}
-}
-
-type getUserByUsernameRequest struct {
-	Username string
-}
-
-type userResponse struct {
-	ID          uuid.UUID  `json:"id"`
-	Username    string     `json:"username"`
-	Name        string     `json:"name"`
-	Phone       *string    `json:"phone"`
-	DateOfBirth *time.Time `json:"dateOfBirth"`
-	PhotoURL    string     `json:"photo"`
 }
