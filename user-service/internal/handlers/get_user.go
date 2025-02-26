@@ -35,8 +35,8 @@ type SearchUsersRequest struct {
 
 type SearchUsersResponse struct {
 	Users  []User `json:"users"`
-	Offset int
-	Count  int
+	Offset int    `json:"offset"`
+	Count  int    `json:"count"`
 }
 
 type GetUserByUsernameRequest struct {
@@ -46,7 +46,7 @@ type GetUserByUsernameRequest struct {
 type GetUserServer interface {
 	GetUserById(ctx context.Context, ownerId uuid.UUID, targetId uuid.UUID) (*models.User, error)
 	GetUserByUsername(ctx context.Context, ownerId uuid.UUID, username string) (*models.User, error)
-	GetUsersByCriteria(ctx context.Context, req SearchUsersRequest) (*storage.SearchUsersResponse, error)
+	GetUsersByCriteria(ctx context.Context, req storage.SearchUsersRequest) (*storage.SearchUsersResponse, error)
 }
 
 type GetUserHandler struct {
@@ -189,7 +189,7 @@ func (s *GetUserHandler) GetUserByUsername() gin.HandlerFunc {
 
 func (s *GetUserHandler) GetUsersByCriteria() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var req SearchUsersRequest
+		var req storage.SearchUsersRequest
 		if err := c.ShouldBindQuery(&req); err != nil {
 			c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
 				ErrorType:    restapi.ErrTypeInvalidJson,
