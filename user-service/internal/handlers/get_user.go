@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
@@ -13,23 +14,23 @@ import (
 	"github.com/google/uuid"
 )
 
-// type GetUserServer interface {
-// 	GetUserById(ctx context.Context, ownerId uuid.UUID, targetId uuid.UUID) (*storage.User, error)
-// 	GetUserByUsername(ctx context.Context, ownerId uuid.UUID, username string) (*storage.User, error)
-// 	GetUsersByCriteria(ctx context.Context, req storage.SearchUsersRequest) (*storage.SearchUsersResponse, error)
-// }
-
-type GetUser struct {
-	service services.GetUserService
+type GetUserServer interface {
+	GetUserById(ctx context.Context, ownerId uuid.UUID, targetId uuid.UUID) (*models.User, error)
+	GetUserByUsername(ctx context.Context, ownerId uuid.UUID, username string) (*models.User, error)
+	GetUsersByCriteria(ctx context.Context, req models.SearchUsersRequest) (*models.SearchUsersResponse, error)
 }
 
-func NewGetUserService(service services.GetUserService) *GetUser {
-	return &GetUser{
+type GetUserHandler struct {
+	service GetUserServer
+}
+
+func NewGetUserHandler(service GetUserServer) *GetUserHandler {
+	return &GetUserHandler{
 		service: service,
 	}
 }
 
-func (s *GetUser) GetUserById() gin.HandlerFunc {
+func (s *GetUserHandler) GetUserById() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims := auth.GetClaims(c.Request.Context())
 		if claims == nil {
@@ -75,7 +76,7 @@ func (s *GetUser) GetUserById() gin.HandlerFunc {
 			return
 		}
 
-		user, err := s.service.GetUserByID(c.Request.Context(), ownerId, userTarget)
+		user, err := s.service.GetUserById(c.Request.Context(), ownerId, userTarget)
 		if err != nil {
 			if err == services.ErrNotFound {
 				c.JSON(http.StatusNotFound, restapi.ErrorResponse{
@@ -100,7 +101,7 @@ func (s *GetUser) GetUserById() gin.HandlerFunc {
 	}
 }
 
-func (s *GetUser) GetUserByUsername() gin.HandlerFunc {
+func (s *GetUserHandler) GetUserByUsername() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims := auth.GetClaims(c.Request.Context())
 		if claims == nil {
@@ -157,7 +158,7 @@ func (s *GetUser) GetUserByUsername() gin.HandlerFunc {
 	}
 }
 
-func (s *GetUser) GetUsersByCriteria() gin.HandlerFunc {
+func (s *GetUserHandler) GetUsersByCriteria() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req models.SearchUsersRequest
 		if err := c.ShouldBindQuery(&req); err != nil {
