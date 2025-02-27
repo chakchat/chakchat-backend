@@ -32,10 +32,6 @@ type SearchUsersResponse struct {
 	Count  int    `json:"count"`
 }
 
-type GetUserByUsernameRequest struct {
-	Username string `json:"username"`
-}
-
 type GetUserServer interface {
 	GetUserById(ctx context.Context, ownerId uuid.UUID, targetId uuid.UUID) (*models.User, error)
 	GetUserByUsername(ctx context.Context, ownerId uuid.UUID, username string) (*models.User, error)
@@ -127,8 +123,7 @@ func (s *GetUserHandler) GetUserByUsername() gin.HandlerFunc {
 			return
 		}
 
-		var req GetUserByUsernameRequest
-		user, err := s.service.GetUserByUsername(c.Request.Context(), ownerId, req.Username)
+		user, err := s.service.GetUserByUsername(c.Request.Context(), ownerId, c.Param("username"))
 
 		if err != nil {
 			if err == services.ErrNotFound {
