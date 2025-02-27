@@ -27,6 +27,14 @@ func SendValidationError(c *gin.Context, errors []ErrorDetail) {
 	})
 }
 
+func SendAuthorizationError(c *gin.Context, errors []ErrorDetail) {
+	c.JSON(http.StatusUnauthorized, ErrorResponse{
+		ErrorType:    ErrTypeUnautorized,
+		ErrorMessage: "Invalid JWT token",
+		ErrorDetails: errors,
+	})
+}
+
 func SendInternalError(c *gin.Context) {
 	c.JSON(http.StatusInternalServerError, ErrorResponse{
 		ErrorType:    ErrTypeInternal,
