@@ -1,8 +1,15 @@
 package handlers
 
-import "net/http"
+import (
+	"net/http"
 
-func AmITeapot(r *http.Request, w http.ResponseWriter) {
-	w.WriteHeader(http.StatusTeapot)
-	w.Write([]byte("I'm a teapot"))
+	"github.com/gin-gonic/gin"
+)
+
+func AmITeapot() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.JSON(http.StatusTeapot, gin.H{
+			"message": "I'm a teapot",
+		})
+	}
 }
