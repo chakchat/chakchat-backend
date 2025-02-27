@@ -27,10 +27,10 @@ func SendValidationError(c *gin.Context, errors []ErrorDetail) {
 	})
 }
 
-func SendAuthorizationError(c *gin.Context, errors []ErrorDetail) {
+func SendUnauthorizedError(c *gin.Context, errors []ErrorDetail) {
 	c.JSON(http.StatusUnauthorized, ErrorResponse{
 		ErrorType:    ErrTypeUnautorized,
-		ErrorMessage: "Invalid JWT token",
+		ErrorMessage: "Failed JWT token authentication",
 		ErrorDetails: errors,
 	})
 }
