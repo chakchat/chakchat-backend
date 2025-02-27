@@ -23,7 +23,7 @@ type User struct {
 	Phone       *string    `json:"phone,omitempty"`
 	DateOfBirth *time.Time `json:"dateOfBirth,omitempty"`
 	PhotoURL    string     `json:"photo"`
-	CreatedAt   int64
+	CreatedAt   int64      `json:"createdAt"`
 }
 
 type SearchUsersResponse struct {
@@ -54,36 +54,16 @@ func NewGetUserHandler(service GetUserServer) *GetUserHandler {
 
 func (s *GetUserHandler) GetUserById() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		claims := auth.GetClaims(c.Request.Context())
-		if claims == nil {
-			c.JSON(http.StatusUnauthorized, restapi.ErrorResponse{
-				ErrorType:    restapi.ErrTypeUnautorized,
-				ErrorMessage: "Invalid JWT token",
-			})
-			return
-		}
-		if claims[auth.ClaimId] == nil {
-			c.JSON(http.StatusUnauthorized, restapi.ErrorResponse{
-				ErrorType:    restapi.ErrTypeUnautorized,
-				ErrorMessage: "Invalid JWT token",
-			})
-			return
-		}
-		userOwner, ok := claims[auth.ClaimId].(string)
+		claimId, ok := auth.GetClaims(c.Request.Context())[auth.ClaimId]
 		if !ok {
-			c.JSON(http.StatusUnauthorized, restapi.ErrorResponse{
-				ErrorType:    restapi.ErrTypeUnautorized,
-				ErrorMessage: "Invalid JWT token",
-			})
+			restapi.SendAuthorizationError(c, []restapi.ErrorDetail{})
 			return
 		}
+		userOwner := claimId.(string)
 
 		ownerId, err := uuid.Parse(userOwner)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
-				ErrorType:    restapi.ErrTypeUnautorized,
-				ErrorMessage: "Yout JWT token is invalid",
-			})
+			restapi.SendAuthorizationError(c, []restapi.ErrorDetail{})
 			return
 		}
 
@@ -127,18 +107,12 @@ func (s *GetUserHandler) GetUserByUsername() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims := auth.GetClaims(c.Request.Context())
 		if claims == nil {
-			c.JSON(http.StatusUnauthorized, restapi.ErrorResponse{
-				ErrorType:    restapi.ErrTypeUnautorized,
-				ErrorMessage: "Input is invalid",
-			})
+			restapi.SendAuthorizationError(c, []restapi.ErrorDetail{})
 			return
 		}
 		userOwner, ok := claims[auth.ClaimUsername].(string)
 		if !ok {
-			c.JSON(http.StatusUnauthorized, restapi.ErrorResponse{
-				ErrorType:    restapi.ErrTypeUnautorized,
-				ErrorMessage: "Input is invalid",
-			})
+			restapi.SendAuthorizationError(c, []restapi.ErrorDetail{})
 			return
 		}
 
@@ -196,7 +170,7 @@ func (s *GetUserHandler) GetUsersByCriteria() gin.HandlerFunc {
 			if errors.Is(err, services.ErrNoCriteriaCpecified) {
 				c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
 					ErrorType:    restapi.ErrTypeBadRequest,
-					ErrorMessage: "Input is invalid",
+					ErrorMessage: "Criteria wasn't specified correctly",
 				})
 				return
 			}
@@ -209,7 +183,7 @@ func (s *GetUserHandler) GetUsersByCriteria() gin.HandlerFunc {
 			}
 			c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
 				ErrorType:    restapi.ErrTypeInternal,
-				ErrorMessage: "Failed",
+				ErrorMessage: "Internal error",
 			})
 		}
 		var users []User

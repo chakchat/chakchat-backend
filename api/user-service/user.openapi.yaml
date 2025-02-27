@@ -500,6 +500,11 @@ components:
           format: date
           nullable: true
           description: User date of birth. May be null if user that made a request is stricted to see this date of birth.
+        createdAt:
+          type: string
+          format: date
+          nullable: false
+          description: Date of creating the user.
       required:
         - id
         - name
@@ -511,6 +516,7 @@ components:
         phone: +1234567890
         photo: https://example.com/johndoe.jpg
         dateOfBirth: 1990-01-01
+        createdAt: 2025-01-04T15:04:05
     UpdateUserProfile:
       description: User profile info. It is used only for update. Contains only updateble fields.
       type: object
