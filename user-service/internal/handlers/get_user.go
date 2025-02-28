@@ -52,7 +52,7 @@ func (s *GetUserHandler) GetUserByID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claimId, ok := auth.GetClaims(c.Request.Context())[auth.ClaimId]
 		if !ok {
-			restapi.SendUnauthorizedError(c, []restapi.ErrorDetail{})
+			restapi.SendUnauthorizedError(c, nil)
 			return
 		}
 
@@ -60,7 +60,7 @@ func (s *GetUserHandler) GetUserByID() gin.HandlerFunc {
 
 		ownerId, err := uuid.Parse(userOwner)
 		if err != nil {
-			restapi.SendUnauthorizedError(c, []restapi.ErrorDetail{})
+			restapi.SendUnauthorizedError(c, nil)
 			return
 		}
 
@@ -96,6 +96,7 @@ func (s *GetUserHandler) GetUserByID() gin.HandlerFunc {
 			Phone:       &user.Phone,
 			DateOfBirth: user.DateOfBirth,
 			PhotoURL:    user.PhotoURL,
+			CreatedAt:   user.CreatedAt,
 		})
 	}
 }
@@ -104,12 +105,12 @@ func (s *GetUserHandler) GetUserByUsername() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims := auth.GetClaims(c.Request.Context())
 		if claims == nil {
-			restapi.SendUnauthorizedError(c, []restapi.ErrorDetail{})
+			restapi.SendUnauthorizedError(c, nil)
 			return
 		}
 		userOwner, ok := claims[auth.ClaimUsername].(string)
 		if !ok {
-			restapi.SendUnauthorizedError(c, []restapi.ErrorDetail{})
+			restapi.SendUnauthorizedError(c, nil)
 			return
 		}
 
@@ -146,6 +147,7 @@ func (s *GetUserHandler) GetUserByUsername() gin.HandlerFunc {
 			Phone:       &user.Phone,
 			DateOfBirth: user.DateOfBirth,
 			PhotoURL:    user.PhotoURL,
+			CreatedAt:   user.CreatedAt,
 		})
 	}
 }
@@ -191,12 +193,55 @@ func (s *GetUserHandler) GetUsersByCriteria() gin.HandlerFunc {
 				Phone:       &user.Phone,
 				DateOfBirth: user.DateOfBirth,
 				PhotoURL:    user.PhotoURL,
+				CreatedAt:   user.CreatedAt,
 			})
 		}
 		restapi.SendSuccess(c, SearchUsersResponse{
 			Users:  users,
 			Offset: response.Offset,
 			Count:  response.Count,
+		})
+	}
+}
+
+func (s *GetUserHandler) GetMe() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		claimId, ok := auth.GetClaims(c.Request.Context())[auth.ClaimId]
+		if !ok {
+			restapi.SendUnauthorizedError(c, nil)
+			return
+		}
+
+		userOwner := claimId.(string)
+
+		ownerId, err := uuid.Parse(userOwner)
+		if err != nil {
+			restapi.SendUnauthorizedError(c, nil)
+			return
+		}
+
+		me, err := s.service.GetUserByID(c.Request.Context(), ownerId, ownerId)
+		if err != nil {
+			if err == services.ErrNotFound {
+				c.JSON(http.StatusNotFound, restapi.ErrorResponse{
+					ErrorType:    restapi.ErrTypeNotFound,
+					ErrorMessage: "User not found",
+				})
+				return
+			}
+			c.Error(err)
+			restapi.SendInternalError(c)
+			return
+		}
+
+		restapi.SendSuccess(c, User{
+			ID:          me.ID,
+			Name:        me.Name,
+			Username:    me.Username,
+			Phone:       &me.Phone,
+			PhotoURL:    me.PhotoURL,
+			DateOfBirth: me.DateOfBirth,
+			CreatedAt:   me.CreatedAt,
 		})
 	}
 }

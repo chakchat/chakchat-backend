@@ -83,6 +83,7 @@ func main() {
 	userServer := handlers.NewUserServer(*userService)
 	restrictionStorage := storage.NewRestrictionStorage(db)
 	getUserService := services.NewGetService(userStorage, restrictionStorage)
+	updateUserService := services.NewUpdateUserService(userStorage)
 	getUserServer := handlers.NewGetUserHandler(getUserService)
 
 	grpcPort := viper.GetString("server.grpc-port")
@@ -119,7 +120,9 @@ func main() {
 		Use(authMiddleware).
 		GET("/v1.0/user/:userId", getUserServer.GetUserByID()).
 		GET("/v1.0/user/username/:username", getUserServer.GetUserByUsername()).
-		GET("/v1.0/users", getUserServer.GetUsersByCriteria())
+		GET("/v1.0/users", getUserServer.GetUsersByCriteria()).
+		GET("/v1.0/me", getUserServer.GetMe()).
+		PUT("v1.0/me", handlers.UpdateUser(updateUserService, getUserService))
 	r.GET("/v1.0/are-you-a-real-teapot", handlers.AmITeapot())
 
 	r.Run(":5004")
