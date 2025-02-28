@@ -3,3 +3,11 @@ server:
 
 db:
   dsn: "postgres://user:secret@postgres:5432/userdb?sslmode=disable" 
+
+jwt:
+  signing_method: RS256
+  lifetime: 3m
+  issuer: user_service
+  audience: 
+    - user_service
+  key_file_path: /app/keys/rsa.pub
