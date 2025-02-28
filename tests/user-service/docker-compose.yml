@@ -4,8 +4,6 @@ services:
             context: ./service-test
         environment:
             - USER_SERVICE_ADDR=user-service:50051 # TODO: Pass your user-service address here
-            - DB_DSN=postgres://user:secret@postgres:5432/userdb?sslmode=disable
-            - USER_SERVICE_HTTP_ADDR=user-service:5004
         depends_on:
             - user-service
             - postgres
