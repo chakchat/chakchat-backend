@@ -142,3 +142,15 @@ func (s *UserStorage) CreateUser(ctx context.Context, user *models.User) (*model
 	}
 	return &newUser, nil
 }
+
+func (s *UserStorage) UpdateUser(ctx context.Context, user *models.User, name string, username string, birthday *time.Time) (*models.User, error) {
+
+	if err := s.db.WithContext(ctx).Save(&models.User{ID: (*user).ID, Name: name, Username: username, DateOfBirth: birthday}).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+
+	return user, nil
+}
