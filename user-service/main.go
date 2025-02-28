@@ -4,19 +4,38 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
+	"os"
+	"time"
 
+	"github.com/chakchat/chakchat-backend/shared/go/auth"
+	"github.com/chakchat/chakchat-backend/shared/go/jwt"
 	"github.com/chakchat/chakchat-backend/user-service/internal/grpcservice"
 	"github.com/chakchat/chakchat-backend/user-service/internal/handlers"
 	"github.com/chakchat/chakchat-backend/user-service/internal/models"
+	"github.com/chakchat/chakchat-backend/user-service/internal/restapi"
 	"github.com/chakchat/chakchat-backend/user-service/internal/services"
 	"github.com/chakchat/chakchat-backend/user-service/internal/storage"
+
+	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"google.golang.org/grpc"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
+type JWTConfig struct {
+	SigningMethod string        `mapstructure:"signing_method"`
+	Lifetime      time.Duration `mapstructure:"lifetime"`
+	Issuer        string        `mapstructure:"issuer"`
+	Audience      []string      `mapstructure:"audience"`
+	KeyFilePath   string        `mapstructure:"key_file_path"`
+}
+
 type Config struct {
+	Jwt JWTConfig `mapstructure:"jwt"`
+
 	DB struct {
 		DSN string `mapstructure:"dsn"`
 	} `mapstructure:"db"`
@@ -53,6 +72,7 @@ var conf *Config = loadConfig("/app/config.yml")
 
 func main() {
 
+	jwtConf := loadJWTConfig()
 	db, err := connectDB()
 	if err != nil {
 		log.Fatalf("failed to connect DB: %v", err)
@@ -61,6 +81,9 @@ func main() {
 	userStorage := storage.NewUserStorage(db)
 	userService := services.NewGetUserService(userStorage)
 	userServer := handlers.NewUserServer(*userService)
+	restrictionStorage := storage.NewRestrictionStorage(db)
+	getUserService := services.NewGetService(userStorage, restrictionStorage)
+	getUserServer := handlers.NewGetUserHandler(getUserService)
 
 	grpcPort := viper.GetString("server.grpc-port")
 
@@ -76,6 +99,44 @@ func main() {
 		log.Fatalf("failed to serve: %v", err)
 	}
 
+	r := gin.New()
+
+	r.Use(otelgin.Middleware("user-service"))
+
+	r.NoRoute(func(c *gin.Context) {
+		c.JSON(http.StatusNotFound, restapi.ErrorResponse{
+			ErrorType:    restapi.ErrTypeNotFound,
+			ErrorMessage: "No such endpoint. Make sure that you use correct route and HTTP method.",
+		})
+	})
+
+	authMiddleware := auth.NewJWT(&auth.JWTConfig{
+		Conf:          jwtConf,
+		DefaultHeader: "X-Internal-Token",
+	})
+
+	r.Group("/").
+		Use(authMiddleware).
+		GET("/v1.0/user/:userId", getUserServer.GetUserByID()).
+		GET("/v1.0/user/username/:username", getUserServer.GetUserByUsername()).
+		GET("/v1.0/users", getUserServer.GetUsersByCriteria())
+	r.GET("/v1.0/are-you-a-real-teapot", handlers.AmITeapot())
+
+	r.Run(":5004")
+}
+
+func loadJWTConfig() *jwt.Config {
+	config := &jwt.Config{
+		SigningMethod: conf.Jwt.SigningMethod,
+		Lifetime:      conf.Jwt.Lifetime,
+		Issuer:        conf.Jwt.Issuer,
+		Audience:      conf.Jwt.Audience,
+		Type:          "internal_access",
+	}
+	if err := config.RSAPublicOnlyKey(readKey(conf.Jwt.KeyFilePath)); err != nil {
+		log.Fatal(err)
+	}
+	return config
 }
 
 func connectDB() (*gorm.DB, error) {
@@ -88,4 +149,12 @@ func connectDB() (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to auto-migrate database: %w", err)
 	}
 	return db, nil
+}
+
+func readKey(path string) []byte {
+	key, err := os.ReadFile(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return key
 }

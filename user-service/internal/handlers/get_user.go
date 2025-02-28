@@ -33,7 +33,7 @@ type SearchUsersResponse struct {
 }
 
 type GetUserServer interface {
-	GetUserById(ctx context.Context, ownerId uuid.UUID, targetId uuid.UUID) (*models.User, error)
+	GetUserByID(ctx context.Context, ownerId uuid.UUID, targetId uuid.UUID) (*models.User, error)
 	GetUserByUsername(ctx context.Context, ownerId uuid.UUID, username string) (*models.User, error)
 	GetUsersByCriteria(ctx context.Context, req storage.SearchUsersRequest) (*storage.SearchUsersResponse, error)
 }
@@ -48,13 +48,14 @@ func NewGetUserHandler(service GetUserServer) *GetUserHandler {
 	}
 }
 
-func (s *GetUserHandler) GetUserById() gin.HandlerFunc {
+func (s *GetUserHandler) GetUserByID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claimId, ok := auth.GetClaims(c.Request.Context())[auth.ClaimId]
 		if !ok {
 			restapi.SendUnauthorizedError(c, []restapi.ErrorDetail{})
 			return
 		}
+
 		userOwner := claimId.(string)
 
 		ownerId, err := uuid.Parse(userOwner)
@@ -74,7 +75,7 @@ func (s *GetUserHandler) GetUserById() gin.HandlerFunc {
 			return
 		}
 
-		user, err := s.service.GetUserById(c.Request.Context(), ownerId, userTarget)
+		user, err := s.service.GetUserByID(c.Request.Context(), ownerId, userTarget)
 		if err != nil {
 			if err == services.ErrNotFound {
 				c.JSON(http.StatusNotFound, restapi.ErrorResponse{
