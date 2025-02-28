@@ -34,7 +34,7 @@ func NewGetService(getter GetUserRepository, restrictions GetRestrictionReposito
 }
 
 func (g *GetUserService) GetUserByID(ctx context.Context, ownerId uuid.UUID, targetId uuid.UUID) (*models.User, error) {
-	user, err := g.getUserRepo.GetUserById(ctx, ownerId)
+	user, err := g.getUserRepo.GetUserById(ctx, targetId)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return nil, ErrNotFound
@@ -42,7 +42,7 @@ func (g *GetUserService) GetUserByID(ctx context.Context, ownerId uuid.UUID, tar
 		return nil, err
 	}
 
-	restr, err := g.getRestrictionRepo.GetRestriction(ctx, ownerId)
+	restr, err := g.getRestrictionRepo.GetRestriction(ctx, targetId)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return nil, ErrNotFound
