@@ -9,6 +9,7 @@ import (
 	"github.com/chakchat/chakchat-backend/user-service/internal/models"
 	"github.com/chakchat/chakchat-backend/user-service/internal/restapi"
 	"github.com/chakchat/chakchat-backend/user-service/internal/services"
+	"github.com/chakchat/chakchat-backend/user-service/internal/storage"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -20,7 +21,7 @@ type updateUserRequest struct {
 }
 
 type UpdateUserserver interface {
-	UpdateUser(ctx context.Context, user *models.User, name string, username string, birthday *time.Time) (*models.User, error)
+	UpdateUser(ctx context.Context, user *models.User, req *storage.UpdateUserRequest) (*models.User, error)
 }
 
 func UpdateUser(service UpdateUserserver, getter GetUserServer) gin.HandlerFunc {
@@ -32,7 +33,7 @@ func UpdateUser(service UpdateUserserver, getter GetUserServer) gin.HandlerFunc 
 		}
 		claimId, ok := auth.GetClaims(c.Request.Context())[auth.ClaimId]
 		if !ok {
-			restapi.SendUnauthorizedError(c, []restapi.ErrorDetail{})
+			restapi.SendUnauthorizedError(c, nil)
 			return
 		}
 
@@ -40,7 +41,7 @@ func UpdateUser(service UpdateUserserver, getter GetUserServer) gin.HandlerFunc 
 
 		ownerId, err := uuid.Parse(userOwner)
 		if err != nil {
-			restapi.SendUnauthorizedError(c, []restapi.ErrorDetail{})
+			restapi.SendUnauthorizedError(c, nil)
 			return
 		}
 
@@ -58,7 +59,11 @@ func UpdateUser(service UpdateUserserver, getter GetUserServer) gin.HandlerFunc 
 			return
 		}
 
-		updatedUser, err := service.UpdateUser(c.Request.Context(), user, req.Name, req.Username, req.DateOfBirth)
+		updatedUser, err := service.UpdateUser(c.Request.Context(), user, &storage.UpdateUserRequest{
+			Name:        req.Name,
+			Username:    req.Username,
+			DateOfBirth: req.DateOfBirth,
+		})
 		if err != nil {
 			restapi.SendValidationError(c, []restapi.ErrorDetail{
 				{

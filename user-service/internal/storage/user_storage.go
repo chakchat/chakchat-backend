@@ -13,6 +13,12 @@ import (
 var ErrNotFound = errors.New("not found")
 var ErrAlreadyExists = errors.New("already exists")
 
+type UpdateUserRequest struct {
+	Name        string
+	Username    string
+	DateOfBirth *time.Time
+}
+
 type SearchUsersRequest struct {
 	Name     *string
 	Username *string
@@ -143,9 +149,9 @@ func (s *UserStorage) CreateUser(ctx context.Context, user *models.User) (*model
 	return &newUser, nil
 }
 
-func (s *UserStorage) UpdateUser(ctx context.Context, user *models.User, name string, username string, birthday *time.Time) (*models.User, error) {
+func (s *UserStorage) UpdateUser(ctx context.Context, user *models.User, req *UpdateUserRequest) (*models.User, error) {
 
-	if err := s.db.WithContext(ctx).Save(&models.User{ID: (*user).ID, Name: name, Username: username, DateOfBirth: birthday}).Error; err != nil {
+	if err := s.db.WithContext(ctx).Save(&models.User{ID: (*user).ID, Name: (*req).Name, Username: (*req).Username, DateOfBirth: (*req).DateOfBirth}).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrNotFound
 		}

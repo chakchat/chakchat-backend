@@ -52,7 +52,7 @@ func (s *GetUserHandler) GetUserByID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claimId, ok := auth.GetClaims(c.Request.Context())[auth.ClaimId]
 		if !ok {
-			restapi.SendUnauthorizedError(c, []restapi.ErrorDetail{})
+			restapi.SendUnauthorizedError(c, nil)
 			return
 		}
 
@@ -60,7 +60,7 @@ func (s *GetUserHandler) GetUserByID() gin.HandlerFunc {
 
 		ownerId, err := uuid.Parse(userOwner)
 		if err != nil {
-			restapi.SendUnauthorizedError(c, []restapi.ErrorDetail{})
+			restapi.SendUnauthorizedError(c, nil)
 			return
 		}
 
@@ -105,12 +105,12 @@ func (s *GetUserHandler) GetUserByUsername() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims := auth.GetClaims(c.Request.Context())
 		if claims == nil {
-			restapi.SendUnauthorizedError(c, []restapi.ErrorDetail{})
+			restapi.SendUnauthorizedError(c, nil)
 			return
 		}
 		userOwner, ok := claims[auth.ClaimUsername].(string)
 		if !ok {
-			restapi.SendUnauthorizedError(c, []restapi.ErrorDetail{})
+			restapi.SendUnauthorizedError(c, nil)
 			return
 		}
 
@@ -208,7 +208,7 @@ func (s *GetUserHandler) GetMe() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claimId, ok := auth.GetClaims(c.Request.Context())[auth.ClaimId]
 		if !ok {
-			restapi.SendUnauthorizedError(c, []restapi.ErrorDetail{})
+			restapi.SendUnauthorizedError(c, nil)
 			return
 		}
 
@@ -216,7 +216,7 @@ func (s *GetUserHandler) GetMe() gin.HandlerFunc {
 
 		ownerId, err := uuid.Parse(userOwner)
 		if err != nil {
-			restapi.SendUnauthorizedError(c, []restapi.ErrorDetail{})
+			restapi.SendUnauthorizedError(c, nil)
 			return
 		}
 
