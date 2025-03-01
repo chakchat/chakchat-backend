@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package filestorage;
+
+option go_package = "./filestorage";
+
+message UUID {
+    string value = 1;
+}
+
+message GetFileRequest {
+    UUID fileId = 1;
+}
+
+message GetFileResponse {
+    UUID fileId = 1;
+    string fileName = 2;
+    int64 fileSize = 3;
+    string mimeType = 4;
+    string fileUrl = 5;
+    int64 createdAtUNIX = 6;
+}
+
+service FileStorageService {
+    rpc GetFile(GetFileRequest) returns (GetFileResponse);
+}
