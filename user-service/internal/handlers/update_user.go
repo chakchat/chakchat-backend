@@ -17,7 +17,7 @@ import (
 type updateUserRequest struct {
 	Name        string
 	Username    string
-	DateOfBirth *time.Time
+	DateOfBirth *string
 }
 
 type UpdateUserserver interface {
@@ -59,10 +59,18 @@ func UpdateUser(service UpdateUserserver, getter GetUserServer) gin.HandlerFunc 
 			return
 		}
 
+		date, err := time.Parse(time.DateOnly, *req.DateOfBirth)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
+				ErrorType:    restapi.ErrTypeInvalidJson,
+				ErrorMessage: "Wrong data format",
+			})
+			return
+		}
 		updatedUser, err := service.UpdateUser(c.Request.Context(), user, &storage.UpdateUserRequest{
 			Name:        req.Name,
 			Username:    req.Username,
-			DateOfBirth: req.DateOfBirth,
+			DateOfBirth: &date,
 		})
 		if err != nil {
 			restapi.SendValidationError(c, []restapi.ErrorDetail{
@@ -79,7 +87,7 @@ func UpdateUser(service UpdateUserserver, getter GetUserServer) gin.HandlerFunc 
 			Username:    updatedUser.Username,
 			Name:        updatedUser.Name,
 			Phone:       toStrPtr(updatedUser.Phone),
-			DateOfBirth: updatedUser.DateOfBirth,
+			DateOfBirth: toFormatDate(updatedUser.DateOfBirth),
 			PhotoURL:    updatedUser.PhotoURL,
 		})
 	}

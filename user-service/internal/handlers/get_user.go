@@ -17,13 +17,13 @@ import (
 )
 
 type User struct {
-	ID          uuid.UUID  `json:"id"`
-	Username    string     `json:"name"`
-	Name        string     `json:"username"`
-	Phone       *string    `json:"phone,omitempty"`
-	DateOfBirth *time.Time `json:"dateOfBirth,omitempty"`
-	PhotoURL    string     `json:"photo"`
-	CreatedAt   int64      `json:"createdAt"`
+	ID          uuid.UUID `json:"id"`
+	Username    string    `json:"name"`
+	Name        string    `json:"username"`
+	Phone       *string   `json:"phone,omitempty"`
+	DateOfBirth *string   `json:"dateOfBirth,omitempty"`
+	PhotoURL    string    `json:"photo"`
+	CreatedAt   int64     `json:"createdAt"`
 }
 
 type SearchUsersResponse struct {
@@ -93,7 +93,7 @@ func (s *GetUserHandler) GetUserByID() gin.HandlerFunc {
 			Username:    user.Username,
 			Name:        user.Name,
 			Phone:       toStrPtr(user.Phone),
-			DateOfBirth: user.DateOfBirth,
+			DateOfBirth: toFormatDate(user.DateOfBirth),
 			PhotoURL:    user.PhotoURL,
 			CreatedAt:   user.CreatedAt,
 		})
@@ -144,7 +144,7 @@ func (s *GetUserHandler) GetUserByUsername() gin.HandlerFunc {
 			Username:    user.Username,
 			Name:        user.Name,
 			Phone:       toStrPtr(user.Phone),
-			DateOfBirth: user.DateOfBirth,
+			DateOfBirth: toFormatDate(user.DateOfBirth),
 			PhotoURL:    user.PhotoURL,
 			CreatedAt:   user.CreatedAt,
 		})
@@ -190,7 +190,7 @@ func (s *GetUserHandler) GetUsersByCriteria() gin.HandlerFunc {
 				Username:    user.Username,
 				Name:        user.Name,
 				Phone:       toStrPtr(user.Phone),
-				DateOfBirth: user.DateOfBirth,
+				DateOfBirth: toFormatDate(user.DateOfBirth),
 				PhotoURL:    user.PhotoURL,
 				CreatedAt:   user.CreatedAt,
 			})
@@ -239,7 +239,7 @@ func (s *GetUserHandler) GetMe() gin.HandlerFunc {
 			Username:    me.Username,
 			Phone:       toStrPtr(me.Phone),
 			PhotoURL:    me.PhotoURL,
-			DateOfBirth: me.DateOfBirth,
+			DateOfBirth: toFormatDate(me.DateOfBirth),
 			CreatedAt:   me.CreatedAt,
 		})
 	}
@@ -248,7 +248,14 @@ func (s *GetUserHandler) GetMe() gin.HandlerFunc {
 func toStrPtr(str string) *string {
 	if str == "" {
 		return nil
-	} else {
-		return &str
 	}
+	return &str
+}
+
+func toFormatDate(date *time.Time) *string {
+	if date == nil {
+		return nil
+	}
+	formatDate := date.Format(time.DateOnly)
+	return &formatDate
 }
