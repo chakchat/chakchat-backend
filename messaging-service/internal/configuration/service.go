@@ -2,12 +2,12 @@ package configuration
 
 import "github.com/chakchat/chakchat-backend/messaging-service/internal/application/services/chat"
 
-type Service struct {
-	PersonalChatService *chat.PersonalChatService
+type Services struct {
+	PersonalChat *chat.PersonalChatService
 }
 
-func NewService(db *DB, external *External) *Service {
-	return &Service{
-		PersonalChatService: chat.NewPersonalChatService(db.PersonalChatRepo, external.Publisher),
+func NewService(db *DB, external *External) *Services {
+	return &Services{
+		PersonalChat: chat.NewPersonalChatService(db.PersonalChat, external.Publisher),
 	}
 }

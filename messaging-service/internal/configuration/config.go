@@ -15,7 +15,7 @@ type Config struct {
 	} `mapstructure:"jwt"`
 }
 
-func loadConfig(file string) *Config {
+func LoadConfig(file string) *Config {
 	viper.SetConfigFile(file)
 
 	if err := viper.ReadInConfig(); err != nil {

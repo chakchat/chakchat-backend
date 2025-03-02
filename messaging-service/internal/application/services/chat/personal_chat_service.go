@@ -27,23 +27,23 @@ func NewPersonalChatService(repo repository.PersonalChatRepository, pub publish.
 	}
 }
 
-func (s *PersonalChatService) BlockChat(ctx context.Context, req request.BlockChat) error {
+func (s *PersonalChatService) BlockChat(ctx context.Context, req request.BlockChat) (*dto.PersonalChatDTO, error) {
 	chat, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			return services.ErrChatNotFound
+			return nil, services.ErrChatNotFound
 		}
-		return err
+		return nil, err
 	}
 
 	err = chat.BlockBy(domain.UserID(req.SenderID))
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if _, err := s.repo.Update(ctx, chat); err != nil {
-		return err
+	if chat, err = s.repo.Update(ctx, chat); err != nil {
+		return nil, err
 	}
 
 	s.pub.PublishForUsers(
@@ -53,26 +53,27 @@ func (s *PersonalChatService) BlockChat(ctx context.Context, req request.BlockCh
 		},
 	)
 
-	return nil
+	chatDto := dto.NewPersonalChatDTO(chat)
+	return &chatDto, nil
 }
 
-func (s *PersonalChatService) UnblockChat(ctx context.Context, req request.UnblockChat) error {
+func (s *PersonalChatService) UnblockChat(ctx context.Context, req request.UnblockChat) (*dto.PersonalChatDTO, error)  {
 	chat, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			return services.ErrChatNotFound
+			return nil, services.ErrChatNotFound
 		}
-		return err
+		return nil, err
 	}
 
 	err = chat.UnblockBy(domain.UserID(req.SenderID))
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if _, err := s.repo.Update(ctx, chat); err != nil {
-		return err
+		return nil, err
 	}
 
 	s.pub.PublishForUsers(
@@ -82,7 +83,8 @@ func (s *PersonalChatService) UnblockChat(ctx context.Context, req request.Unblo
 		},
 	)
 
-	return nil
+	chatDto := dto.NewPersonalChatDTO(chat)
+	return &chatDto, nil
 }
 
 func (s *PersonalChatService) CreateChat(ctx context.Context, req request.CreatePersonalChat) (*dto.PersonalChatDTO, error) {
