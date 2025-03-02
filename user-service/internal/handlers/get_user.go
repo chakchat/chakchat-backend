@@ -92,7 +92,7 @@ func (s *GetUserHandler) GetUserByID() gin.HandlerFunc {
 			ID:          user.ID,
 			Username:    user.Username,
 			Name:        user.Name,
-			Phone:       CheckPhone(user.Phone),
+			Phone:       toStrPtr(user.Phone),
 			DateOfBirth: user.DateOfBirth,
 			PhotoURL:    user.PhotoURL,
 			CreatedAt:   user.CreatedAt,
@@ -143,7 +143,7 @@ func (s *GetUserHandler) GetUserByUsername() gin.HandlerFunc {
 			ID:          user.ID,
 			Username:    user.Username,
 			Name:        user.Name,
-			Phone:       CheckPhone(user.Phone),
+			Phone:       toStrPtr(user.Phone),
 			DateOfBirth: user.DateOfBirth,
 			PhotoURL:    user.PhotoURL,
 			CreatedAt:   user.CreatedAt,
@@ -189,7 +189,7 @@ func (s *GetUserHandler) GetUsersByCriteria() gin.HandlerFunc {
 				ID:          user.ID,
 				Username:    user.Username,
 				Name:        user.Name,
-				Phone:       CheckPhone(user.Phone),
+				Phone:       toStrPtr(user.Phone),
 				DateOfBirth: user.DateOfBirth,
 				PhotoURL:    user.PhotoURL,
 				CreatedAt:   user.CreatedAt,
@@ -237,7 +237,7 @@ func (s *GetUserHandler) GetMe() gin.HandlerFunc {
 			ID:          me.ID,
 			Name:        me.Name,
 			Username:    me.Username,
-			Phone:       CheckPhone(me.Phone),
+			Phone:       toStrPtr(me.Phone),
 			PhotoURL:    me.PhotoURL,
 			DateOfBirth: me.DateOfBirth,
 			CreatedAt:   me.CreatedAt,
@@ -245,10 +245,10 @@ func (s *GetUserHandler) GetMe() gin.HandlerFunc {
 	}
 }
 
-func CheckPhone(phone string) *string {
-	if phone == "" {
+func toStrPtr(str string) *string {
+	if str == "" {
 		return nil
 	} else {
-		return &phone
+		return &str
 	}
 }
