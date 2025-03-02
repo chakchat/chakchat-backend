@@ -78,7 +78,7 @@ func UpdateUser(service UpdateUserserver, getter GetUserServer) gin.HandlerFunc 
 			ID:          updatedUser.ID,
 			Username:    updatedUser.Username,
 			Name:        updatedUser.Name,
-			Phone:       &updatedUser.Phone,
+			Phone:       CheckPhone(updatedUser.Phone),
 			DateOfBirth: updatedUser.DateOfBirth,
 			PhotoURL:    updatedUser.PhotoURL,
 		})
