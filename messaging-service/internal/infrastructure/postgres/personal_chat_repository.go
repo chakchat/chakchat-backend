@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
@@ -100,4 +101,75 @@ func (r *PersonalChatRepository) FindByMembers(ctx context.Context, members [2]d
 		Members:   members,
 		BlockedBy: userIDs(blockedBy),
 	}, nil
+}
+
+func (r *PersonalChatRepository) Update(ctx context.Context, chat *personal.PersonalChat) (*personal.PersonalChat, error) {
+	blockings, err := r.getBlockings(ctx, uuid.UUID(chat.ID))
+	if err != nil {
+		return nil, err
+	}
+
+	toAdd := sliceMisses(chat.BlockedBy, blockings)
+	if len(toAdd) != 0 {
+		if err := r.addBlocking(ctx, uuid.UUID(chat.ID), uuids(toAdd)); err != nil {
+			return nil, err
+		}
+	}
+
+	toDelete := sliceMisses(blockings, chat.BlockedBy)
+	if len(toDelete) != 0 {
+		if err := r.deleteBlocking(ctx, uuid.UUID(chat.ID), uuids(toDelete)); err != nil {
+			return nil, err
+		}
+	}
+
+	return chat, nil
+}
+
+func (r *PersonalChatRepository) addBlocking(ctx context.Context, chatId uuid.UUID, toAdd []uuid.UUID) error {
+	q := `INSERT INTO messaging.blocking (chat_id, user_id) VALUES `
+
+	valExprs := make([]string, 0, len(toAdd))
+	args := make([]any, 0, 2*len(toAdd))
+	for _, userId := range toAdd {
+		argI := len(args) + 1
+		valExprs = append(valExprs, fmt.Sprintf("($%d, $%d)", argI, argI+1))
+		args = append(args, chatId, userId)
+	}
+
+	q += strings.Join(valExprs, ", ")
+
+	_, err := r.db.Exec(ctx, q, args...)
+	return err
+}
+
+func (r *PersonalChatRepository) deleteBlocking(ctx context.Context, chatId uuid.UUID, toDelete []uuid.UUID) error {
+	q := `DELETE FROM messaging.blocking WHERE chat_id = $1 AND user_id = ANY($2)`
+
+	_, err := r.db.Exec(ctx, q, chatId, toDelete)
+	return err
+}
+
+func (r *PersonalChatRepository) getBlockings(ctx context.Context, id uuid.UUID) ([]domain.UserID, error) {
+	q := `SELECT user_id FROM messaging.blocking WHERE chat_id = $1`
+
+	rows, err := r.db.Query(ctx, q, id)
+	if err != nil {
+		return nil, fmt.Errorf("get blockings query failed: %s", err)
+	}
+
+	res := make([]domain.UserID, 0)
+	for rows.Next() {
+		var curr domain.UserID
+		if err := rows.Scan(&curr); err != nil {
+			return nil, fmt.Errorf("scanning rows failed: %s", err)
+		}
+		res = append(res, curr)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("sql rows returned an error: %s", err)
+	}
+
+	return res, nil
 }

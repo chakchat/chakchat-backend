@@ -13,3 +13,28 @@ func userIDs(arr pgtype.Array[uuid.UUID]) []domain.UserID {
 	}
 	return res
 }
+
+func uuids(s []domain.UserID) []uuid.UUID {
+	res := make([]uuid.UUID, len(s))
+	for i := range res {
+		res[i] = uuid.UUID(s[i])
+	}
+	return res
+}
+
+func sliceMisses[T comparable](orig, comp []T) []T {
+	compMap := make(map[T]bool, len(comp))
+	for _, t := range comp {
+		compMap[t] = true
+	}
+
+	var misses []T
+
+	for _, t := range orig {
+		if !compMap[t] {
+			misses = append(misses, t)
+		}
+	}
+
+	return misses
+}
