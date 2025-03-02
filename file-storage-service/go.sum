@@ -47,8 +47,6 @@ github.com/cenkalti/backoff/v4 v4.3.0 h1:MyRJ/UdXutAwSAT+s3wNd7MfTIcy71VQueUuFK3
 github.com/cenkalti/backoff/v4 v4.3.0/go.mod h1:Y3VNntkOUPxTVeUxJ/G5vcM//AlwfmyYozVcomhLiZE=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
-github.com/chakchat/chakchat-backend/shared/go v0.0.0-20250207104303-499acc1f16d0 h1:bvypz0t3Snf0y+ANLNMdUi05pvTMvE9SXpr1dp4zGoQ=
-github.com/chakchat/chakchat-backend/shared/go v0.0.0-20250207104303-499acc1f16d0/go.mod h1:muKqfMzJnRx4TsEPh+hLbE3nUOtPSVI2h7ygbvh+QVY=
 github.com/chakchat/chakchat-backend/shared/go v0.0.0-20250207154606-0c3bb2e8ad13 h1:f+klHbaAoc2cRv/a/oh4lg5R8UjY9vDUzhp6wM10ez4=
 github.com/chakchat/chakchat-backend/shared/go v0.0.0-20250207154606-0c3bb2e8ad13/go.mod h1:muKqfMzJnRx4TsEPh+hLbE3nUOtPSVI2h7ygbvh+QVY=
 github.com/cloudwego/base64x v0.1.5 h1:XPciSp1xaq2VCSt6lF0phncD4koWyULpl5bUxbfCyP4=
