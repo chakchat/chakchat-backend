@@ -88,12 +88,11 @@ func (s *GetUserHandler) GetUserByID() gin.HandlerFunc {
 			restapi.SendInternalError(c)
 			return
 		}
-
 		restapi.SendSuccess(c, User{
 			ID:          user.ID,
 			Username:    user.Username,
 			Name:        user.Name,
-			Phone:       &user.Phone,
+			Phone:       toStrPtr(user.Phone),
 			DateOfBirth: user.DateOfBirth,
 			PhotoURL:    user.PhotoURL,
 			CreatedAt:   user.CreatedAt,
@@ -144,7 +143,7 @@ func (s *GetUserHandler) GetUserByUsername() gin.HandlerFunc {
 			ID:          user.ID,
 			Username:    user.Username,
 			Name:        user.Name,
-			Phone:       &user.Phone,
+			Phone:       toStrPtr(user.Phone),
 			DateOfBirth: user.DateOfBirth,
 			PhotoURL:    user.PhotoURL,
 			CreatedAt:   user.CreatedAt,
@@ -190,7 +189,7 @@ func (s *GetUserHandler) GetUsersByCriteria() gin.HandlerFunc {
 				ID:          user.ID,
 				Username:    user.Username,
 				Name:        user.Name,
-				Phone:       &user.Phone,
+				Phone:       toStrPtr(user.Phone),
 				DateOfBirth: user.DateOfBirth,
 				PhotoURL:    user.PhotoURL,
 				CreatedAt:   user.CreatedAt,
@@ -238,10 +237,18 @@ func (s *GetUserHandler) GetMe() gin.HandlerFunc {
 			ID:          me.ID,
 			Name:        me.Name,
 			Username:    me.Username,
-			Phone:       &me.Phone,
+			Phone:       toStrPtr(me.Phone),
 			PhotoURL:    me.PhotoURL,
 			DateOfBirth: me.DateOfBirth,
 			CreatedAt:   me.CreatedAt,
 		})
+	}
+}
+
+func toStrPtr(str string) *string {
+	if str == "" {
+		return nil
+	} else {
+		return &str
 	}
 }
