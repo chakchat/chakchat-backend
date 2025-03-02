@@ -71,12 +71,12 @@ func loadConfig(file string) *Config {
 var conf *Config = loadConfig("/app/config.yml")
 
 func main() {
-
 	jwtConf := loadJWTConfig()
 	db, err := connectDB()
 	if err != nil {
 		log.Fatalf("failed to connect DB: %v", err)
 	}
+	log.Println("connected to DB")
 
 	userStorage := storage.NewUserStorage(db)
 	userService := services.NewGetUserService(userStorage)
@@ -96,9 +96,11 @@ func main() {
 	grpcServer := grpc.NewServer()
 	grpcservice.RegisterUserServiceServer(grpcServer, userServer)
 
-	if err := grpcServer.Serve(listen); err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
+	go func() {
+		if err := grpcServer.Serve(listen); err != nil {
+			log.Fatalf("failed to serve: %v", err)
+		}
+	}()
 
 	r := gin.New()
 
@@ -125,7 +127,10 @@ func main() {
 		PUT("v1.0/me", handlers.UpdateUser(updateUserService, getUserService))
 	r.GET("/v1.0/are-you-a-real-teapot", handlers.AmITeapot())
 
-	r.Run(":5004")
+	err = r.Run(":5004")
+	if err != nil {
+		log.Fatalf("Failed to run gin: %s", err)
+	}
 }
 
 func loadJWTConfig() *jwt.Config {
