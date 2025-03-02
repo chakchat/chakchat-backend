@@ -90,7 +90,7 @@ func main() {
 	uploadAbortService := services.NewUploadAbortService(uploadMetaStorage, s3Client, s3Config)
 	uploadCompleteService := services.NewUploadCompleteService(fileMetaStorage, uploadMetaStorage, s3Client, s3Config)
 
-	grpcListener, err := net.Listen("tcp", strconv.Itoa(conf.GRPCService.Port))
+	grpcListener, err := net.Listen("tcp", ":"+strconv.Itoa(conf.GRPCService.Port))
 	if err != nil {
 		log.Fatalf("Listening TCP failed: %s", err)
 	}
