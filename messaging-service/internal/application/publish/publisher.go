@@ -38,3 +38,7 @@ func (p UserEventPublisher) PublishForUsers(users []uuid.UUID, ev Event) {
 
 	p.mq.Publish(userEvent)
 }
+
+type PublisherStub struct{}
+
+func (PublisherStub) PublishForUsers(users []uuid.UUID, ev Event) {}
