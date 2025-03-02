@@ -21,3 +21,5 @@ s3:
   url_prefix: https://storage.yandexcloud.net/demo-chakchat-yandex-storage/
 otlp:
   grpc_addr: otel-collector:4317
+grpc_service:
+  port: 9090

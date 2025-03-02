@@ -3,13 +3,17 @@ package main
 import (
 	"context"
 	"log"
+	"net"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/chakchat/chakchat-backend/file-storage-service/internal/handlers"
+	"github.com/chakchat/chakchat-backend/file-storage-service/internal/proto"
+	"github.com/chakchat/chakchat-backend/file-storage-service/internal/proto/filestorage"
 	"github.com/chakchat/chakchat-backend/file-storage-service/internal/restapi"
 	"github.com/chakchat/chakchat-backend/file-storage-service/internal/services"
 	"github.com/chakchat/chakchat-backend/file-storage-service/internal/storage"
@@ -26,6 +30,7 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+	"google.golang.org/grpc"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/plugin/opentelemetry/tracing"
@@ -85,6 +90,18 @@ func main() {
 	uploadAbortService := services.NewUploadAbortService(uploadMetaStorage, s3Client, s3Config)
 	uploadCompleteService := services.NewUploadCompleteService(fileMetaStorage, uploadMetaStorage, s3Client, s3Config)
 
+	grpcListener, err := net.Listen("tcp", strconv.Itoa(conf.GRPCService.Port))
+	if err != nil {
+		log.Fatalf("Listening TCP failed: %s", err)
+	}
+	grpcServer := grpc.NewServer()
+	filestorage.RegisterFileStorageServiceServer(grpcServer, proto.NewGRPCServer(getFileService))
+	go func() {
+		if err := grpcServer.Serve(grpcListener); err != nil {
+			log.Fatalf("Serving gRPC failed: %s", err)
+		}
+	}()
+
 	r := gin.New()
 
 	r.Use(otelgin.Middleware("file-storage-service"))
@@ -114,7 +131,10 @@ func main() {
 		PUT("/v1.0/upload/multipart/part", handlers.UploadPart(multipartConfig, uploadPartService)).
 		PUT("/v1.0/upload/multipart/abort", handlers.UploadAbort(uploadAbortService))
 
-	r.Run(":5004")
+	err = r.Run(":5004")
+	if err != nil {
+		log.Fatalf("HTTP server failed: %s", err)
+	}
 }
 
 func loadJWTConfig() *jwt.Config {
