@@ -126,6 +126,41 @@ func (r *PersonalChatRepository) Update(ctx context.Context, chat *personal.Pers
 	return chat, nil
 }
 
+func (r *PersonalChatRepository) Create(ctx context.Context, chat *personal.PersonalChat) (*personal.PersonalChat, error) {
+	{
+		q := `
+		INSERT INTO messaging.chat
+		(chat_id, chat_type, created_at)
+		VALUES ($1, 'personal', $2)
+		`
+		_, err := r.db.Exec(ctx, q, chat.ID, time.Now())
+		if err != nil {
+			return nil, err
+		}
+	}
+	{
+		q := `INSERT INTO messaging.personal_chat (chat_id) VALUES ($1)`
+		_, err := r.db.Exec(ctx, q, chat.ID)
+		if err != nil {
+			return nil, err
+		}
+	}
+	{
+		q := `INSERT INTO messaging.membership (chat_id, user_id) VALUES ($1, $2), ($1, $3)`
+		_, err := r.db.Exec(ctx, q, chat.ID, chat.Members[0], chat.Members[1])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return chat, nil
+}
+
+func (r *PersonalChatRepository) Delete(ctx context.Context, id domain.ChatID) error {
+	q := `DELETE FROM messaging.chat WHERE chat_id = $1`
+	_, err := r.db.Exec(ctx, q, id)
+	return err
+}
+
 func (r *PersonalChatRepository) addBlocking(ctx context.Context, chatId uuid.UUID, toAdd []uuid.UUID) error {
 	q := `INSERT INTO messaging.blocking (chat_id, user_id) VALUES `
 

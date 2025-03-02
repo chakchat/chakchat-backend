@@ -1,8 +1,10 @@
 CREATE SCHEMA IF NOT EXISTS "messaging";
 
+CREATE TYPE messaging.chat_type AS ENUM ('personal', 'group', 'secret_personal', 'secret_group');
+
 CREATE TABLE IF NOT EXISTS messaging.chat (
     chat_id UUID PRIMARY KEY,
-    chat_type VARCHAR(31) NOT NULL,
+    chat_type messaging.chat_type NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 );
 
