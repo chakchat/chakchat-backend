@@ -7,7 +7,7 @@ db:
 jwt:
   signing_method: RS256
   lifetime: 3m
-  issuer: user_service
+  issuer: identity_service
   audience: 
     - user_service
   key_file_path: /app/keys/rsa.pub
