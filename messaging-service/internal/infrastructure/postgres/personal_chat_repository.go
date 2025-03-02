@@ -14,14 +14,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func userIDs(arr pgtype.Array[uuid.UUID]) []domain.UserID {
-	res := make([]domain.UserID, arr.Dims[0].Length)
-	for i := range res {
-		res[i] = domain.UserID(arr.Index(i).(uuid.UUID))
-	}
-	return res
-}
-
 type PersonalChatRepository struct {
 	db *pgx.Conn
 }
@@ -62,10 +54,50 @@ func (r *PersonalChatRepository) FindById(ctx context.Context, id domain.ChatID)
 
 	return &personal.PersonalChat{
 		Chat: domain.Chat{
-			ID:        id,
+			ID:        domain.ChatID(chatID),
 			CreatedAt: domain.Timestamp(createdAt.Unix()),
 		},
 		Members:   [2]domain.UserID(userIDs(members)),
+		BlockedBy: userIDs(blockedBy),
+	}, nil
+}
+
+func (r *PersonalChatRepository) FindByMembers(ctx context.Context, members [2]domain.UserID) (*personal.PersonalChat, error) {
+	q := `
+	SELECT 
+		m.chat_id, 
+		MAX(c.created_at),
+		(SELECT ARRAY_AGG(user_id) FROM messaging.blockings b WHERE b.chat_id = c.chat_id)
+	FROM messaging.membership m
+		JOIN messaging.chat c ON c.chat_id = m.chat_id
+		JOIN messaging.personal_chat p ON p.chat_id = m.chat_id
+	WHERE m.user_id = $1 OR m.user_id = $2
+	GROUP BY m.chat_id
+	HAVING COUNT(DISCTINCT m.user_id) = 2
+	`
+
+	row := r.db.QueryRow(ctx, q, uuid.UUID(members[0]), uuid.UUID(members[1]))
+
+	var (
+		chatID    uuid.UUID
+		createdAt time.Time
+		blockedBy pgtype.Array[uuid.UUID]
+	)
+
+	err := row.Scan(&chatID, &createdAt, &blockedBy)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, repository.ErrNotFound
+		}
+		return nil, fmt.Errorf("getting personal chat failed: %s", err)
+	}
+
+	return &personal.PersonalChat{
+		Chat: domain.Chat{
+			ID:        domain.ChatID(chatID),
+			CreatedAt: domain.Timestamp(createdAt.Unix()),
+		},
+		Members:   members,
 		BlockedBy: userIDs(blockedBy),
 	}, nil
 }
