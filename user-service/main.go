@@ -153,7 +153,7 @@ func connectDB() (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
-	if err := db.AutoMigrate(&models.User{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.FieldRestriction{}, &models.FieldRestrictionUser{}); err != nil {
 		return nil, fmt.Errorf("failed to auto-migrate database: %w", err)
 	}
 	return db, nil
