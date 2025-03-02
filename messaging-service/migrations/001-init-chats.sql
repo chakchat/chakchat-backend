@@ -1,45 +1,84 @@
 CREATE SCHEMA IF NOT EXISTS "messaging";
 
-SET search_path TO "messaging";
+CREATE TYPE messaging.chat_type AS ENUM ('personal', 'group', 'secret_personal', 'secret_group');
 
-CREATE TABLE IF NOT EXISTS "chat" (
+CREATE TABLE IF NOT EXISTS messaging.chat (
     chat_id UUID PRIMARY KEY,
-    chat_type VARCHAR(31) NOT NULL,
+    chat_type messaging.chat_type NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 );
 
-CREATE TABLE IF NOT EXISTS "personal_chat" (
-    chat_id UUID NOT NULL PRIMARY KEY REFERENCES "chat"(chat_id),
+CREATE TABLE IF NOT EXISTS messaging.personal_chat (
+    chat_id UUID NOT NULL PRIMARY KEY REFERENCES messaging.chat (chat_id) ON DELETE CASCADE,
 );
 
-CREATE TABLE IF NOT EXISTS "group_chat" (
-    chat_id UUID NOT NULL PRIMARY KEY REFERENCES "chat"(chat_id),
+CREATE TABLE IF NOT EXISTS messaging.group_chat (
+    chat_id UUID NOT NULL PRIMARY KEY REFERENCES messaging.chat (chat_id) ON DELETE CASCADE,
     admin_id UUID NOT NULL,
     group_name CHAR(255) NOT NULL,
     group_description TEXT,
 );
 
-CREATE TABLE IF NOT EXISTS "secret_personal_chat" (
-    chat_id UUID NOT NULL PRIMARY KEY REFERENCES "chat"(chat_id),
+CREATE TABLE IF NOT EXISTS messaging.secret_personal_chat (
+    chat_id UUID NOT NULL PRIMARY KEY REFERENCES messaging.chat(chat_id) ON DELETE CASCADE,
     expiration_seconds BIGINT,
 );
 
-CREATE TABLE IF NOT EXISTS "secret_group_chat" (
-    chat_id UUID NOT NULL PRIMARY KEY REFERENCES "chat"(chat_id),
+CREATE TABLE IF NOT EXISTS messaging.secret_group_chat (
+    chat_id UUID NOT NULL PRIMARY KEY REFERENCES messaging.chat (chat_id) ON DELETE CASCADE,
     group_name CHAR(255) NOT NULL,
     group_description TEXT,
 );
 
-CREATE TABLE IF NOT EXISTS "membership" (
+CREATE TABLE IF NOT EXISTS messaging.membership (
     user_id UUID NOT NULL,
-    chat_id UUID NOT NULL,
+    chat_id UUID NOT NULL REFERENCES messaging.chat (chat_id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, chat_id),
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS "membership_user_id_chat_id_idx" 
-    ON "membership" ("user_id", "chat_id");
+CREATE INDEX IF NOT EXISTS messaging.membership_user_id_idx 
+    ON messaging.membership ("chat_id");
 
-CREATE INDEX IF NOT EXISTS "membership_user_id_idx" 
-    ON "membership" ("user_id");
+CREATE TABLE IF NOT EXISTS messaging.blocking (
+    user_id UUID NOT NULL,
+    chat_id UUID NOT NULL REFERENCES messaging.chat (chat_id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, chat_id),
+);
 
-CREATE INDEX IF NOT EXISTS "membership_user_id_idx" 
-    ON "membership" ("chat_id");
+CREATE INDEX IF NOT EXISTS messaging.blocking_user_id_idx 
+    ON messaging.blocking ("chat_id");
+
+--------------------------------------------------------------------------------
+
+CREATE FUNCTION messaging.check_personal_chat_has_exact_two_members() RETURNS TRIGGER AS $$
+BEGIN
+    IF (SELECT COUNT(*) != 2 FROM messaging.membership WHERE chat_id = NEW.chat_id) THEN
+        RAISE EXCEPTION 'Personal chat must have exactly two members';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER ensure_personal_chat_has_exact_two_members
+    BEFORE INSERT OR UPDATE ON messaging.membership
+    FOR EACH ROW
+EXECUTE PROCEDURE messaging.check_personal_chat_has_exact_two_members();
+
+--------------------------------------------------------------------------------
+
+CREATE FUNCTION messaging.check_blocking_user_is_member() RETURNS TRIGGER AS $$
+BEGIN
+    IF NOT EXISTS (SELECT 1
+                   FROM messaging.membership 
+                   WHERE user_id = NEW.user_id AND chat_id = NEW.chat_id) 
+    THEN
+        RAISE EXCEPTION 'Blocking chat user must be a member of the chat';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER ensure_blocking_user_is_not_member
+    BEFORE INSERT OR UPDATE ON messaging.blocking
+    FOR EACH ROW
+EXECUTE PROCEDURE messaging.check_blocking_user_is_member();
