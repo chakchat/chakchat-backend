@@ -12,11 +12,11 @@ import (
 )
 
 type GRPCService struct {
-	service services.GetFileService
+	service *services.GetFileService
 	filestorage.UnimplementedFileStorageServiceServer
 }
 
-func NewGRPCServer(service services.GetFileService) *GRPCService {
+func NewGRPCServer(service *services.GetFileService) *GRPCService {
 	return &GRPCService{
 		service: service,
 	}

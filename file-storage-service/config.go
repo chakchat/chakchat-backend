@@ -16,6 +16,10 @@ type Config struct {
 		DB       int    `mapstructure:"db"`
 	} `mapstructure:"redis"`
 
+	GRPCService struct {
+		Port int `mapstructure:"port"`
+	} `mapstructure:"grpc_service"`
+
 	Idempotency struct {
 		DataExp time.Duration `mapstructure:"data_exp"`
 	} `mapstructure:"idempotency"`
