@@ -9,12 +9,15 @@ import (
 	"github.com/chakchat/chakchat-backend/shared/go/jwt"
 	"github.com/chakchat/chakchat/backend/shared/go/idempotency"
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 )
 
 func GinEngine(handlers *Handlers, db *DB, conf *Config) *gin.Engine {
 	r := gin.New()
 
 	r.Use(gin.Logger())
+
+	r.Use(otelgin.Middleware("messaging-service"))
 
 	r.Use(auth.NewJWT(&auth.JWTConfig{
 		Conf: &jwt.Config{

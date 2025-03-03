@@ -4,7 +4,11 @@ jwt:
   audience:
     - messaging_service
   key_file_path: /app/keys/rsa.pub
+
 redis:
   addr: messaging-redis:6379
   password: secret
   db: 0
+
+otlp:
+  grpc_addr: otel-collector:4317

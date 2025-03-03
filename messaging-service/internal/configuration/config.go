@@ -23,6 +23,10 @@ type Config struct {
 		Password string `mapstructure:"password"`
 		DB       int    `mapstructure:"db"`
 	} `mapstructure:"redis"`
+
+	Otlp struct {
+		GrpcAddr string `mapstructure:"grpc_addr"`
+	} `mapstructure:"otlp"`
 }
 
 func LoadConfig(file string) (*Config, error) {
