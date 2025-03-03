@@ -101,11 +101,6 @@ func main() {
 	r.PUT("/v1.0/sign-out", handlers.SignOut(signOutService))
 	r.GET("/v1.0/identity", handlers.Identity(identityService))
 
-	// Delete this line
-	r.GET("/internal", func(c *gin.Context) {
-		log.Println(c.Request.Header)
-	})
-
 	r.Run(":5000")
 }
 

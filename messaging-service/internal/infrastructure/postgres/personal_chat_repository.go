@@ -12,7 +12,6 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/personal"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type PersonalChatRepository struct {
@@ -30,8 +29,8 @@ func (r *PersonalChatRepository) FindById(ctx context.Context, id domain.ChatID)
 	SELECT 
 		c.chat_id, 
 		c.created_at, 
-		(SELECT ARRAY_AGG(user_id) FROM messaging.membership m WHERE m.chat_id = c.chat_id), 
-		(SELECT ARRAY_AGG(user_id) FROM messaging.blockings b WHERE b.chat_id = c.chat_id)
+		(SELECT ARRAY_AGG(m.user_id) FROM messaging.membership m WHERE m.chat_id = c.chat_id), 
+		(SELECT ARRAY_AGG(b.user_id) FROM messaging.blocking b WHERE b.chat_id = c.chat_id)
 	FROM messaging.chat c
 		JOIN messaging.personal_chat p ON p.chat_id = c.chat_id
 	WHERE c.chat_id = $1`
@@ -41,8 +40,8 @@ func (r *PersonalChatRepository) FindById(ctx context.Context, id domain.ChatID)
 	var (
 		chatID    uuid.UUID
 		createdAt time.Time
-		members   pgtype.Array[uuid.UUID]
-		blockedBy pgtype.Array[uuid.UUID]
+		members   []uuid.UUID
+		blockedBy []uuid.UUID
 	)
 
 	err := row.Scan(&chatID, &createdAt, &members, &blockedBy)
@@ -68,13 +67,13 @@ func (r *PersonalChatRepository) FindByMembers(ctx context.Context, members [2]d
 	SELECT 
 		m.chat_id, 
 		MAX(c.created_at),
-		(SELECT ARRAY_AGG(user_id) FROM messaging.blockings b WHERE b.chat_id = c.chat_id)
+		(SELECT ARRAY_AGG(user_id) FROM messaging.blocking b WHERE b.chat_id = m.chat_id)
 	FROM messaging.membership m
 		JOIN messaging.chat c ON c.chat_id = m.chat_id
 		JOIN messaging.personal_chat p ON p.chat_id = m.chat_id
 	WHERE m.user_id = $1 OR m.user_id = $2
 	GROUP BY m.chat_id
-	HAVING COUNT(DISCTINCT m.user_id) = 2
+	HAVING COUNT(DISTINCT m.user_id) = 2
 	`
 
 	row := r.db.QueryRow(ctx, q, uuid.UUID(members[0]), uuid.UUID(members[1]))
@@ -82,7 +81,7 @@ func (r *PersonalChatRepository) FindByMembers(ctx context.Context, members [2]d
 	var (
 		chatID    uuid.UUID
 		createdAt time.Time
-		blockedBy pgtype.Array[uuid.UUID]
+		blockedBy []uuid.UUID
 	)
 
 	err := row.Scan(&chatID, &createdAt, &blockedBy)
