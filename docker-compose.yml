@@ -83,6 +83,34 @@ services:
     volumes:
       - user_postgres_data:/var/lib/postgresql/data
 
+  messaging-service:
+    build: ./messaging-service
+    volumes:
+      - ./messaging-service/config.yml:/app/config.yml:ro
+      - ./keys/rsa.pub:/app/keys/rsa.pub:ro
+    depends_on:
+      - messaging-redis
+      - messaging-postgres
+    environment:
+      - DB_CONN_STRING=postgres://postgres:secret@messaging-postgres:5432/messaging?sslmode=disable
+    restart: on-failure
+  messaging-redis:
+    image: redis:latest
+    volumes:
+      - messaging_redis_data:/data
+    environment:
+      - REDIS_PASSWORD=secret
+    restart: on-failure
+  messaging-postgres:
+    image: postgres:latest
+    volumes:
+      - messaging_postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=messaging
+    restart: on-failure
+
   # Stubs
   sms-service-stub:
     build:
@@ -108,3 +136,5 @@ volumes:
   file_storage_postgres_data:
   identity_redis_data:
   user_postgres_data:
+  messaging_redis_data:
+  messaging_postgres_data:
