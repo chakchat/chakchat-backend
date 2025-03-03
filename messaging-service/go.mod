@@ -3,8 +3,7 @@ module github.com/chakchat/chakchat-backend/messaging-service
 go 1.23.1
 
 require (
-	github.com/chakchat/chakchat-backend/shared/go v0.0.0-20250212141726-fa2ba7ab6d90
-	github.com/chakchat/chakchat/backend/shared/go v0.0.0-20250114124701-fc285c3fac8f
+	github.com/chakchat/chakchat-backend/shared/go v0.0.0-20250302194712-87a6e4ccea66
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.2

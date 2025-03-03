@@ -110,6 +110,17 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_DB=messaging
     restart: on-failure
+  messaging-flyway:
+    image: flyway/flyway:latest
+    command: ["migrate"]
+    environment:
+      - FLYWAY_URL=jdbc:postgresql://messaging-postgres:5432/messaging
+      - FLYWAY_USER=postgres
+      - FLYWAY_PASSWORD=secret
+      - FLYWAY_LOCATIONS=filesystem:/app/migrations
+      - FLYWAY_VALIDATE_MIGRATION_NAMING=true
+    volumes:
+      - ./messaging-service/migrations:/app/migrations
 
   # Stubs
   sms-service-stub:

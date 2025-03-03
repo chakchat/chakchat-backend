@@ -48,6 +48,9 @@ func (h *PersonalChatHandler) CreateChat(c *gin.Context) {
 	})
 	if err != nil {
 		resp := errmap.Map(err)
+		if resp.Code >= 500 {
+			c.Error(err)
+		}
 		c.JSON(resp.Code, resp.Body)
 		return
 	}

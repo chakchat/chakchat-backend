@@ -79,7 +79,10 @@ func main() {
 
 	rest := configuration.NewHandlers(srv)
 
-	ginEngine := configuration.GinEngine(rest, confDB, config)
+	ginEngine, err := configuration.GinEngine(rest, confDB, config)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	if err := ginEngine.Run(":5000"); err != nil {
 		log.Fatalf("Gin engine running failed: %s", err)

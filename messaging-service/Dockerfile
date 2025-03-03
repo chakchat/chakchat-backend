@@ -14,7 +14,7 @@ RUN go mod download
 COPY . .
 
 # Build the application binary
-RUN go build -o main .
+RUN go build -o main ./cmd/main.go
 
 # Stage 2: Run
 FROM ubuntu:latest
