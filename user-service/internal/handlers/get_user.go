@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/chakchat/chakchat-backend/shared/go/auth"
@@ -153,13 +154,43 @@ func (s *GetUserHandler) GetUserByUsername() gin.HandlerFunc {
 
 func (s *GetUserHandler) GetUsersByCriteria() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var req storage.SearchUsersRequest
-		if err := c.ShouldBindQuery(&req); err != nil {
-			c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
-				ErrorType:    restapi.ErrTypeInvalidJson,
-				ErrorMessage: "Invalid query parameters",
-			})
-			return
+		name := c.Request.URL.Query().Get("name")
+		username := c.Request.URL.Query().Get("username")
+		offset := c.Request.URL.Query().Get("offset")
+		var int_offset *int
+		if toStrPtr(offset) == nil {
+			int_offset = nil
+		} else {
+			offset, err := strconv.Atoi(offset)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
+					ErrorType:    restapi.ErrTypeInvalidJson,
+					ErrorMessage: "Invalid query parameters",
+				})
+				return
+			}
+			int_offset = &offset
+		}
+		limit := c.Request.URL.Query().Get("limit")
+		var int_limit *int
+		if toStrPtr(limit) == nil {
+			int_limit = nil
+		} else {
+			limit, err := strconv.Atoi(limit)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
+					ErrorType:    restapi.ErrTypeInvalidJson,
+					ErrorMessage: "Invalid query parameters",
+				})
+				return
+			}
+			int_limit = &limit
+		}
+		req := storage.SearchUsersRequest{
+			Name:     toStrPtr(name),
+			Username: toStrPtr(username),
+			Offset:   int_offset,
+			Limit:    int_limit,
 		}
 
 		response, err := s.service.GetUsersByCriteria(c.Request.Context(), req)
