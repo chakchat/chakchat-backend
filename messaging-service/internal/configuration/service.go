@@ -6,7 +6,7 @@ type Services struct {
 	PersonalChat *chat.PersonalChatService
 }
 
-func NewService(db *DB, external *External) *Services {
+func NewServices(db *DB, external *External) *Services {
 	return &Services{
 		PersonalChat: chat.NewPersonalChatService(db.PersonalChat, external.Publisher),
 	}
