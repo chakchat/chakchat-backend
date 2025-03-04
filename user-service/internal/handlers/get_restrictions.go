@@ -12,14 +12,13 @@ import (
 )
 
 type UserRestrictions struct {
-	Phone struct {
-		OpenTo         string      `json:"open_to"`
-		SpecifiedUsers []uuid.UUID `json:"specified_users"`
-	} `json:"phone"`
-	DateOfBirth struct {
-		OpenTo         string      `json:"open_to"`
-		SpecifiedUsers []uuid.UUID `json:"specified_users"`
-	} `json:"dateOfBirth"`
+	Phone       FieldRestriction `json:"phone"`
+	DateOfBirth FieldRestriction `json:"dateOfBirth"`
+}
+
+type FieldRestriction struct {
+	OpenTo         string      `json:"open_to"`
+	SpecifiedUsers []uuid.UUID `json:"specified_users"`
 }
 
 type GetRestrictionsServer interface {
@@ -63,17 +62,11 @@ func GetRestrictions(service GetRestrictionsServer) gin.HandlerFunc {
 			users_date = append(users_date, user.UserID)
 		}
 		restapi.SendSuccess(c, &UserRestrictions{
-			Phone: struct {
-				OpenTo         string      "json:\"open_to\""
-				SpecifiedUsers []uuid.UUID "json:\"specified_users\""
-			}{
+			Phone: FieldRestriction{
 				OpenTo:         restr.Phone.OpenTo,
 				SpecifiedUsers: users_phone,
 			},
-			DateOfBirth: struct {
-				OpenTo         string      "json:\"open_to\""
-				SpecifiedUsers []uuid.UUID "json:\"specified_users\""
-			}{
+			DateOfBirth: FieldRestriction{
 				OpenTo:         restr.DateOfBirth.OpenTo,
 				SpecifiedUsers: users_date,
 			},
