@@ -135,6 +135,7 @@ func (s *UserStorage) CreateUser(ctx context.Context, user *models.User) (*model
 		CreatedAt:   time.Now().Unix(),
 	}
 
+	// Change getting user
 	if err := s.db.WithContext(ctx).First(&user).Error; err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
@@ -159,4 +160,32 @@ func (s *UserStorage) UpdateUser(ctx context.Context, user *models.User, req *Up
 	}
 
 	return user, nil
+}
+
+func (s *UserStorage) UpdatePhoto(ctx context.Context, id uuid.UUID, photoURL string) (*models.User, error) {
+	var user models.User
+	if err := s.db.WithContext(ctx).First(&user, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+
+	user.PhotoURL = photoURL
+
+	return &user, nil
+}
+
+func (s *UserStorage) DeletePhoto(ctx context.Context, id uuid.UUID) (*models.User, error) {
+	var user models.User
+	if err := s.db.WithContext(ctx).First(&user, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+
+	user.PhotoURL = ""
+
+	return &user, nil
 }
