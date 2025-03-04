@@ -88,7 +88,7 @@ func UpdateUser(service UpdateUserserver, getter GetUserServer) gin.HandlerFunc 
 			Name:        updatedUser.Name,
 			Phone:       toStrPtr(updatedUser.Phone),
 			DateOfBirth: toFormatDate(updatedUser.DateOfBirth),
-			PhotoURL:    updatedUser.PhotoURL,
+			PhotoURL:    toStrPtr(updatedUser.PhotoURL),
 		})
 	}
 }
