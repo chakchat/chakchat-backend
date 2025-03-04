@@ -125,6 +125,13 @@ func (s *UserStorage) GetUsersByCriteria(ctx context.Context, req SearchUsersReq
 }
 
 func (s *UserStorage) CreateUser(ctx context.Context, user *models.User) (*models.User, error) {
+
+	if err := s.db.WithContext(ctx).Where("username = ? OR phone = ?", user.Username, user.Phone).First(&models.User{}).Error; err == nil {
+		return nil, ErrAlreadyExists
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
 	var newUser models.User = models.User{
 		ID:          uuid.New(),
 		Username:    user.Username,
@@ -133,15 +140,6 @@ func (s *UserStorage) CreateUser(ctx context.Context, user *models.User) (*model
 		DateOfBirth: user.DateOfBirth,
 		PhotoURL:    user.PhotoURL,
 		CreatedAt:   time.Now().Unix(),
-	}
-
-	// Change getting user
-	if err := s.db.WithContext(ctx).First(&user).Error; err != nil {
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, err
-		}
-	} else {
-		return nil, ErrAlreadyExists
 	}
 
 	if err := s.db.Create(&newUser).Error; err != nil {
@@ -159,7 +157,11 @@ func (s *UserStorage) UpdateUser(ctx context.Context, user *models.User, req *Up
 		return nil, err
 	}
 
-	return user, nil
+	updatedUser, err := s.GetUserById(ctx, user.ID)
+	if err != nil {
+		return nil, err
+	}
+	return updatedUser, nil
 }
 
 func (s *UserStorage) UpdatePhoto(ctx context.Context, id uuid.UUID, photoURL string) (*models.User, error) {
@@ -172,6 +174,9 @@ func (s *UserStorage) UpdatePhoto(ctx context.Context, id uuid.UUID, photoURL st
 	}
 
 	user.PhotoURL = photoURL
+	if err := s.db.WithContext(ctx).Save(&user).Error; err != nil {
+		return nil, err
+	}
 
 	return &user, nil
 }
@@ -186,6 +191,9 @@ func (s *UserStorage) DeletePhoto(ctx context.Context, id uuid.UUID) (*models.Us
 	}
 
 	user.PhotoURL = ""
+	if err := s.db.WithContext(ctx).Save(&user).Error; err != nil {
+		return nil, err
+	}
 
 	return &user, nil
 }

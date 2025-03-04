@@ -49,6 +49,7 @@ func (u *UpdatePhotoService) UpdatePhoto(ctx context.Context, id uuid.UUID, phot
 		if errors.Is(err, storage.ErrNotFound) {
 			return nil, ErrNotFound
 		}
+		return nil, err
 	}
 	return user, nil
 }
@@ -59,6 +60,7 @@ func (u *UpdatePhotoService) DeletePhoto(ctx context.Context, id uuid.UUID) (*mo
 		if errors.Is(err, storage.ErrNotFound) {
 			return nil, ErrNotFound
 		}
+		return nil, err
 	}
 	return user, nil
 }
