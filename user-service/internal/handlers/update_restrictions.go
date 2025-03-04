@@ -73,17 +73,11 @@ func UpdateRestrictions(restr UpdateRestrictionsServer) gin.HandlerFunc {
 		}
 
 		restapi.SendSuccess(c, &UserRestrictions{
-			Phone: struct {
-				OpenTo         string      "json:\"open_to\""
-				SpecifiedUsers []uuid.UUID "json:\"specified_users\""
-			}{
+			Phone: FieldRestriction{
 				OpenTo:         updatedRestr.Phone.OpenTo,
 				SpecifiedUsers: users_phone,
 			},
-			DateOfBirth: struct {
-				OpenTo         string      "json:\"open_to\""
-				SpecifiedUsers []uuid.UUID "json:\"specified_users\""
-			}{
+			DateOfBirth: FieldRestriction{
 				OpenTo:         updatedRestr.DateOfBirth.OpenTo,
 				SpecifiedUsers: users_date,
 			},
