@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
@@ -25,6 +26,13 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 )
 
 type JWTConfig struct {
@@ -45,6 +53,10 @@ type Config struct {
 	Server struct {
 		GRPCPort string `mapstructure:"grpc-port"`
 	} `mapstructure:"server"`
+
+	Otlp struct {
+		GrpcAddr string `mapstructure:"grpc_addr"`
+	} `mapstructure:"otlp"`
 }
 
 func loadConfig(file string) *Config {
@@ -186,4 +198,39 @@ func createFileClient() (filestorage.FileStorageServiceClient, func() error) {
 		log.Fatal(err)
 	}
 	return filestorage.NewFileStorageServiceClient(conn), conn.Close
+}
+
+func initTracer() (*sdktrace.TracerProvider, error) {
+	exporter, err := otlptracegrpc.New(
+		context.Background(),
+		otlptracegrpc.WithInsecure(),
+		otlptracegrpc.WithEndpoint(conf.Otlp.GrpcAddr),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := resource.New(
+		context.Background(),
+		resource.WithAttributes(
+			semconv.ServiceNameKey.String("backend-services"),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(exporter),
+		sdktrace.WithResource(res),
+	)
+
+	otel.SetTracerProvider(tp)
+
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(
+		propagation.TraceContext{},
+		propagation.Baggage{},
+	))
+
+	return tp, nil
 }
