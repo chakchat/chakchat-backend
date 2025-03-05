@@ -48,9 +48,9 @@ func UpdateUser(service UpdateUserserver, getter GetUserServer) gin.HandlerFunc 
 		user, err := getter.GetUserByID(c.Request.Context(), ownerId, ownerId)
 		if err != nil {
 			if err == services.ErrNotFound {
-				c.JSON(http.StatusNotFound, restapi.ErrorResponse{
-					ErrorType:    restapi.ErrTypeValidationFailed,
-					ErrorMessage: "Input is invalid",
+				c.JSON(http.StatusUnauthorized, restapi.ErrorResponse{
+					ErrorType:    restapi.ErrTypeUnautorized,
+					ErrorMessage: "Can't find user by owner id",
 				})
 				return
 			}

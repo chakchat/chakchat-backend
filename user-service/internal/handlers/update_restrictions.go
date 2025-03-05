@@ -58,7 +58,7 @@ func UpdateRestrictions(restr UpdateRestrictionsServer) gin.HandlerFunc {
 			if errors.Is(err, services.ErrValidationError) {
 				c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
 					ErrorType:    restapi.ErrTypeBadRequest,
-					ErrorMessage: "Input is invalid",
+					ErrorMessage: "Can't get restrictions to update for the user",
 				})
 				return
 			}

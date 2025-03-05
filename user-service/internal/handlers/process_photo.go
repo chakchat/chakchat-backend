@@ -48,7 +48,7 @@ func UpdatePhoto(u UpdatePhotoServer) gin.HandlerFunc {
 			if errors.Is(err, services.ErrInvalidPhoto) {
 				c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
 					ErrorType:    restapi.ErrTypeBadRequest,
-					ErrorMessage: "Input is invalid",
+					ErrorMessage: "Invalid photo",
 				})
 				return
 			}
@@ -56,7 +56,7 @@ func UpdatePhoto(u UpdatePhotoServer) gin.HandlerFunc {
 			if errors.Is(err, services.ErrNotFound) {
 				c.JSON(http.StatusNotFound, restapi.ErrorResponse{
 					ErrorType:    restapi.ErrTypeNotFound,
-					ErrorMessage: "user is not found",
+					ErrorMessage: "Can't find user with ownerId",
 				})
 			}
 
@@ -95,7 +95,7 @@ func DeletePhoto(u UpdatePhotoServer) gin.HandlerFunc {
 			if errors.Is(err, services.ErrNotFound) {
 				c.JSON(http.StatusNotFound, restapi.ErrorResponse{
 					ErrorType:    restapi.ErrTypeNotFound,
-					ErrorMessage: "user is not found",
+					ErrorMessage: "Can't find user with owner id",
 				})
 			}
 
