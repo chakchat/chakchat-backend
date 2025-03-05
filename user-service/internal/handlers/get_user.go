@@ -23,7 +23,7 @@ type User struct {
 	Name        string    `json:"username"`
 	Phone       *string   `json:"phone,omitempty"`
 	DateOfBirth *string   `json:"dateOfBirth,omitempty"`
-	PhotoURL    string    `json:"photo"`
+	PhotoURL    *string   `json:"photo"`
 	CreatedAt   int64     `json:"createdAt"`
 }
 
@@ -95,7 +95,7 @@ func (s *GetUserHandler) GetUserByID() gin.HandlerFunc {
 			Name:        user.Name,
 			Phone:       toStrPtr(user.Phone),
 			DateOfBirth: toFormatDate(user.DateOfBirth),
-			PhotoURL:    user.PhotoURL,
+			PhotoURL:    toStrPtr(user.PhotoURL),
 			CreatedAt:   user.CreatedAt,
 		})
 	}
@@ -146,7 +146,7 @@ func (s *GetUserHandler) GetUserByUsername() gin.HandlerFunc {
 			Name:        user.Name,
 			Phone:       toStrPtr(user.Phone),
 			DateOfBirth: toFormatDate(user.DateOfBirth),
-			PhotoURL:    user.PhotoURL,
+			PhotoURL:    toStrPtr(user.PhotoURL),
 			CreatedAt:   user.CreatedAt,
 		})
 	}
@@ -222,7 +222,7 @@ func (s *GetUserHandler) GetUsersByCriteria() gin.HandlerFunc {
 				Name:        user.Name,
 				Phone:       toStrPtr(user.Phone),
 				DateOfBirth: toFormatDate(user.DateOfBirth),
-				PhotoURL:    user.PhotoURL,
+				PhotoURL:    toStrPtr(user.PhotoURL),
 				CreatedAt:   user.CreatedAt,
 			})
 		}
@@ -269,7 +269,7 @@ func (s *GetUserHandler) GetMe() gin.HandlerFunc {
 			Name:        me.Name,
 			Username:    me.Username,
 			Phone:       toStrPtr(me.Phone),
-			PhotoURL:    me.PhotoURL,
+			PhotoURL:    toStrPtr(me.PhotoURL),
 			DateOfBirth: toFormatDate(me.DateOfBirth),
 			CreatedAt:   me.CreatedAt,
 		})
