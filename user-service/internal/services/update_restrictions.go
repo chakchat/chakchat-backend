@@ -10,7 +10,7 @@ import (
 )
 
 type UpdateRestrictionsRepo interface {
-	UpdateRestrictions(ctx context.Context, id uuid.UUID, phone storage.FieldRestriction, date storage.FieldRestriction) (*models.UserRestrictions, error)
+	UpdateRestrictions(ctx context.Context, id uuid.UUID, restr storage.UserRestrictions) (*models.UserRestrictions, error)
 }
 
 type UpdateRestrictionsService struct {
@@ -23,8 +23,8 @@ func NewUpdateRestrService(repo UpdateRestrictionsRepo) *UpdateRestrictionsServi
 	}
 }
 
-func (s *UpdateRestrictionsService) UpdateRestrictions(ctx context.Context, id uuid.UUID, phone storage.FieldRestriction, date storage.FieldRestriction) (*models.UserRestrictions, error) {
-	updatedRestr, err := s.repo.UpdateRestrictions(ctx, id, phone, date)
+func (s *UpdateRestrictionsService) UpdateRestrictions(ctx context.Context, id uuid.UUID, restr storage.UserRestrictions) (*models.UserRestrictions, error) {
+	updatedRestr, err := s.repo.UpdateRestrictions(ctx, id, restr)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return nil, ErrValidationError

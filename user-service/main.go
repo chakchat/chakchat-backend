@@ -10,6 +10,7 @@ import (
 
 	"github.com/chakchat/chakchat-backend/shared/go/auth"
 	"github.com/chakchat/chakchat-backend/shared/go/jwt"
+	"github.com/chakchat/chakchat-backend/user-service/internal/filestorage"
 	"github.com/chakchat/chakchat-backend/user-service/internal/grpcservice"
 	"github.com/chakchat/chakchat-backend/user-service/internal/handlers"
 	"github.com/chakchat/chakchat-backend/user-service/internal/models"
@@ -21,6 +22,7 @@ import (
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -78,6 +80,9 @@ func main() {
 	}
 	log.Println("connected to DB")
 
+	fileClient, close := createFileClient()
+	defer close()
+
 	userStorage := storage.NewUserStorage(db)
 	userService := services.NewGetUserService(userStorage)
 	userServer := handlers.NewUserServer(*userService)
@@ -85,6 +90,8 @@ func main() {
 	getUserService := services.NewGetService(userStorage, restrictionStorage)
 	getRestrictionService := services.NewGetRestrictionService(restrictionStorage)
 	updateUserService := services.NewUpdateUserService(userStorage)
+	updateRestrictions := services.NewUpdateRestrService(restrictionStorage)
+	processPhotoService := services.NewProcessPhotoService(userStorage, fileClient)
 	getUserServer := handlers.NewGetUserHandler(getUserService)
 
 	grpcPort := viper.GetString("server.grpc-port")
@@ -126,7 +133,10 @@ func main() {
 		GET("/v1.0/users", getUserServer.GetUsersByCriteria()).
 		GET("/v1.0/me", getUserServer.GetMe()).
 		GET("/v1.0/me/restrictions", handlers.GetRestrictions(getRestrictionService)).
-		PUT("v1.0/me", handlers.UpdateUser(updateUserService, getUserService))
+		PUT("v1.0/me", handlers.UpdateUser(updateUserService, getUserService)).
+		PUT("v1.0/me/restrictions", handlers.UpdateRestrictions(updateRestrictions)).
+		PUT("v1.0/me/profile-photo", handlers.UpdatePhoto(processPhotoService)).
+		DELETE("v1.0/me/profile-photo", handlers.DeletePhoto(processPhotoService))
 	r.GET("/v1.0/are-you-a-real-teapot", handlers.AmITeapot())
 
 	err = r.Run(":5004")
@@ -167,4 +177,13 @@ func readKey(path string) []byte {
 		log.Fatal(err)
 	}
 	return key
+}
+
+func createFileClient() (filestorage.FileStorageServiceClient, func() error) {
+	addr := conf.Server.GRPCPort
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatal(err)
+	}
+	return filestorage.NewFileStorageServiceClient(conn), conn.Close
 }
