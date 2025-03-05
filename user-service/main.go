@@ -20,6 +20,7 @@ import (
 	"github.com/chakchat/chakchat-backend/user-service/internal/storage"
 
 	"github.com/gin-gonic/gin"
+	"github.com/kostyay/gorm-opentelemetry"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"google.golang.org/grpc"
@@ -94,6 +95,25 @@ func main() {
 
 	fileClient, close := createFileClient()
 	defer close()
+
+	tp, err := initTracer()
+	if err != nil {
+		log.Fatalf("Failed to initialize tracer: %s", err)
+	}
+	defer func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			log.Printf("Failed to shutdown tracer provider: %s", err)
+		}
+	}()
+	defer func() {
+		if err := tp.ForceFlush(context.Background()); err != nil {
+			log.Fatalf("ForceFlush failed: %s", err)
+		}
+	}()
+
+	if err := db.Use(otelgorm.NewPlugin()); err != nil {
+		log.Fatalf("Can't add OpenTelemetry for GORM: %v", err)
+	}
 
 	userStorage := storage.NewUserStorage(db)
 	userService := services.NewGetUserService(userStorage)

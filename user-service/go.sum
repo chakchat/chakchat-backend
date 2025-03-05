@@ -70,6 +70,8 @@ github.com/klauspost/cpuid/v2 v2.0.9/go.mod h1:FInQzS24/EEf25PyTYn52gqo7WaD8xa02
 github.com/klauspost/cpuid/v2 v2.2.10 h1:tBs3QSyvjDyFTq3uoc/9xFpCuOsJQFNPiAhYdw2skhE=
 github.com/klauspost/cpuid/v2 v2.2.10/go.mod h1:hqwkgyIinND0mEev00jJYCxPNVRVXFQeu1XKlok6oO0=
 github.com/knz/go-libedit v1.10.1/go.mod h1:MZTVkCWyz0oBc7JOWP3wNAzd002ZbM/5hgShxwh4x8M=
+github.com/kostyay/gorm-opentelemetry v1.1.3 h1:LIh+Q7f8sYrILPSCcCSAeboEakEuCHd35A+ilpGA63I=
+github.com/kostyay/gorm-opentelemetry v1.1.3/go.mod h1:4be7NXmgst98hMGOQkUw8XkELEdIclmkyFl8bRuQC9w=
 github.com/kr/pretty v0.3.1 h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=
 github.com/kr/pretty v0.3.1/go.mod h1:hoEshYVHaxMs3cyo3Yncou5ZscifuDolrwPKZanG3xk=
 github.com/kr/text v0.2.0 h1:5Nx0Ya0ZqY2ygV366QzturHI13Jq95ApcVaJBhpS+AY=
@@ -128,6 +130,12 @@ github.com/ugorji/go/codec v1.2.12 h1:9LC83zGrHhuUA9l16C9AHXAqEV/2wBQ4nkvumAE65E
 github.com/ugorji/go/codec v1.2.12/go.mod h1:UNopzCgEMSXjBc6AOMqYvWC1ktqTAfzJZUZgYf6w6lg=
 go.opentelemetry.io/auto/sdk v1.1.0 h1:cH53jehLUN6UFLY71z+NDOiNJqDdPRaXzTel0sJySYA=
 go.opentelemetry.io/auto/sdk v1.1.0/go.mod h1:3wSPjt5PWp2RhlCcmmOial7AvC4DQqZb7a7wCow3W8A=
+go.opentelemetry.io/contrib v1.20.0 h1:oXUiIQLlkbi9uZB/bt5B1WRLsrTKqb7bPpAQ+6htn2w=
+go.opentelemetry.io/contrib v1.20.0/go.mod h1:gIzjwWFoGazJmtCaDgViqOSJPde2mCWzv60o0bWPcZs=
+go.opentelemetry.io/contrib v1.26.0 h1:8/CmxLl5uDm37V9rdqbZcVLvYigAE2vMostBq3nGDrI=
+go.opentelemetry.io/contrib v1.26.0/go.mod h1:Tmhw9grdWtmXy6DxZNpIAudzYJqLeEM2P6QTZQSRwU8=
+go.opentelemetry.io/contrib v1.34.0 h1:3M0wJFV+OsN1a8FRgQ14VtE1K79m+LvuykJMYSpM3Oo=
+go.opentelemetry.io/contrib v1.34.0/go.mod h1:AKMNK1Pl02lB7gmq03ViGcdqz6tZTrd4gleIWZQEoxE=
 go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin v0.59.0 h1:5Acs0t57/EJbB54SUEdALa+0ln2UEawYPUSIX3qdE14=
 go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin v0.59.0/go.mod h1:cjK/fPi4ORW5XQbD+wH3Fv69yWxEo3ld+koLjQfiGO4=
 go.opentelemetry.io/otel v1.34.0 h1:zRLXxLCgL1WyKsPVrgbSdMN4c0FMkDAskSTQP+0hdUY=
