@@ -44,7 +44,11 @@ func GetRestrictions(service GetRestrictionsServer) gin.HandlerFunc {
 		restr, err := service.GetRestrictions(c.Request.Context(), meId)
 		if err != nil {
 			if err == services.ErrNotFound {
-				restapi.SendUnauthorizedError(c, nil)
+				restapi.SendUnauthorizedError(c, []restapi.ErrorDetail{
+					{
+						Message: "Not found user with owner id",
+					},
+				})
 				return
 			}
 			c.Error(err)
