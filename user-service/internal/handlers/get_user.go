@@ -108,7 +108,7 @@ func (s *GetUserHandler) GetUserByUsername() gin.HandlerFunc {
 			restapi.SendUnauthorizedError(c, nil)
 			return
 		}
-		userOwner, ok := claims[auth.ClaimUsername].(string)
+		userOwner, ok := claims[auth.ClaimId].(string)
 		if !ok {
 			restapi.SendUnauthorizedError(c, nil)
 			return
@@ -119,7 +119,7 @@ func (s *GetUserHandler) GetUserByUsername() gin.HandlerFunc {
 			restapi.SendValidationError(c, []restapi.ErrorDetail{
 				{
 					Field:   "UserId",
-					Message: "Invalid UserId query parameter",
+					Message: "Invalid UserId parameter",
 				},
 			})
 			return
