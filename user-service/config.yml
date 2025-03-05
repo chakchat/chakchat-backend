@@ -12,3 +12,5 @@ jwt:
     - user_service
   key_file_path: /app/keys/rsa.pub
 
+otlp:
+  grpc_addr: otel-collector:4317

@@ -119,7 +119,7 @@ func (s *UserStorage) GetUsersByCriteria(ctx context.Context, req SearchUsersReq
 
 	return &SearchUsersResponse{
 		Users:  users,
-		Offset: offset/limit + 1,
+		Offset: offset,
 		Count:  int(count),
 	}, nil
 }
