@@ -15,7 +15,7 @@ import (
 )
 
 type UpdateRestrictionsServer interface {
-	UpdateRestrictions(ctx context.Context, id uuid.UUID, phone storage.FieldRestriction, date storage.FieldRestriction) (*models.UserRestrictions, error)
+	UpdateRestrictions(ctx context.Context, id uuid.UUID, restr storage.UserRestrictions) (*models.UserRestrictions, error)
 }
 
 func UpdateRestrictions(restr UpdateRestrictionsServer) gin.HandlerFunc {
@@ -50,7 +50,10 @@ func UpdateRestrictions(restr UpdateRestrictionsServer) gin.HandlerFunc {
 			SpecifiedUsers: updateRestrReq.DateOfBirth.SpecifiedUsers,
 		}
 
-		updatedRestr, err := restr.UpdateRestrictions(c.Request.Context(), ownerId, phone, date)
+		updatedRestr, err := restr.UpdateRestrictions(c.Request.Context(), ownerId, storage.UserRestrictions{
+			Phone:       phone,
+			DateOfBirth: date,
+		})
 		if err != nil {
 			if errors.Is(err, services.ErrValidationError) {
 				c.JSON(http.StatusBadRequest, restapi.ErrorResponse{

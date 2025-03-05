@@ -21,24 +21,24 @@ var groupPhotoMimes = map[string]bool{
 	"image/heic": true,
 }
 
-type UpdatePhotoRepo interface {
+type ProcessPhotoRepo interface {
 	UpdatePhoto(ctx context.Context, id uuid.UUID, photoURL string) (*models.User, error)
 	DeletePhoto(ctx context.Context, id uuid.UUID) (*models.User, error)
 }
 
-type UpdatePhotoService struct {
-	repo        UpdatePhotoRepo
+type ProcessPhotoService struct {
+	repo        ProcessPhotoRepo
 	fileStorage filestorage.FileStorageServiceClient
 }
 
-func NewUpdatePhotoService(repo UpdatePhotoRepo, fileStorage filestorage.FileStorageServiceClient) *UpdatePhotoService {
-	return &UpdatePhotoService{
+func NewProcessPhotoService(repo ProcessPhotoRepo, fileStorage filestorage.FileStorageServiceClient) *ProcessPhotoService {
+	return &ProcessPhotoService{
 		repo:        repo,
 		fileStorage: fileStorage,
 	}
 }
 
-func (u *UpdatePhotoService) UpdatePhoto(ctx context.Context, id uuid.UUID, photoId string) (*models.User, error) {
+func (u *ProcessPhotoService) UpdatePhoto(ctx context.Context, id uuid.UUID, photoId string) (*models.User, error) {
 	photo, err := u.fetchPhotoURL(ctx, photoId)
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func (u *UpdatePhotoService) UpdatePhoto(ctx context.Context, id uuid.UUID, phot
 	return user, nil
 }
 
-func (u *UpdatePhotoService) DeletePhoto(ctx context.Context, id uuid.UUID) (*models.User, error) {
+func (u *ProcessPhotoService) DeletePhoto(ctx context.Context, id uuid.UUID) (*models.User, error) {
 	user, err := u.repo.DeletePhoto(ctx, id)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
@@ -65,7 +65,7 @@ func (u *UpdatePhotoService) DeletePhoto(ctx context.Context, id uuid.UUID) (*mo
 	return user, nil
 }
 
-func (u *UpdatePhotoService) fetchPhotoURL(ctx context.Context, photo string) (*filestorage.GetFileResponse, error) {
+func (u *ProcessPhotoService) fetchPhotoURL(ctx context.Context, photo string) (*filestorage.GetFileResponse, error) {
 	photoURL, err := u.fileStorage.GetFile(ctx, &filestorage.GetFileRequest{
 		FileId: &filestorage.UUID{Value: photo},
 	})
