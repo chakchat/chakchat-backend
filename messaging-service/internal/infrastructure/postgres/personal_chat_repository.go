@@ -132,10 +132,12 @@ func (r *PersonalChatRepository) Create(ctx context.Context, chat *personal.Pers
 		(chat_id, chat_type, created_at)
 		VALUES ($1, 'personal', $2)
 		`
-		_, err := r.db.Exec(ctx, q, chat.ID, time.Now())
+		now := time.Now()
+		_, err := r.db.Exec(ctx, q, chat.ID, now)
 		if err != nil {
 			return nil, err
 		}
+		chat.CreatedAt = domain.Timestamp(now.Unix())
 	}
 	{
 		q := `INSERT INTO messaging.personal_chat (chat_id) VALUES ($1)`
