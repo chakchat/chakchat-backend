@@ -76,7 +76,7 @@ func (s *UserStorage) GetUserByUsername(ctx context.Context, username string) (*
 
 func (s *UserStorage) GetUsersByCriteria(ctx context.Context, req SearchUsersRequest) (*SearchUsersResponse, error) {
 	var users []models.User
-	query := s.db.WithContext(ctx).Model(&users)
+	query := s.db.WithContext(ctx).Model(&models.User{})
 
 	if req.Name != nil {
 		query = query.Where(&models.User{Name: *req.Name})
