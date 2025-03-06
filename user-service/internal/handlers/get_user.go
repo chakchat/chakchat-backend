@@ -119,7 +119,7 @@ func (s *GetUserHandler) GetUserByUsername() gin.HandlerFunc {
 			restapi.SendValidationError(c, []restapi.ErrorDetail{
 				{
 					Field:   "UserId",
-					Message: "Invalid owner id field",
+					Message: "Invalid user id parametr",
 				},
 			})
 			return
@@ -203,11 +203,11 @@ func (s *GetUserHandler) GetUsersByCriteria() gin.HandlerFunc {
 				return
 			}
 			if errors.Is(err, services.ErrNotFound) {
-				c.JSON(http.StatusNotFound, restapi.ErrorResponse{
-					ErrorType:    restapi.ErrTypeNotFound,
-					ErrorMessage: "Wrong criteria, user was not found",
+				restapi.SendSuccess(c, SearchUsersResponse{
+					Users:  nil,
+					Offset: *int_offset,
+					Count:  0,
 				})
-				return
 			}
 			c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
 				ErrorType:    restapi.ErrTypeInternal,
@@ -253,9 +253,9 @@ func (s *GetUserHandler) GetMe() gin.HandlerFunc {
 		me, err := s.service.GetUserByID(c.Request.Context(), ownerId, ownerId)
 		if err != nil {
 			if err == services.ErrNotFound {
-				c.JSON(http.StatusUnauthorized, restapi.ErrorResponse{
-					ErrorType:    restapi.ErrTypeUnautorized,
-					ErrorMessage: "Can't get user with owner id",
+				c.JSON(http.StatusNotFound, restapi.ErrorResponse{
+					ErrorType:    restapi.ErrTypeNotFound,
+					ErrorMessage: "User not found",
 				})
 				return
 			}

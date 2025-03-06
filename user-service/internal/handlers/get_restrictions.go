@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/chakchat/chakchat-backend/shared/go/auth"
 	"github.com/chakchat/chakchat-backend/user-service/internal/models"
@@ -44,10 +45,9 @@ func GetRestrictions(service GetRestrictionsServer) gin.HandlerFunc {
 		restr, err := service.GetRestrictions(c.Request.Context(), meId)
 		if err != nil {
 			if err == services.ErrNotFound {
-				restapi.SendUnauthorizedError(c, []restapi.ErrorDetail{
-					{
-						Message: "Not found user with owner id",
-					},
+				c.JSON(http.StatusNotFound, restapi.ErrorResponse{
+					ErrorType:    restapi.ErrTypeNotFound,
+					ErrorMessage: "User restrictions were not found",
 				})
 				return
 			}
