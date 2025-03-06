@@ -49,8 +49,8 @@ func UpdateUser(service UpdateUserserver, getter GetUserServer) gin.HandlerFunc 
 		if err != nil {
 			if err == services.ErrNotFound {
 				c.JSON(http.StatusNotFound, restapi.ErrorResponse{
-					ErrorType:    restapi.ErrTypeValidationFailed,
-					ErrorMessage: "Input is invalid",
+					ErrorType:    restapi.ErrTypeNotFound,
+					ErrorMessage: "User not found",
 				})
 				return
 			}

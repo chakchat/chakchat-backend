@@ -56,9 +56,9 @@ func UpdateRestrictions(restr UpdateRestrictionsServer) gin.HandlerFunc {
 		})
 		if err != nil {
 			if errors.Is(err, services.ErrValidationError) {
-				c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
-					ErrorType:    restapi.ErrTypeBadRequest,
-					ErrorMessage: "Input is invalid",
+				c.JSON(http.StatusNotFound, restapi.ErrorResponse{
+					ErrorType:    restapi.ErrTypeNotFound,
+					ErrorMessage: "Restrictions was not found",
 				})
 				return
 			}

@@ -70,7 +70,7 @@ func (s *GetUserHandler) GetUserByID() gin.HandlerFunc {
 			restapi.SendValidationError(c, []restapi.ErrorDetail{
 				{
 					Field:   "UserId",
-					Message: "Invalid UserId query parameter",
+					Message: "Invalid UserId parameter",
 				},
 			})
 			return
@@ -81,7 +81,7 @@ func (s *GetUserHandler) GetUserByID() gin.HandlerFunc {
 			if err == services.ErrNotFound {
 				c.JSON(http.StatusNotFound, restapi.ErrorResponse{
 					ErrorType:    restapi.ErrTypeNotFound,
-					ErrorMessage: "User not found",
+					ErrorMessage: "Not found user with the id",
 				})
 				return
 			}
@@ -119,7 +119,7 @@ func (s *GetUserHandler) GetUserByUsername() gin.HandlerFunc {
 			restapi.SendValidationError(c, []restapi.ErrorDetail{
 				{
 					Field:   "UserId",
-					Message: "Invalid UserId parameter",
+					Message: "Invalid user id parametr",
 				},
 			})
 			return
@@ -131,7 +131,7 @@ func (s *GetUserHandler) GetUserByUsername() gin.HandlerFunc {
 			if err == services.ErrNotFound {
 				c.JSON(http.StatusNotFound, restapi.ErrorResponse{
 					ErrorType:    restapi.ErrTypeNotFound,
-					ErrorMessage: "User not found",
+					ErrorMessage: "Not found user with the username",
 				})
 				return
 			}
@@ -165,7 +165,7 @@ func (s *GetUserHandler) GetUsersByCriteria() gin.HandlerFunc {
 			if err != nil {
 				c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
 					ErrorType:    restapi.ErrTypeInvalidJson,
-					ErrorMessage: "Invalid query parameters",
+					ErrorMessage: "Invalid offset parameter",
 				})
 				return
 			}
@@ -180,7 +180,7 @@ func (s *GetUserHandler) GetUsersByCriteria() gin.HandlerFunc {
 			if err != nil {
 				c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
 					ErrorType:    restapi.ErrTypeInvalidJson,
-					ErrorMessage: "Invalid query parameters",
+					ErrorMessage: "Invalid limit parameter",
 				})
 				return
 			}
@@ -203,11 +203,11 @@ func (s *GetUserHandler) GetUsersByCriteria() gin.HandlerFunc {
 				return
 			}
 			if errors.Is(err, services.ErrNotFound) {
-				c.JSON(http.StatusNotFound, restapi.ErrorResponse{
-					ErrorType:    restapi.ErrTypeNotFound,
-					ErrorMessage: "User not found",
+				restapi.SendSuccess(c, SearchUsersResponse{
+					Users:  []User{},
+					Offset: *int_offset,
+					Count:  0,
 				})
-				return
 			}
 			c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
 				ErrorType:    restapi.ErrTypeInternal,
