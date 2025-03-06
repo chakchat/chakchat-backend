@@ -204,7 +204,7 @@ func (s *GetUserHandler) GetUsersByCriteria() gin.HandlerFunc {
 			}
 			if errors.Is(err, services.ErrNotFound) {
 				restapi.SendSuccess(c, SearchUsersResponse{
-					Users:  nil,
+					Users:  []User{},
 					Offset: *int_offset,
 					Count:  0,
 				})

@@ -2,7 +2,7 @@ package restapi
 
 const (
 	ErrTypeNotFound         = "not_found"
-	ErrTypeUnautorized      = "unauthorized_user"
+	ErrTypeUnautorized      = "unauthorized"
 	ErrTypeInternal         = "internal"
 	ErrTypeInvalidJson      = "invalid_json"
 	ErrTypeValidationFailed = "validation_failed"
