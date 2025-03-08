@@ -100,25 +100,51 @@ func (r *GroupChatRepository) Update(ctx context.Context, g *group.GroupChat) (*
 	return g, err
 }
 
-// func (r *GroupChatRepository) Create(ctx context.Context, g *group.GroupChat) (*group.GroupChat, error) {
-// 	{
-// 		q := `
-// 		INSERT INTO messaging.chat
-// 		(chat_id, chat_type, created_at)
-// 		VALUES ($1, 'group', $2)`
+func (r *GroupChatRepository) Create(ctx context.Context, g *group.GroupChat) (*group.GroupChat, error) {
+	{
+		q := `
+		INSERT INTO messaging.chat
+		(chat_id, chat_type, created_at)
+		VALUES ($1, 'group', $2)`
 
-// 		now := time.Now()
-// 		_, err := r.db.Exec(ctx, q, g.ID, now)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		g.CreatedAt = domain.Timestamp(now.Unix())
-// 	}
-// 	{
-// 		q := `
-// 		INSERT `
-// 	}
-// }
+		now := time.Now()
+		_, err := r.db.Exec(ctx, q, g.ID, now)
+		if err != nil {
+			return nil, err
+		}
+		g.CreatedAt = domain.Timestamp(now.Unix())
+	}
+	{
+		q := `
+		INSERT INTO messaging.group_chat
+		(chat_id, admin_id, group_name, group_photo, group_description)
+		VALUES ($1, $2, $3, $4, $5)`
+		_, err := r.db.Exec(ctx, q, g.ID, g.Admin, g.GroupPhoto, g.Description)
+		if err != nil {
+			return nil, err
+		}
+	}
+	{
+		q := `INSERT INTO messaging.membership (chat_id, user_id) VALUES `
+
+		valExprs := make([]string, 0, len(g.Members))
+		args := make([]any, 0, 2*len(g.Members))
+		for _, userId := range g.Members {
+			argI := len(args) + 1
+			valExprs = append(valExprs, fmt.Sprintf("($%d, $%d)", argI, argI+1))
+			args = append(args, g.ID, userId)
+		}
+
+		q += strings.Join(valExprs, ", ")
+
+		_, err := r.db.Exec(ctx, q, args...)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return g, nil
+}
 
 func (r *GroupChatRepository) addMembers(ctx context.Context, id domain.ChatID, toAdd []domain.UserID) error {
 	q := `INSERT INTO messaging.membership (chat_id, user_id) VALUES `

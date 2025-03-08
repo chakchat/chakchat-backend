@@ -2,7 +2,7 @@ package configuration
 
 import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/infrastructure/postgres"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/infrastructure/postgres/chat"
 	"github.com/jackc/pgx/v5"
 	"github.com/redis/go-redis/v9"
 )
@@ -14,7 +14,7 @@ type DB struct {
 
 func NewDB(db *pgx.Conn, redis *redis.Client) *DB {
 	return &DB{
-		PersonalChat: postgres.NewPersonalChatRepository(db),
+		PersonalChat: chat.NewPersonalChatRepository(db),
 		Redis:        redis,
 	}
 }
