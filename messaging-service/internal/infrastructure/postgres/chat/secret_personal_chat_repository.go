@@ -125,3 +125,40 @@ func (r *SecretPersonalChatRepository) Update(ctx context.Context, chat *secpers
 	_, err := r.db.Exec(ctx, q, chat.ID, int(chat.Expiration().Seconds()))
 	return chat, err
 }
+
+func (r *SecretPersonalChatRepository) Create(ctx context.Context, chat *secpersonal.SecretPersonalChat) (*secpersonal.SecretPersonalChat, error) {
+	{
+		q := `
+		INSERT INTO messaging.chat
+		(chat_id, chat_type, created_at)
+		VALUES ($1, 'personal', $2)`
+
+		now := time.Now()
+		_, err := r.db.Exec(ctx, q, chat.ID, now)
+		if err != nil {
+			return nil, err
+		}
+		chat.CreatedAt = domain.Timestamp(now.Unix())
+	}
+	{
+		q := `INSERT INTO messaging.personal_chat (chat_id, expiration_seconds) VALUES ($1, $2)`
+		_, err := r.db.Exec(ctx, q, chat.ID, int(chat.Exp.Seconds()))
+		if err != nil {
+			return nil, err
+		}
+	}
+	{
+		q := `INSERT INTO messaging.membership (chat_id, user_id) VALUES ($1, $2), ($1, $3)`
+		_, err := r.db.Exec(ctx, q, chat.ID, chat.Members[0], chat.Members[1])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return chat, nil
+}
+
+func (r *SecretPersonalChatRepository) Delete(ctx context.Context, id domain.ChatID) error {
+	q := `DELETE FROM messaging.chat WHERE chat_id = $1`
+	_, err := r.db.Exec(ctx, q, id)
+	return err
+}
