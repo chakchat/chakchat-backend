@@ -146,6 +146,12 @@ func (r *GroupChatRepository) Create(ctx context.Context, g *group.GroupChat) (*
 	return g, nil
 }
 
+func (r *GroupChatRepository) Delete(ctx context.Context, id domain.ChatID) error {
+	q := `DELETE FROM messaging.chat WHERE chat_id = $1`
+	_, err := r.db.Exec(ctx, q, id)
+	return err
+}
+
 func (r *GroupChatRepository) addMembers(ctx context.Context, id domain.ChatID, toAdd []domain.UserID) error {
 	q := `INSERT INTO messaging.membership (chat_id, user_id) VALUES `
 
