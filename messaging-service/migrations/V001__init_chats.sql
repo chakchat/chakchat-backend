@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS messaging.personal_chat (
 CREATE TABLE IF NOT EXISTS messaging.group_chat (
     chat_id UUID NOT NULL PRIMARY KEY REFERENCES messaging.chat (chat_id) ON DELETE CASCADE,
     admin_id UUID NOT NULL,
-    group_name CHAR(255) NOT NULL,
+    group_name VARCHAR(255) NOT NULL,
+    group_photo VARCHAR(255)
     group_description TEXT
 );
 
@@ -26,7 +27,9 @@ CREATE TABLE IF NOT EXISTS messaging.secret_personal_chat (
 
 CREATE TABLE IF NOT EXISTS messaging.secret_group_chat (
     chat_id UUID NOT NULL PRIMARY KEY REFERENCES messaging.chat (chat_id) ON DELETE CASCADE,
-    group_name CHAR(255) NOT NULL,
+    admin_id UUID NOT NULL,
+    group_name VARCHAR(255) NOT NULL,
+    group_photo VARCHAR(255)
     group_description TEXT
 );
 

@@ -1,4 +1,4 @@
-package postgres
+package chat
 
 import (
 	"context"
@@ -130,8 +130,8 @@ func (r *PersonalChatRepository) Create(ctx context.Context, chat *personal.Pers
 		q := `
 		INSERT INTO messaging.chat
 		(chat_id, chat_type, created_at)
-		VALUES ($1, 'personal', $2)
-		`
+		VALUES ($1, 'personal', $2)`
+
 		now := time.Now()
 		_, err := r.db.Exec(ctx, q, chat.ID, now)
 		if err != nil {
