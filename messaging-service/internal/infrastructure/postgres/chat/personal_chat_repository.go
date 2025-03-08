@@ -73,8 +73,7 @@ func (r *PersonalChatRepository) FindByMembers(ctx context.Context, members [2]d
 		JOIN messaging.personal_chat p ON p.chat_id = m.chat_id
 	WHERE m.user_id = $1 OR m.user_id = $2
 	GROUP BY m.chat_id
-	HAVING COUNT(DISTINCT m.user_id) = 2
-	`
+	HAVING COUNT(DISTINCT m.user_id) = 2`
 
 	row := r.db.QueryRow(ctx, q, uuid.UUID(members[0]), uuid.UUID(members[1]))
 
