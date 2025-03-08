@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS messaging.secret_group_chat (
     group_name VARCHAR(255) NOT NULL,
     group_photo VARCHAR(255)
     group_description TEXT
+    expiration_seconds BIGINT
 );
 
 CREATE TABLE IF NOT EXISTS messaging.membership (

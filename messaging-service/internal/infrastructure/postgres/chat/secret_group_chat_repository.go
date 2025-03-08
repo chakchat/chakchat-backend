@@ -9,22 +9,22 @@ import (
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/group"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/secgroup"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
-type GroupChatRepository struct {
+type SecretGroupChatRepository struct {
 	db *pgx.Conn
 }
 
-func NewGroupChatRepository(db *pgx.Conn) *GroupChatRepository {
-	return &GroupChatRepository{
+func NewSecretGroupChatRepository(db *pgx.Conn) *SecretGroupChatRepository {
+	return &SecretGroupChatRepository{
 		db: db,
 	}
 }
 
-func (r *GroupChatRepository) FindById(ctx context.Context, id domain.ChatID) (*group.GroupChat, error) {
+func (r *SecretGroupChatRepository) FindById(ctx context.Context, id domain.ChatID) (*secgroup.SecretGroupChat, error) {
 	q := `
 	SELECT c.chat_id, c.created_at, g.admin_id, g.group_name, g.group_photo, g.group_description,
 		(SELECT ARRAY_AGG(m.user_id) FROM messaging.membership m WHERE m.chat_id = c.chat_id)
@@ -51,10 +51,12 @@ func (r *GroupChatRepository) FindById(ctx context.Context, id domain.ChatID) (*
 		return nil, fmt.Errorf("getting group chat failed: %s", err)
 	}
 
-	return &group.GroupChat{
-		Chat: domain.Chat{
-			ID:        domain.ChatID(chatID),
-			CreatedAt: domain.Timestamp(createdAt.Unix()),
+	return &secgroup.SecretGroupChat{
+		SecretChat: domain.SecretChat{
+			Chat: domain.Chat{
+				ID:        id,
+				CreatedAt: domain.Timestamp(createdAt.Unix()),
+			},
 		},
 		Admin:       domain.UserID(adminID),
 		Members:     userIDs(members),
@@ -64,7 +66,7 @@ func (r *GroupChatRepository) FindById(ctx context.Context, id domain.ChatID) (*
 	}, nil
 }
 
-func (r *GroupChatRepository) Update(ctx context.Context, g *group.GroupChat) (*group.GroupChat, error) {
+func (r *SecretGroupChatRepository) Update(ctx context.Context, g *secgroup.SecretGroupChat) (*secgroup.SecretGroupChat, error) {
 	members, err := r.getMembers(ctx, g.ID)
 	if err != nil {
 		return nil, err
@@ -90,9 +92,10 @@ func (r *GroupChatRepository) Update(ctx context.Context, g *group.GroupChat) (*
 		group_name = $3, 
 		group_photo = $4, 
 		group_description = $5
+		expiration_seconds = $6
 	WHERE chat_id = $1`
 
-	_, err = r.db.Exec(ctx, q, g.ID, g.Admin, g.Name, g.GroupPhoto, g.Description)
+	_, err = r.db.Exec(ctx, q, g.ID, g.Admin, g.Name, g.GroupPhoto, g.Description, int(g.Exp.Seconds()))
 	if err != nil {
 		return nil, fmt.Errorf("updating group chat failed: %s", err)
 	}
@@ -100,7 +103,7 @@ func (r *GroupChatRepository) Update(ctx context.Context, g *group.GroupChat) (*
 	return g, err
 }
 
-func (r *GroupChatRepository) Create(ctx context.Context, g *group.GroupChat) (*group.GroupChat, error) {
+func (r *SecretGroupChatRepository) Create(ctx context.Context, g *secgroup.SecretGroupChat) (*secgroup.SecretGroupChat, error) {
 	{
 		q := `
 		INSERT INTO messaging.chat
@@ -117,9 +120,9 @@ func (r *GroupChatRepository) Create(ctx context.Context, g *group.GroupChat) (*
 	{
 		q := `
 		INSERT INTO messaging.group_chat
-		(chat_id, admin_id, group_name, group_photo, group_description)
+		(chat_id, admin_id, group_name, group_photo, group_description, expiration_seconds)
 		VALUES ($1, $2, $3, $4, $5)`
-		_, err := r.db.Exec(ctx, q, g.ID, g.Admin, g.GroupPhoto, g.Description)
+		_, err := r.db.Exec(ctx, q, g.ID, g.Admin, g.GroupPhoto, g.Description, int(g.Exp.Seconds()))
 		if err != nil {
 			return nil, err
 		}
@@ -146,13 +149,13 @@ func (r *GroupChatRepository) Create(ctx context.Context, g *group.GroupChat) (*
 	return g, nil
 }
 
-func (r *GroupChatRepository) Delete(ctx context.Context, id domain.ChatID) error {
+func (r *SecretGroupChatRepository) Delete(ctx context.Context, id domain.ChatID) error {
 	q := `DELETE FROM messaging.chat WHERE chat_id = $1`
 	_, err := r.db.Exec(ctx, q, id)
 	return err
 }
 
-func (r *GroupChatRepository) addMembers(ctx context.Context, id domain.ChatID, toAdd []domain.UserID) error {
+func (r *SecretGroupChatRepository) addMembers(ctx context.Context, id domain.ChatID, toAdd []domain.UserID) error {
 	q := `INSERT INTO messaging.membership (chat_id, user_id) VALUES `
 
 	valExprs := make([]string, 0, len(toAdd))
@@ -169,14 +172,14 @@ func (r *GroupChatRepository) addMembers(ctx context.Context, id domain.ChatID, 
 	return err
 }
 
-func (r *GroupChatRepository) deleteMembers(ctx context.Context, id uuid.UUID, toDelete []uuid.UUID) error {
+func (r *SecretGroupChatRepository) deleteMembers(ctx context.Context, id uuid.UUID, toDelete []uuid.UUID) error {
 	q := `DELETE FROM messaging.membership WHERE chat_id = $1 AND user_id = ANY($2)`
 
 	_, err := r.db.Exec(ctx, q, id, toDelete)
 	return err
 }
 
-func (r *GroupChatRepository) getMembers(ctx context.Context, id domain.ChatID) ([]domain.UserID, error) {
+func (r *SecretGroupChatRepository) getMembers(ctx context.Context, id domain.ChatID) ([]domain.UserID, error) {
 	q := `SELECT user_id FROM messaging.membership WHERE chat_id = $1`
 
 	rows, err := r.db.Query(ctx, q, id)
