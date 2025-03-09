@@ -5,16 +5,10 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 	"github.com/jackc/pgx/v5"
-)
-
-const (
-	ChatTypePersonal       = "personal"
-	ChatTypeGroup          = "group"
-	ChatTypeSecretPersonal = "secret_personal"
-	ChatTypeSecretGroup    = "secret_group"
 )
 
 type ChatterRepository struct {
@@ -48,11 +42,11 @@ func (r *ChatterRepository) FindChatter(ctx context.Context, id domain.ChatID) (
 		return nil, err
 	}
 
-	if chatType == ChatTypePersonal {
+	if chatType == services.ChatTypePersonal {
 		return r.personalRepo.FindById(ctx, id)
 	}
 
-	if chatType == ChatTypeGroup {
+	if chatType == services.ChatTypeGroup {
 		return r.groupRepo.FindById(ctx, id)
 	}
 
