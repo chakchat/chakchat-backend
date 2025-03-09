@@ -1929,6 +1929,11 @@ components:
           type: boolean
         name:
           type: string
+        members:
+          type: array
+          items:
+            type: string
+            format: uuid
         chat_photo:
           type: string
           format: url
@@ -1946,6 +1951,7 @@ components:
         - type
         - secret
         - name
+        - members
         - chat_photo
         - preview
     UpdateGroupPhotoRequest:
@@ -2089,9 +2095,11 @@ components:
         chat_id:
           type: string
           format: uuid
-        member_id:
-          type: string
-          format: uuid
+        members:
+          type: array
+          items:
+            type: string
+            format: uuid
         blocked:
           type: boolean
         blocked_by:
@@ -2102,7 +2110,7 @@ components:
           description: List of user ids who blocked this chat
       required:
         - chat_id
-        - member_id
+        - members
         - blocked
         - blocked_by
     SetExpirationRequest:
@@ -2121,9 +2129,11 @@ components:
         chat_id:
           type: string
           format: uuid
-        member_id:
-          type: string
-          format: uuid
+        members:
+          type: array
+          items:
+            type: string
+            format: uuid
         expiration:
           type: string
           example: "24h"
@@ -2131,7 +2141,7 @@ components:
           description: Secret chat messages expiration period
       required:
         - chat_id
-        - member_id
+        - members
     EmptySuccessResponse:
       type: object
       example: {}
