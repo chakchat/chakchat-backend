@@ -27,6 +27,10 @@ type Config struct {
 	Otlp struct {
 		GrpcAddr string `mapstructure:"grpc_addr"`
 	} `mapstructure:"otlp"`
+
+	FileStorage struct {
+		GrpcAddr string `mapstructure:"grpc_addr"`
+	} `mapstructure:"file_storage"`
 }
 
 func LoadConfig(file string) (*Config, error) {

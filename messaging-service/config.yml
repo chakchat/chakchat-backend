@@ -10,5 +10,8 @@ redis:
   password: secret
   db: 0
 
+file_storage:
+  grpc_addr: file-storage-service:9090
+
 otlp:
   grpc_addr: otel-collector:4317
