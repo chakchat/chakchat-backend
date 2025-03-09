@@ -56,7 +56,7 @@ func (s *GroupFileService) SendFileMessage(ctx context.Context, req request.Send
 		}
 	}
 
-	file, err := s.files.GetById(req.FileID)
+	file, err := s.files.GetById(ctx, req.FileID)
 	if err != nil {
 		if errors.Is(err, external.ErrFileNotFound) {
 			return nil, services.ErrFileNotFound

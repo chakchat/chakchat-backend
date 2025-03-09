@@ -56,7 +56,7 @@ func (s *PersonalFileService) SendFileMessage(ctx context.Context, req request.S
 		}
 	}
 
-	file, err := s.files.GetById(req.FileID)
+	file, err := s.files.GetById(ctx, req.FileID)
 	if err != nil {
 		if errors.Is(err, external.ErrFileNotFound) {
 			return nil, services.ErrFileNotFound
