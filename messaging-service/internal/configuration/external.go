@@ -3,6 +3,8 @@ package configuration
 import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/external"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/infrastructure/proto"
+	"google.golang.org/grpc"
 )
 
 type External struct {
@@ -10,9 +12,9 @@ type External struct {
 	FileStorage external.FileStorage
 }
 
-func NewExternal() *External {
+func NewExternal(fileStConn *grpc.ClientConn) *External {
 	return &External{
 		Publisher:   publish.PublisherStub{},
-		FileStorage: nil,
+		FileStorage: proto.NewFileStorage(fileStConn),
 	}
 }
