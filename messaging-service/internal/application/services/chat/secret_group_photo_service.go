@@ -40,7 +40,7 @@ func (s *SecretGroupPhotoService) UpdatePhoto(ctx context.Context, req request.U
 		return nil, err
 	}
 
-	file, err := s.files.GetById(req.FileID)
+	file, err := s.files.GetById(ctx, req.FileID)
 	if err != nil {
 		if errors.Is(err, external.ErrFileNotFound) {
 			return nil, services.ErrFileNotFound
