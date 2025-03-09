@@ -9,6 +9,7 @@ type Services struct {
 	SecretPersonalChat *chat.SecretPersonalChatService
 	SecretGroup        *chat.SecretGroupChatService
 	SecretGroupPhoto   *chat.SecretGroupPhotoService
+	GenericChat        *chat.GenericChatService
 }
 
 func NewServices(db *DB, external *External) *Services {
@@ -19,5 +20,6 @@ func NewServices(db *DB, external *External) *Services {
 		SecretPersonalChat: chat.NewSecretPersonalChatService(db.SecretPersonalChat, external.Publisher),
 		SecretGroup:        chat.NewSecretGroupChatService(db.SecretGroupChat, external.Publisher),
 		SecretGroupPhoto:   chat.NewSecretGroupPhotoService(db.SecretGroupChat, external.FileStorage, external.Publisher),
+		GenericChat:        chat.NewGenericChatService(&db.GenericChat),
 	}
 }

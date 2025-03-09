@@ -52,6 +52,9 @@ func GinEngine(handlers *Handlers, db *DB, conf *Config) (*gin.Engine, error) {
 			}),
 		))
 
+	r.GET("/v1.0/chat/all", handlers.GenericChat.GetAllChats)
+	r.GET("/v1.0/chat/:chatId", handlers.GenericChat.GetChat)
+
 	idemp.POST("/v1.0/chat/personal", handlers.PersonalChat.CreateChat)
 	r.PUT("/v1.0/chat/personal/:chatId/block", handlers.PersonalChat.BlockChat)
 	r.PUT("/v1.0/chat/personal/:chatId/unblock", handlers.PersonalChat.UnblockChat)

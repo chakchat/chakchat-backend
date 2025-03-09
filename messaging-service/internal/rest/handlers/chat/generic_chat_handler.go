@@ -1,18 +1,25 @@
 package chat
 
 import (
-	services "github.com/chakchat/chakchat-backend/messaging-service/internal/application/services/chat"
+	"context"
+
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/errmap"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/restapi"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
-type GenericChatHandler struct {
-	service services.GenericChatService
+type GenericChatService interface {
+	GetByMemberID(ctx context.Context, memberID uuid.UUID) ([]services.GenericChat, error)
+	GetByChatID(ctx context.Context, senderID, chatID uuid.UUID) (*services.GenericChat, error)
 }
 
-func NewGenericChatHandler(service services.GenericChatService) *GenericChatHandler {
+type GenericChatHandler struct {
+	service GenericChatService
+}
+
+func NewGenericChatHandler(service GenericChatService) *GenericChatHandler {
 	return &GenericChatHandler{
 		service: service,
 	}

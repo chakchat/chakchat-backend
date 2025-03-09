@@ -15,6 +15,7 @@ type DB struct {
 	SecretPersonalChat repository.SecretPersonalChatRepository
 	SecretGroupChat    repository.SecretGroupChatRepository
 	Chatter            repository.ChatterRepository
+	GenericChat        chat.GenericChatRepository
 
 	TxProvider storage.TxProvider
 
@@ -28,6 +29,7 @@ func NewDB(db *pgx.Conn, redis *redis.Client) *DB {
 		SecretPersonalChat: chat.NewSecretPersonalChatRepository(db),
 		SecretGroupChat:    chat.NewSecretGroupChatRepository(db),
 		Chatter:            chat.NewChatterRepository(db),
+		GenericChat:        *chat.NewGenericChatRepository(db),
 		TxProvider:         postgres.TxProviderStub{},
 		Redis:              redis,
 	}
