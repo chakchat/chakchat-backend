@@ -28,7 +28,7 @@ jobs:
 
       - name: Docker system prune
         run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "docker system prune"
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "docker system prune --force"
 
       - name: Deploy Application
         run: |
