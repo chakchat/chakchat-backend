@@ -44,8 +44,7 @@ func (h *SecretPersonalChatHandler) CreateChat(c *gin.Context) {
 		MemberID: req.MemberID,
 	})
 	if err != nil {
-		resp := errmap.Map(err)
-		c.JSON(resp.Code, resp.Body)
+		errmap.Respond(c, err)
 		return
 	}
 
@@ -74,8 +73,7 @@ func (h *SecretPersonalChatHandler) SetExpiration(c *gin.Context) {
 		Expiration: req.Expiration,
 	})
 	if err != nil {
-		resp := errmap.Map(err)
-		c.JSON(resp.Code, resp.Body)
+		errmap.Respond(c, err)
 		return
 	}
 
@@ -95,8 +93,7 @@ func (h *SecretPersonalChatHandler) DeleteChat(c *gin.Context) {
 		SenderID: userId,
 	})
 	if err != nil {
-		resp := errmap.Map(err)
-		c.JSON(resp.Code, resp.Body)
+		errmap.Respond(c, err)
 		return
 	}
 

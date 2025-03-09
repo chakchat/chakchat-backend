@@ -30,8 +30,7 @@ func (h *GenericChatHandler) GetAllChats(c *gin.Context) {
 
 	chats, err := h.service.GetByMemberID(c.Request.Context(), userID)
 	if err != nil {
-		resp := errmap.Map(err)
-		c.JSON(resp.Code, resp.Body)
+		errmap.Respond(c, err)
 		return
 	}
 
@@ -58,8 +57,7 @@ func (h *GenericChatHandler) GetChat(c *gin.Context) {
 
 	chat, err := h.service.GetByChatID(c.Request.Context(), userID, chatId)
 	if err != nil {
-		resp := errmap.Map(err)
-		c.JSON(resp.Code, resp.Body)
+		errmap.Respond(c, err)
 		return
 	}
 

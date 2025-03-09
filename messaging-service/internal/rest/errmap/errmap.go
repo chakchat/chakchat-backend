@@ -8,7 +8,16 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/restapi"
+	"github.com/gin-gonic/gin"
 )
+
+func Respond(c *gin.Context, err error) {
+	resp := Map(err)
+	if resp.Code >= 500 {
+		c.Error(err)
+	}
+	c.JSON(resp.Code, resp.Body)
+}
 
 type Response struct {
 	Code int
