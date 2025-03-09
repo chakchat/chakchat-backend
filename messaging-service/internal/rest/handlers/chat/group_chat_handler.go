@@ -49,8 +49,7 @@ func (h *GroupChatHandler) CreateGroup(c *gin.Context) {
 		Name:     req.Name,
 	})
 	if err != nil {
-		resp := errmap.Map(err)
-		c.JSON(resp.Code, resp.Body)
+		errmap.Respond(c, err)
 		return
 	}
 
@@ -81,8 +80,7 @@ func (h *GroupChatHandler) UpdateGroup(c *gin.Context) {
 		Description: req.Description,
 	})
 	if err != nil {
-		resp := errmap.Map(err)
-		c.JSON(resp.Code, resp.Body)
+		errmap.Respond(c, err)
 		return
 	}
 
@@ -102,8 +100,7 @@ func (h GroupChatHandler) DeleteGroup(c *gin.Context) {
 		SenderID: userId,
 	})
 	if err != nil {
-		resp := errmap.Map(err)
-		c.JSON(resp.Code, resp.Body)
+		errmap.Respond(c, err)
 		return
 	}
 
@@ -130,8 +127,7 @@ func (h *GroupChatHandler) AddMember(c *gin.Context) {
 		MemberID: memberId,
 	})
 	if err != nil {
-		resp := errmap.Map(err)
-		c.JSON(resp.Code, resp.Body)
+		errmap.Respond(c, err)
 		return
 	}
 
@@ -158,8 +154,7 @@ func (h *GroupChatHandler) DeleteMember(c *gin.Context) {
 		MemberID: memberId,
 	})
 	if err != nil {
-		resp := errmap.Map(err)
-		c.JSON(resp.Code, resp.Body)
+		errmap.Respond(c, err)
 		return
 	}
 

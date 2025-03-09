@@ -48,8 +48,7 @@ func (h *SecretGroupPhotoHandler) UpdatePhoto(c *gin.Context) {
 		FileID:   req.PhotoID,
 	})
 	if err != nil {
-		resp := errmap.Map(err)
-		c.JSON(resp.Code, resp.Body)
+		errmap.Respond(c, err)
 		return
 	}
 
@@ -77,8 +76,7 @@ func (h *SecretGroupPhotoHandler) DeletePhoto(c *gin.Context) {
 		SenderID: userId,
 	})
 	if err != nil {
-		resp := errmap.Map(err)
-		c.JSON(resp.Code, resp.Body)
+		errmap.Respond(c, err)
 		return
 	}
 
