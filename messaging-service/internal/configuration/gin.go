@@ -45,17 +45,37 @@ func GinEngine(handlers *Handlers, db *DB, conf *Config) (*gin.Engine, error) {
 		DefaultHeader: "X-Internal-Token",
 	}))
 
-	idempotent := r.Group("/").
+	idemp := r.Group("/").
 		Use(idempotency.New(
 			idempotency.NewStorage(db.Redis, &idempotency.IdempotencyConfig{
 				DataExp: 1 * time.Hour,
 			}),
 		))
 
-	idempotent.POST("/v1.0/chat/personal", handlers.PersonalChat.CreateChat)
+	idemp.POST("/v1.0/chat/personal", handlers.PersonalChat.CreateChat)
 	r.PUT("/v1.0/chat/personal/:chatId/block", handlers.PersonalChat.BlockChat)
 	r.PUT("/v1.0/chat/personal/:chatId/unblock", handlers.PersonalChat.UnblockChat)
 	r.DELETE("/v1.0/chat/personal/:chatId", handlers.PersonalChat.DeleteChat)
+
+	idemp.POST("/v1.0/chat/personal/secret", handlers.SecretPersonalChat.CreateChat)
+	r.PUT("/v1.0/chat/personal/secret/:chatId/expiration", handlers.SecretGroup.SetExpiration)
+	r.DELETE("/v1.0/chat/personal/secret/:chatId/:deleteMode", handlers.SecretPersonalChat.DeleteChat)
+
+	idemp.POST("/v1.0/group", handlers.GroupChat.CreateGroup)
+	r.PUT("/v1.0/group/:chatId", handlers.GroupChat.UpdateGroup)
+	r.DELETE("/v1.0/group/:chatId", handlers.GroupChat.DeleteGroup)
+	r.PUT("/v1.0/group/:chatId/member/:memberId", handlers.GroupChat.AddMember)
+	r.DELETE("/v1.0/group/:chatId/member/:memberId", handlers.GroupChat.DeleteMember)
+	r.PUT("/v1.0/group/:chatId/photo", handlers.GroupPhoto.UpdatePhoto)
+	r.DELETE("/v1.0/group/:chatId/photo", handlers.GroupPhoto.DeletePhoto)
+
+	idemp.POST("/v1.0/group/secret", handlers.SecretGroup.Create)
+	r.PUT("/v1.0/group/secret/:chatId", handlers.SecretGroup.Update)
+	r.DELETE("/v1.0/group/secret/:chatId", handlers.SecretGroup.Delete)
+	r.PUT("/v1.0/group/secret/:chatId/member/:memberId", handlers.SecretGroup.AddMember)
+	r.DELETE("/v1.0/group/secret/:chatId/member/:memberId", handlers.SecretGroup.DeleteMember)
+	r.PUT("/v1.0/group/secret/:chatId/photo", handlers.SecretGroupPhoto.UpdatePhoto)
+	r.DELETE("/v1.0/group/secret/:chatId/photo", handlers.SecretGroupPhoto.DeletePhoto)
 
 	return r, nil
 }

@@ -1,4 +1,4 @@
-package postgres
+package chat
 
 import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
