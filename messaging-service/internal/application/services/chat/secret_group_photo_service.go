@@ -23,8 +23,8 @@ type SecretGroupPhotoService struct {
 func NewSecretGroupPhotoService(repo repository.SecretGroupChatRepository,
 	files external.FileStorage,
 	pub publish.Publisher,
-) SecretGroupPhotoService {
-	return SecretGroupPhotoService{
+) *SecretGroupPhotoService {
+	return &SecretGroupPhotoService{
 		repo:  repo,
 		files: files,
 		pub:   pub,

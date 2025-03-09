@@ -82,6 +82,28 @@ func (h *SecretPersonalChatHandler) SetExpiration(c *gin.Context) {
 	restapi.SendSuccess(c, newSecretPersonalChatResponse(chat))
 }
 
+func (h *SecretPersonalChatHandler) DeleteChat(c *gin.Context) {
+	chatId, err := uuid.Parse(c.Param(paramChatID))
+	if err != nil {
+		restapi.SendInvalidChatID(c)
+		return
+	}
+	userId := getUserID(c.Request.Context())
+
+	err = h.service.DeleteChat(c.Request.Context(), request.DeleteChat{
+		ChatID:   chatId,
+		SenderID: userId,
+	})
+	if err != nil {
+		resp := errmap.Map(err)
+		c.JSON(resp.Code, resp.Body)
+		return
+	}
+
+	restapi.SendSuccess(c, struct{}{})
+
+}
+
 type secretPersonalChatResponse struct {
 	ID      uuid.UUID    `json:"chat_id"`
 	Members [2]uuid.UUID `json:"members"`

@@ -207,7 +207,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponseWithDetails'
-  /chat/personal/{chatId}/delete/{deleteMode}:
+  /chat/personal/{chatId}/{deleteMode}:
     delete:
       summary: Delete chat
       description: Delete chat
@@ -349,7 +349,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponseWithDetails'
-  /chat/personal/secret/{chatId}/delete/{deleteMode}:
+  /chat/personal/secret/{chatId}/{deleteMode}:
     delete:
       summary: Delete chat
       description: Delete chat
