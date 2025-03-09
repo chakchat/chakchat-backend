@@ -15,6 +15,7 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {
@@ -74,10 +75,13 @@ func main() {
 		log.Fatalf("Add instrument tracing to redis failed: %s", err)
 	}
 
-	fileStConn, err := grpc.NewClient(config.FileStorage.GrpcAddr)
+	fileStConn, err := grpc.NewClient(config.FileStorage.GrpcAddr,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 	if err != nil {
 		log.Fatalf("Cannot connect to file storage gRPC: %s", err)
 	}
+	defer fileStConn.Close()
 
 	confDB := configuration.NewDB(db, rdb)
 
