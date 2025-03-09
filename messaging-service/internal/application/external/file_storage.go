@@ -1,6 +1,7 @@
 package external
 
 import (
+	"context"
 	"errors"
 
 	"github.com/google/uuid"
@@ -21,5 +22,5 @@ type FileMeta struct {
 
 type FileStorage interface {
 	// Should return ErrFileNotFound if there are no such file
-	GetById(uuid.UUID) (*FileMeta, error)
+	GetById(context.Context, uuid.UUID) (*FileMeta, error)
 }
