@@ -1,6 +1,8 @@
 package services
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 )
 
@@ -31,13 +33,28 @@ type GenericChatInfo interface {
 	SecretGroup() SecretGroupInfo
 }
 
-type PersonalInfo struct{}
+type PersonalInfo struct {
+	BlockedBy []uuid.UUID
+}
 
-type GroupInfo struct{}
+type GroupInfo struct {
+	Admin            uuid.UUID
+	GroupName        string
+	GroupDescription string
+	GroupPhoto       string
+}
 
-type SecretPersonalInfo struct{}
+type SecretPersonalInfo struct {
+	Expiration *time.Duration
+}
 
-type SecretGroupInfo struct{}
+type SecretGroupInfo struct {
+	Admin            uuid.UUID
+	GroupName        string
+	GroupDescription string
+	GroupPhoto       string
+	Expiration       *time.Duration
+}
 
 func NewPersonalGenericChat(
 	id uuid.UUID,
