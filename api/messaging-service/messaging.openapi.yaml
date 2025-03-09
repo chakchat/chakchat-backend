@@ -1925,18 +1925,13 @@ components:
         type:
           type: string
           enum: [personal, personal_secret, group, group_secret]
-        secret: 
-          type: boolean
-        name:
-          type: string
         members:
           type: array
           items:
             type: string
             format: uuid
-        chat_photo:
-          type: string
-          format: url
+        info:
+          type: object
         last_update_id:
           type: integer
           format: int64``
@@ -1949,10 +1944,8 @@ components:
       required:
         - chat_id
         - type
-        - secret
-        - name
+        - info
         - members
-        - chat_photo
         - preview
     UpdateGroupPhotoRequest:
       type: object

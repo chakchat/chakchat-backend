@@ -47,11 +47,7 @@ func (h *PersonalChatHandler) CreateChat(c *gin.Context) {
 		MemberID: req.MemberID,
 	})
 	if err != nil {
-		resp := errmap.Map(err)
-		if resp.Code >= 500 {
-			c.Error(err)
-		}
-		c.JSON(resp.Code, resp.Body)
+		errmap.Respond(c, err)
 		return
 	}
 
@@ -71,8 +67,7 @@ func (h *PersonalChatHandler) BlockChat(c *gin.Context) {
 		SenderID: userId,
 	})
 	if err != nil {
-		resp := errmap.Map(err)
-		c.JSON(resp.Code, resp.Body)
+		errmap.Respond(c, err)
 		return
 	}
 
@@ -92,8 +87,7 @@ func (h *PersonalChatHandler) UnblockChat(c *gin.Context) {
 		SenderID: userId,
 	})
 	if err != nil {
-		resp := errmap.Map(err)
-		c.JSON(resp.Code, resp.Body)
+		errmap.Respond(c, err)
 		return
 	}
 
@@ -113,8 +107,7 @@ func (h *PersonalChatHandler) DeleteChat(c *gin.Context) {
 		SenderID: userId,
 	})
 	if err != nil {
-		resp := errmap.Map(err)
-		c.JSON(resp.Code, resp.Body)
+		errmap.Respond(c, err)
 		return
 	}
 

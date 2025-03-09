@@ -9,6 +9,7 @@ type Handlers struct {
 	SecretPersonalChat *chat.SecretPersonalChatHandler
 	SecretGroup        *chat.SecretGroupHandler
 	SecretGroupPhoto   *chat.SecretGroupPhotoHandler
+	GenericChat        *chat.GenericChatHandler
 }
 
 func NewHandlers(services *Services) *Handlers {
@@ -19,5 +20,6 @@ func NewHandlers(services *Services) *Handlers {
 		SecretPersonalChat: chat.NewSecretPersonalChatHandler(services.SecretPersonalChat),
 		SecretGroup:        chat.NewSecretGroupHandler(services.SecretGroup),
 		SecretGroupPhoto:   chat.NewSecretGroupPhotoHandler(services.GroupPhoto),
+		GenericChat:        chat.NewGenericChatHandler(services.GenericChat),
 	}
 }

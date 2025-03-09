@@ -49,8 +49,7 @@ func (h *SecretGroupHandler) Create(c *gin.Context) {
 		Name:     req.Name,
 	})
 	if err != nil {
-		resp := errmap.Map(err)
-		c.JSON(resp.Code, resp.Body)
+		errmap.Respond(c, err)
 		return
 	}
 
@@ -81,8 +80,7 @@ func (h *SecretGroupHandler) Update(c *gin.Context) {
 		Description: req.Description,
 	})
 	if err != nil {
-		resp := errmap.Map(err)
-		c.JSON(resp.Code, resp.Body)
+		errmap.Respond(c, err)
 		return
 	}
 
@@ -109,8 +107,7 @@ func (h *SecretGroupHandler) AddMember(c *gin.Context) {
 		MemberID: memberId,
 	})
 	if err != nil {
-		resp := errmap.Map(err)
-		c.JSON(resp.Code, resp.Body)
+		errmap.Respond(c, err)
 		return
 	}
 
@@ -137,8 +134,7 @@ func (h *SecretGroupHandler) DeleteMember(c *gin.Context) {
 		MemberID: memberId,
 	})
 	if err != nil {
-		resp := errmap.Map(err)
-		c.JSON(resp.Code, resp.Body)
+		errmap.Respond(c, err)
 		return
 	}
 
@@ -158,8 +154,7 @@ func (h *SecretGroupHandler) Delete(c *gin.Context) {
 		SenderID: userId,
 	})
 	if err != nil {
-		resp := errmap.Map(err)
-		c.JSON(resp.Code, resp.Body)
+		errmap.Respond(c, err)
 		return
 	}
 
@@ -188,8 +183,7 @@ func (h *SecretGroupHandler) SetExpiration(c *gin.Context) {
 		Expiration: req.Expiration,
 	})
 	if err != nil {
-		resp := errmap.Map(err)
-		c.JSON(resp.Code, resp.Body)
+		errmap.Respond(c, err)
 		return
 	}
 
