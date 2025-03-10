@@ -6,6 +6,14 @@ import (
 	"github.com/google/uuid"
 )
 
+type Restriction string
+
+const (
+	RestrictionAll       = "everyone"
+	RestrictionSpecified = "specified"
+	RestrictionNone      = "only_me"
+)
+
 type User struct {
 	ID          uuid.UUID `gorm:"type:uuid;primaryKey"`
 	Username    string
@@ -13,23 +21,20 @@ type User struct {
 	Phone       string
 	DateOfBirth *time.Time
 	PhotoURL    string
-	CreatedAt   int64
-}
+	CreatedAt   int64 `gorm:"autoCreateTime"`
 
-type UserRestrictions struct {
-	UserId      uuid.UUID        `gorm:"primaryKey"`
-	Phone       FieldRestriction `gorm:"embedded"`
-	DateOfBirth FieldRestriction `gorm:"embedded"`
+	DateOfBirthVisibility Restriction `gorm:"default:everyone"`
+	PhoneVisibility       Restriction `gorm:"default:everyone"`
 }
 
 type FieldRestriction struct {
-	ID             uuid.UUID `gorm:"primaryKey"`
-	OpenTo         string
-	SpecifiedUsers []FieldRestrictionUser `gorm:"foreignKey:UserID"`
+	OwnerID        uuid.UUID `gorm:"primaryKey"`
+	FieldName      string
+	SpecifiedUsers []FieldRestrictionUser `gorm:"foreignKey:FieldRestrictionId;constraint:OnDelete:Cascade"`
 }
 
 type FieldRestrictionUser struct {
-	ID                 uuid.UUID `gorm:"primaryKey"`
-	FieldRestrictionId uuid.UUID
-	UserID             uuid.UUID
+	UserID             uuid.UUID         `gorm:"type:uuid"`
+	FieldRestrictionId uuid.UUID         `gorm:"type:uuid"`
+	FieldRestriction   *FieldRestriction `gorm:"constraint:OnDelete:CASCADE"`
 }
