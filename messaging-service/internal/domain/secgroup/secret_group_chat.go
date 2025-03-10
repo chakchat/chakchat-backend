@@ -99,7 +99,7 @@ func (g *SecretGroupChat) AddMember(sender domain.UserID, newMember domain.UserI
 }
 
 func (g *SecretGroupChat) DeleteMember(sender domain.UserID, member domain.UserID) error {
-	if sender != g.Admin {
+	if sender != g.Admin && sender != member {
 		return domain.ErrSenderNotAdmin
 	}
 

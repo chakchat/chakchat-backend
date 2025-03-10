@@ -41,7 +41,7 @@ func (r *GenericChatRepository) GetByMemberID(ctx context.Context, memberID doma
 		COALESCE(group_chat.group_name, secret_group_chat.group_name),
 		COALESCE(group_chat.group_photo, secret_group_chat.group_photo),
 		COALESCE(group_chat.group_description, secret_group_chat.group_description),
-		COALESCE(secret_personal_chat.expiration_seconds, secret_group_chat.expiration_seconds),
+		COALESCE(secret_personal_chat.expiration_seconds, secret_group_chat.expiration_seconds)
 	FROM messaging.membership m
 		JOIN messaging.chat c ON c.chat_id = m.chat_id
 		LEFT JOIN messaging.personal_chat ON personal_chat.chat_id = c.chat_id
@@ -104,7 +104,7 @@ func (r *GenericChatRepository) GetByChatID(ctx context.Context, id domain.ChatI
 		COALESCE(group_chat.group_name, secret_group_chat.group_name),
 		COALESCE(group_chat.group_photo, secret_group_chat.group_photo),
 		COALESCE(group_chat.group_description, secret_group_chat.group_description),
-		COALESCE(secret_personal_chat.expiration_seconds, secret_group_chat.expiration_seconds),
+		COALESCE(secret_personal_chat.expiration_seconds, secret_group_chat.expiration_seconds)
 	FROM messaging.chat c
 		LEFT JOIN messaging.personal_chat ON personal_chat.chat_id = c.chat_id
 		LEFT JOIN messaging.group_chat ON group_chat.chat_id = c.chat_id

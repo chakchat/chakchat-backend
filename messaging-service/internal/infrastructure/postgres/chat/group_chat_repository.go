@@ -119,7 +119,7 @@ func (r *GroupChatRepository) Create(ctx context.Context, g *group.GroupChat) (*
 		INSERT INTO messaging.group_chat
 		(chat_id, admin_id, group_name, group_photo, group_description)
 		VALUES ($1, $2, $3, $4, $5)`
-		_, err := r.db.Exec(ctx, q, g.ID, g.Admin, g.GroupPhoto, g.Description)
+		_, err := r.db.Exec(ctx, q, g.ID, g.Admin, g.Name, g.GroupPhoto, g.Description)
 		if err != nil {
 			return nil, err
 		}
