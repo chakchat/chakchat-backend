@@ -96,7 +96,7 @@ func (g *GroupChat) AddMember(sender domain.UserID, newMember domain.UserID) err
 }
 
 func (g *GroupChat) DeleteMember(sender domain.UserID, member domain.UserID) error {
-	if sender != g.Admin {
+	if sender != g.Admin && sender != member {
 		return domain.ErrSenderNotAdmin
 	}
 
