@@ -2,6 +2,8 @@ package services
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"time"
@@ -53,11 +55,19 @@ func NewUploadService(storer FileMetaStorer, client *s3.Client, conf *S3Config) 
 
 func (s *UploadService) Upload(ctx context.Context, req *UploadFileRequest) (*FileMeta, error) {
 	fileId := uuid.New()
+
+	hasher := sha256.New()
+	if _, err := io.Copy(hasher, req.File); err != nil {
+		return nil, fmt.Errorf("failed to compute SHA-256 hash: %s", err)
+	}
+	hash := hex.EncodeToString(hasher.Sum(nil))
+
 	_, err := s.client.PutObject(ctx, &s3.PutObjectInput{
-		Bucket:      aws.String(s.conf.Bucket),
-		Key:         aws.String(fileId.String()),
-		Body:        req.File,
-		ContentType: aws.String(req.MimeType),
+		Bucket:         aws.String(s.conf.Bucket),
+		Key:            aws.String(fileId.String()),
+		Body:           req.File,
+		ContentType:    aws.String(req.MimeType),
+		ChecksumSHA256: aws.String(hash),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("file uploading failed: %s", err)
