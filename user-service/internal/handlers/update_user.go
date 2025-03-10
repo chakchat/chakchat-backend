@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"time"
 
@@ -73,6 +74,13 @@ func UpdateUser(service UpdateUserserver, getter GetUserServer) gin.HandlerFunc 
 			DateOfBirth: &date,
 		})
 		if err != nil {
+			if errors.Is(err, services.ErrValidationError) {
+				c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
+					ErrorType:    restapi.ErrTypeInvalidJson,
+					ErrorMessage: "Wrong username",
+				})
+				return
+			}
 			restapi.SendValidationError(c, []restapi.ErrorDetail{
 				{
 					Field:   "UserId",
