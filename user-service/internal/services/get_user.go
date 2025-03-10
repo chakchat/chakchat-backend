@@ -18,7 +18,7 @@ type GetUserRepository interface {
 }
 
 type GetRestrictionRepository interface {
-	GetRestriction(ctx context.Context, id uuid.UUID) (*models.UserRestrictions, error)
+	GetRestrictions(ctx context.Context, id uuid.UUID, field string) (*storage.FieldRestrictions, error)
 }
 
 type GetUserService struct {
@@ -42,20 +42,42 @@ func (g *GetUserService) GetUserByID(ctx context.Context, ownerId uuid.UUID, tar
 		return nil, err
 	}
 
-	restr, err := g.getRestrictionRepo.GetRestriction(ctx, targetId)
-	if err != nil {
-		if errors.Is(err, storage.ErrNotFound) {
-			return nil, ErrNotFound
-		}
-		return nil, err
+	if targetId == ownerId {
+		return user, nil
 	}
 
-	if !canView(ownerId, restr.Phone) {
+	if user.PhoneVisibility == models.RestrictionNone {
 		user.Phone = ""
 	}
 
-	if !canView(ownerId, restr.DateOfBirth) {
+	if user.PhoneVisibility == models.RestrictionSpecified {
+		restr, err := g.getRestrictionRepo.GetRestrictions(ctx, targetId, "Phone")
+		if err != nil {
+			if errors.Is(err, storage.ErrNotFound) {
+				return nil, ErrNotFound
+			}
+			return nil, err
+		}
+		if !canView(ownerId, restr.SpecifiedUsers) {
+			user.Phone = ""
+		}
+	}
+
+	if user.DateOfBirthVisibility == models.RestrictionNone {
 		user.DateOfBirth = nil
+	}
+
+	if user.DateOfBirthVisibility == models.RestrictionSpecified {
+		restr, err := g.getRestrictionRepo.GetRestrictions(ctx, targetId, "DateOfBirth")
+		if err != nil {
+			if errors.Is(err, storage.ErrNotFound) {
+				return nil, ErrNotFound
+			}
+			return nil, err
+		}
+		if !canView(ownerId, restr.SpecifiedUsers) {
+			user.DateOfBirth = nil
+		}
 	}
 
 	return user, nil
@@ -70,20 +92,42 @@ func (g *GetUserService) GetUserByUsername(ctx context.Context, ownerId uuid.UUI
 		return nil, err
 	}
 
-	restr, err := g.getRestrictionRepo.GetRestriction(ctx, user.ID)
-	if err != nil {
-		if errors.Is(err, storage.ErrNotFound) {
-			return nil, ErrNotFound
-		}
-		return nil, err
+	if user.ID == ownerId {
+		return user, nil
 	}
 
-	if !canView(ownerId, restr.Phone) {
+	if user.PhoneVisibility == models.RestrictionNone {
 		user.Phone = ""
 	}
 
-	if !canView(ownerId, restr.DateOfBirth) {
+	if user.PhoneVisibility == models.RestrictionSpecified {
+		restr, err := g.getRestrictionRepo.GetRestrictions(ctx, user.ID, "Phone")
+		if err != nil {
+			if errors.Is(err, storage.ErrNotFound) {
+				return nil, ErrNotFound
+			}
+			return nil, err
+		}
+		if !canView(ownerId, restr.SpecifiedUsers) {
+			user.Phone = ""
+		}
+	}
+
+	if user.DateOfBirthVisibility == models.RestrictionNone {
 		user.DateOfBirth = nil
+	}
+
+	if user.DateOfBirthVisibility == models.RestrictionSpecified {
+		restr, err := g.getRestrictionRepo.GetRestrictions(ctx, user.ID, "DateOfBirth")
+		if err != nil {
+			if errors.Is(err, storage.ErrNotFound) {
+				return nil, ErrNotFound
+			}
+			return nil, err
+		}
+		if !canView(ownerId, restr.SpecifiedUsers) {
+			user.DateOfBirth = nil
+		}
 	}
 
 	return user, nil
@@ -103,20 +147,11 @@ func (g *GetUserService) GetUsersByCriteria(ctx context.Context, req storage.Sea
 	return resp, nil
 }
 
-func canView(ownerId uuid.UUID, restr models.FieldRestriction) bool {
-	switch restr.OpenTo {
-	case "everyone":
-		return true
-	case "only_me":
-		return ownerId == restr.SpecifiedUsers[0].ID
-	case "specified":
-		for _, id := range restr.SpecifiedUsers {
-			if id.ID == ownerId {
-				return true
-			}
+func canView(ownerId uuid.UUID, specifiedUsers []uuid.UUID) bool {
+	for _, id := range specifiedUsers {
+		if id == ownerId {
+			return true
 		}
-		return false
-	default:
-		return false
 	}
+	return false
 }
