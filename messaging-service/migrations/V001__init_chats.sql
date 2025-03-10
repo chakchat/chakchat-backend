@@ -54,10 +54,11 @@ CREATE INDEX IF NOT EXISTS blocking_user_id_idx
 
 --------------------------------------------------------------------------------
 
-CREATE FUNCTION messaging.check_personal_chat_has_exact_two_members() RETURNS TRIGGER AS $$
+CREATE FUNCTION messaging.check_personal_chat_has_exactly_two_members() RETURNS TRIGGER AS $$
 DECLARE
     num_members INT;
 BEGIN
+
     num_members := (SELECT COUNT(*) FROM messaging.membership WHERE chat_id = NEW.chat_id);
     IF (num_members != 2) THEN
         RAISE EXCEPTION 
@@ -67,10 +68,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER ensure_personal_chat_has_exact_two_members
-    AFTER INSERT OR UPDATE ON messaging.membership
+CREATE CONSTRAINT TRIGGER ensure_personal_chat_has_exact_two_members
+    AFTER INSERT OR UPDATE 
+    ON messaging.membership
     FOR EACH ROW
-EXECUTE PROCEDURE messaging.check_personal_chat_has_exact_two_members();
+    DEFERRABLE INITIALLY DEFERRED
+    WHEN (EXISTS (SELECT * FROM messaging.personal_chat WHERE chat_id = NEW.chat_id))
+EXECUTE PROCEDURE messaging.check_personal_chat_has_exactly_two_members();
 
 --------------------------------------------------------------------------------
 
