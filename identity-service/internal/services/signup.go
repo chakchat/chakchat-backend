@@ -81,25 +81,6 @@ func (s *SignUpService) SignUp(ctx context.Context, signUpKey uuid.UUID, user Cr
 	return tokens, nil
 }
 
-func (s *SignUpService) generateTokens(id *userservice.UUID, name, username string) (jwt.Pair, error) {
-	claims := jwt.Claims{
-		jwt.ClaimSub:      id,
-		jwt.ClaimName:     name,
-		jwt.ClaimUsername: username,
-	}
-
-	var pair jwt.Pair
-	var err error
-	if pair.Access, err = jwt.Generate(s.accessConf, claims); err != nil {
-		return jwt.Pair{}, fmt.Errorf("access token generation failed: %s", err)
-	}
-	if pair.Refresh, err = jwt.Generate(s.refreshConf, claims); err != nil {
-		return jwt.Pair{}, fmt.Errorf("refresh token generation failed: %s", err)
-	}
-
-	return pair, nil
-}
-
 func (s *SignUpService) checkMeta(ctx context.Context, signUpKey uuid.UUID) (*SignUpMeta, error) {
 	meta, ok, err := s.storage.FindMeta(ctx, signUpKey)
 	if err != nil {
