@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"time"
@@ -50,7 +51,11 @@ func Upload(conf *UploadConfig, service UploadService) gin.HandlerFunc {
 			restapi.SendInternalError(c)
 			return
 		}
-
+		if _, err := file.Seek(0, io.SeekStart); err != nil {
+			c.Error(fmt.Errorf("i don't even know why I should seek to 0 here but it failed: %s", err))
+			restapi.SendInternalError(c)
+			return
+		}
 		defer file.Close()
 		resp, err := service.Upload(c.Request.Context(), &services.UploadFileRequest{
 			FileName: fileHeader.Filename,
