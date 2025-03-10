@@ -55,9 +55,23 @@ func (s *SignUpService) SignUp(ctx context.Context, signUpKey uuid.UUID, user Cr
 		return jwt.Pair{}, err
 	}
 
-	tokens, err := s.generateTokens(userResp.UserId, *userResp.Name, *userResp.UserName)
+	id, err := uuid.Parse(userResp.UserId.Value)
 	if err != nil {
-		return jwt.Pair{}, err
+		return jwt.Pair{}, fmt.Errorf("failed to parse UserID from user service: %s", err)
+	}
+
+	claims := jwt.Claims{
+		jwt.ClaimSub:      id,
+		jwt.ClaimName:     userResp.Name,
+		jwt.ClaimUsername: userResp.UserName,
+	}
+
+	var tokens jwt.Pair
+	if tokens.Access, err = jwt.Generate(s.accessConf, claims); err != nil {
+		return jwt.Pair{}, fmt.Errorf("access token generation failed: %s", err)
+	}
+	if tokens.Refresh, err = jwt.Generate(s.refreshConf, claims); err != nil {
+		return jwt.Pair{}, fmt.Errorf("refresh token generation failed: %s", err)
 	}
 
 	if err := s.storage.Remove(ctx, signUpKey); err != nil {
