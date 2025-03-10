@@ -112,6 +112,7 @@ func (s *UserStorage) GetUsersByCriteria(ctx context.Context, req SearchUsersReq
 	if err := query.Count(&count).Error; err != nil {
 		return nil, err
 	}
+	count -= int64(offset)
 
 	if err := query.Offset(offset).Limit(limit).Find(&users).Error; err != nil {
 		return nil, err
@@ -150,7 +151,14 @@ func (s *UserStorage) CreateUser(ctx context.Context, user *models.User) (*model
 
 func (s *UserStorage) UpdateUser(ctx context.Context, user *models.User, req *UpdateUserRequest) (*models.User, error) {
 
-	if err := s.db.WithContext(ctx).Save(&models.User{ID: (*user).ID, Name: (*req).Name, Username: (*req).Username, DateOfBirth: (*req).DateOfBirth}).Error; err != nil {
+	var me models.User
+	if err := s.db.WithContext(ctx).Where("username = ?", req.Username).First(&me).Error; err == nil && me.ID != user.ID {
+		return nil, ErrAlreadyExists
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	if err := s.db.WithContext(ctx).Save(&models.User{ID: user.ID, Name: req.Name, Username: req.Username, DateOfBirth: req.DateOfBirth}).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrNotFound
 		}

@@ -9,13 +9,9 @@ import (
 	"gorm.io/gorm"
 )
 
-type UserRestrictions struct {
-	Phone       FieldRestriction
-	DateOfBirth FieldRestriction
-}
-
-type FieldRestriction struct {
-	OpenTo         string
+type FieldRestrictions struct {
+	Field          string
+	OpenTo         models.Restriction
 	SpecifiedUsers []uuid.UUID
 }
 
@@ -29,56 +25,100 @@ func NewRestrictionStorage(db *gorm.DB) *RestrictionStorage {
 	}
 }
 
-func (s *RestrictionStorage) GetRestriction(ctx context.Context, id uuid.UUID) (*models.UserRestrictions, error) {
-	var restrictions models.UserRestrictions
-	if err := s.db.WithContext(ctx).First(&restrictions, id).Error; err != nil {
+func (s *RestrictionStorage) GetRestrictions(ctx context.Context, id uuid.UUID, field string) (*FieldRestrictions, error) {
+	var fieldRestriction models.FieldRestriction
+	var fieldSpecifiedUsers []uuid.UUID
+
+	if err := s.db.WithContext(ctx).Where("owner_id = ? AND field_name = ?", id, field).Preload("SpecifiedUsers").Find(&fieldRestriction).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrNotFound
 		}
 		return nil, err
 	}
+
+	for _, user := range fieldRestriction.SpecifiedUsers {
+		fieldSpecifiedUsers = append(fieldSpecifiedUsers, user.UserID)
+	}
+
+	return &FieldRestrictions{
+		Field:          field,
+		SpecifiedUsers: fieldSpecifiedUsers,
+	}, nil
+}
+
+func (s *RestrictionStorage) UpdateRestrictions(ctx context.Context, id uuid.UUID, restrictions FieldRestrictions) (*FieldRestrictions, error) {
+
+	var user models.User
+
+	if err := s.db.WithContext(ctx).First(&user, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+
+	if restrictions.Field == "Phone" {
+		user.PhoneVisibility = restrictions.OpenTo
+	} else {
+		user.DateOfBirthVisibility = restrictions.OpenTo
+	}
+
+	var add []uuid.UUID
+	var del []uuid.UUID
+	_, err := s.GetRestrictions(ctx, id, restrictions.Field)
+	if err != nil && err != gorm.ErrUnsupportedRelation {
+		return nil, err
+	}
+	if err == nil {
+		phoneRestr, err := s.GetRestrictions(ctx, id, restrictions.Field)
+		if err != nil {
+			return nil, err
+		}
+
+		add = recordMisses(phoneRestr.SpecifiedUsers, restrictions.SpecifiedUsers)
+		del = recordMisses(restrictions.SpecifiedUsers, phoneRestr.SpecifiedUsers)
+
+		err = s.db.WithContext(ctx).Where("field_restriction_id = ?", id).Delete(&models.FieldRestrictionUser{}, del).Error
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		fieldRestriction := models.FieldRestriction{
+			OwnerID:   id,
+			FieldName: restrictions.Field,
+		}
+		if err := s.db.Create(&fieldRestriction).Error; err != nil {
+			return nil, err
+		}
+		add = restrictions.SpecifiedUsers
+	}
+
+	for _, record := range add {
+		specifiedUser := models.FieldRestrictionUser{
+			UserID:             record,
+			FieldRestrictionId: id,
+		}
+		if err := s.db.Create(&specifiedUser).Error; err != nil {
+			return nil, err
+		}
+	}
+
 	return &restrictions, nil
 }
 
-func (s *RestrictionStorage) UpdateRestrictions(ctx context.Context, id uuid.UUID, restrictions UserRestrictions) (*models.UserRestrictions, error) {
-	var userRestrictions models.UserRestrictions
-	if err := s.db.WithContext(ctx).Where(&models.User{ID: id}).First(&userRestrictions).Error; err != nil {
-		return nil, ErrNotFound
+func recordMisses(orig, comp []uuid.UUID) []uuid.UUID {
+	compMap := make(map[uuid.UUID]bool, len(comp))
+	for _, t := range comp {
+		compMap[t] = true
 	}
 
-	var phoneSpecifiedUsers []models.FieldRestrictionUser
+	var misses []uuid.UUID
 
-	for _, id := range restrictions.Phone.SpecifiedUsers {
-		phoneSpecifiedUsers = append(phoneSpecifiedUsers, models.FieldRestrictionUser{
-			ID:                 uuid.New(),
-			FieldRestrictionId: userRestrictions.Phone.ID,
-			UserID:             id,
-		})
-	}
-
-	var dateSpecifiedUsers []models.FieldRestrictionUser
-
-	for _, id := range restrictions.DateOfBirth.SpecifiedUsers {
-		dateSpecifiedUsers = append(dateSpecifiedUsers, models.FieldRestrictionUser{
-			ID:                 uuid.New(),
-			FieldRestrictionId: userRestrictions.DateOfBirth.ID,
-			UserID:             id,
-		})
-	}
-	if err := s.db.WithContext(ctx).Save(&models.UserRestrictions{UserId: id,
-		Phone: models.FieldRestriction{
-			OpenTo:         restrictions.Phone.OpenTo,
-			SpecifiedUsers: phoneSpecifiedUsers,
-		},
-		DateOfBirth: models.FieldRestriction{
-			OpenTo:         restrictions.DateOfBirth.OpenTo,
-			SpecifiedUsers: dateSpecifiedUsers,
-		}}).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrNotFound
+	for _, t := range orig {
+		if !compMap[t] {
+			misses = append(misses, t)
 		}
-		return nil, err
 	}
 
-	return &userRestrictions, nil
+	return misses
 }

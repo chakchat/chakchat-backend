@@ -2,12 +2,14 @@ package handlers
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/chakchat/chakchat-backend/shared/go/auth"
 	"github.com/chakchat/chakchat-backend/user-service/internal/models"
 	"github.com/chakchat/chakchat-backend/user-service/internal/restapi"
 	"github.com/chakchat/chakchat-backend/user-service/internal/services"
+	"github.com/chakchat/chakchat-backend/user-service/internal/storage"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -23,10 +25,10 @@ type FieldRestriction struct {
 }
 
 type GetRestrictionsServer interface {
-	GetRestrictions(ctx context.Context, id uuid.UUID) (*models.UserRestrictions, error)
+	GetRestrictions(ctx context.Context, id uuid.UUID, field string) (*storage.FieldRestrictions, error)
 }
 
-func GetRestrictions(service GetRestrictionsServer) gin.HandlerFunc {
+func GetRestrictions(service GetRestrictionsServer, getUser GetUserServer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claimId, ok := auth.GetClaims(c.Request.Context())[auth.ClaimId]
 		if !ok {
@@ -42,12 +44,12 @@ func GetRestrictions(service GetRestrictionsServer) gin.HandlerFunc {
 			return
 		}
 
-		restr, err := service.GetRestrictions(c.Request.Context(), meId)
+		user, err := getUser.GetUserByID(c.Request.Context(), meId, meId)
 		if err != nil {
 			if err == services.ErrNotFound {
 				c.JSON(http.StatusNotFound, restapi.ErrorResponse{
 					ErrorType:    restapi.ErrTypeNotFound,
-					ErrorMessage: "User restrictions were not found",
+					ErrorMessage: "Not found user with the id",
 				})
 				return
 			}
@@ -56,24 +58,74 @@ func GetRestrictions(service GetRestrictionsServer) gin.HandlerFunc {
 			return
 		}
 
-		var users_phone []uuid.UUID
-		for _, user := range restr.Phone.SpecifiedUsers {
-			users_phone = append(users_phone, user.UserID)
+		var phoneRestriction FieldRestriction
+		var dateRestrictions FieldRestriction
+
+		log.Println(user.PhoneVisibility)
+
+		if user.PhoneVisibility == models.RestrictionAll {
+			phoneRestriction = FieldRestriction{
+				OpenTo:         "everyone",
+				SpecifiedUsers: nil,
+			}
+		} else if user.PhoneVisibility == models.RestrictionNone {
+			phoneRestriction = FieldRestriction{
+				OpenTo:         "only_me",
+				SpecifiedUsers: nil,
+			}
+		} else {
+			restrPhone, err := service.GetRestrictions(c.Request.Context(), meId, "Phone")
+			if err != nil {
+				if err == services.ErrNotFound {
+					c.JSON(http.StatusNotFound, restapi.ErrorResponse{
+						ErrorType:    restapi.ErrTypeNotFound,
+						ErrorMessage: "Phone restrictions were not found",
+					})
+					return
+				}
+				c.Error(err)
+				restapi.SendInternalError(c)
+				return
+			}
+			phoneRestriction = FieldRestriction{
+				OpenTo:         "specified",
+				SpecifiedUsers: restrPhone.SpecifiedUsers,
+			}
 		}
 
-		var users_date []uuid.UUID
-		for _, user := range restr.DateOfBirth.SpecifiedUsers {
-			users_date = append(users_date, user.UserID)
+		if user.DateOfBirthVisibility == models.RestrictionAll {
+			dateRestrictions = FieldRestriction{
+				OpenTo:         "everyone",
+				SpecifiedUsers: nil,
+			}
+		} else if user.DateOfBirthVisibility == models.RestrictionNone {
+			dateRestrictions = FieldRestriction{
+				OpenTo:         "only_me",
+				SpecifiedUsers: nil,
+			}
+		} else {
+			restrDate, err := service.GetRestrictions(c.Request.Context(), meId, "DateOfBirth")
+			if err != nil {
+				if err == services.ErrNotFound {
+					c.JSON(http.StatusNotFound, restapi.ErrorResponse{
+						ErrorType:    restapi.ErrTypeNotFound,
+						ErrorMessage: "Date of birth restrictions were not found",
+					})
+					return
+				}
+				c.Error(err)
+				restapi.SendInternalError(c)
+				return
+			}
+			dateRestrictions = FieldRestriction{
+				OpenTo:         "specified",
+				SpecifiedUsers: restrDate.SpecifiedUsers,
+			}
 		}
+
 		restapi.SendSuccess(c, &UserRestrictions{
-			Phone: FieldRestriction{
-				OpenTo:         restr.Phone.OpenTo,
-				SpecifiedUsers: users_phone,
-			},
-			DateOfBirth: FieldRestriction{
-				OpenTo:         restr.DateOfBirth.OpenTo,
-				SpecifiedUsers: users_date,
-			},
+			Phone:       phoneRestriction,
+			DateOfBirth: dateRestrictions,
 		})
 	}
 }

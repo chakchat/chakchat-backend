@@ -164,7 +164,7 @@ func main() {
 		GET("/v1.0/user/username/:username", getUserServer.GetUserByUsername()).
 		GET("/v1.0/users", getUserServer.GetUsersByCriteria()).
 		GET("/v1.0/me", getUserServer.GetMe()).
-		GET("/v1.0/me/restrictions", handlers.GetRestrictions(getRestrictionService)).
+		GET("/v1.0/me/restrictions", handlers.GetRestrictions(getRestrictionService, getUserService)).
 		PUT("v1.0/me", handlers.UpdateUser(updateUserService, getUserService)).
 		PUT("v1.0/me/restrictions", handlers.UpdateRestrictions(updateRestrictions)).
 		PUT("v1.0/me/profile-photo", handlers.UpdatePhoto(processPhotoService)).
@@ -197,7 +197,7 @@ func connectDB() (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
-	if err := db.AutoMigrate(&models.User{}, &models.UserRestrictions{}, &models.FieldRestriction{}, &models.FieldRestrictionUser{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.FieldRestriction{}, &models.FieldRestrictionUser{}); err != nil {
 		return nil, fmt.Errorf("failed to auto-migrate database: %w", err)
 	}
 	return db, nil

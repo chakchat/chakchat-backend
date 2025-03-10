@@ -30,6 +30,9 @@ func (u *UpdateUserService) UpdateUser(ctx context.Context, user *models.User, r
 		if errors.Is(err, storage.ErrNotFound) {
 			return nil, ErrValidationError
 		}
+		if errors.Is(err, storage.ErrAlreadyExists) {
+			return nil, ErrValidationError
+		}
 		return nil, err
 	}
 	return updatedUser, nil
