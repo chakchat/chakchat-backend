@@ -79,7 +79,7 @@ func (s *UserStorage) GetUsersByCriteria(ctx context.Context, req SearchUsersReq
 	query := s.db.WithContext(ctx).Model(&models.User{})
 
 	if req.Name != nil {
-		query = query.Where(&models.User{Name: *req.Name})
+		query = query.Where("name LIKE ?", "%"+*req.Name+"%")
 		if err := query.Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return nil, ErrNotFound
@@ -89,7 +89,7 @@ func (s *UserStorage) GetUsersByCriteria(ctx context.Context, req SearchUsersReq
 	}
 
 	if req.Username != nil {
-		query = query.Where(&models.User{Username: *req.Username})
+		query = query.Where("username LIKE ?", "%"+*req.Username+"%")
 		if err := query.Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return nil, ErrNotFound
