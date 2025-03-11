@@ -58,6 +58,10 @@ CREATE FUNCTION messaging.check_personal_chat_has_exactly_two_members() RETURNS 
 DECLARE
     num_members INT;
 BEGIN
+    IF (NOT EXISTS (SELECT * FROM messaging.personal_chat WHERE chat_id = NEW.chat_id))
+    THEN 
+        RETURN NEW;
+    END IF;
 
     num_members := (SELECT COUNT(*) FROM messaging.membership WHERE chat_id = NEW.chat_id);
     IF (num_members != 2) THEN
@@ -71,9 +75,8 @@ $$ LANGUAGE plpgsql;
 CREATE CONSTRAINT TRIGGER ensure_personal_chat_has_exact_two_members
     AFTER INSERT OR UPDATE 
     ON messaging.membership
-    FOR EACH ROW
     DEFERRABLE INITIALLY DEFERRED
-    WHEN (EXISTS (SELECT * FROM messaging.personal_chat WHERE chat_id = NEW.chat_id))
+    FOR EACH ROW
 EXECUTE PROCEDURE messaging.check_personal_chat_has_exactly_two_members();
 
 --------------------------------------------------------------------------------
