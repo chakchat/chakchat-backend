@@ -16,8 +16,8 @@ const (
 
 type User struct {
 	ID          uuid.UUID `gorm:"type:uuid;primaryKey"`
-	Username    string
 	Name        string
+	Username    string
 	Phone       string
 	DateOfBirth *time.Time
 	PhotoURL    string
