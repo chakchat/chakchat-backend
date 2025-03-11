@@ -8,6 +8,9 @@ func (e Error) Error() string {
 	return e.text
 }
 
+// NOTE:
+// If you add an error here
+// You alse should add it to `errmap` package
 var (
 	ErrAdminNotMember      = Error{"group members doesn't include admin"}
 	ErrGroupNameEmpty      = Error{"group name is empty"}
