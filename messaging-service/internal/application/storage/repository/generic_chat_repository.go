@@ -12,4 +12,6 @@ type GenericChatRepository interface {
 	GetByMemberID(context.Context, domain.UserID) ([]services.GenericChat, error)
 	// Should return ErrNotFound if not found
 	GetByChatID(context.Context, domain.ChatID) (*services.GenericChat, error)
+	// Should return ErrNotFound if not found
+	GetChatType(context.Context, domain.ChatID) (string, error)
 }

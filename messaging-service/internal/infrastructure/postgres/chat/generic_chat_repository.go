@@ -196,3 +196,18 @@ func (r *GenericChatRepository) buildGenericChat(
 
 	panic(fmt.Errorf("unknown chat type is gotten from db: %s", chatType))
 }
+
+func (r *GenericChatRepository) GetChatType(ctx context.Context, id domain.ChatID) (string, error) {
+	q := `SELECT chat_type FROM messaging.chat WHERE chat_id = $1`
+	row := r.db.QueryRow(ctx, q, id)
+
+	var chatType string
+	if err := row.Scan(&chatType); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", repository.ErrNotFound
+		}
+		return "", fmt.Errorf("getting chat type failed: %s", err)
+	}
+
+	return chatType, nil
+}
