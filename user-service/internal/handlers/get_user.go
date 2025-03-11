@@ -19,8 +19,8 @@ import (
 
 type User struct {
 	ID          uuid.UUID `json:"id"`
-	Username    string    `json:"name"`
-	Name        string    `json:"username"`
+	Username    string    `json:"username"`
+	Name        string    `json:"name"`
 	Phone       *string   `json:"phone,omitempty"`
 	DateOfBirth *string   `json:"dateOfBirth,omitempty"`
 	PhotoURL    *string   `json:"photo"`
