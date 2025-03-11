@@ -66,6 +66,13 @@ var servicesErrMap = map[services.Error]Response{
 			ErrorMessage: "Chat is not found",
 		},
 	},
+	services.ErrInvalidChatType: {
+		Code: http.StatusBadRequest,
+		Body: restapi.ErrorResponse{
+			ErrorType:    "invalid_chat_type",
+			ErrorMessage: "Invalid chat type",
+		},
+	},
 	services.ErrFileNotFound: {
 		Code: http.StatusNotFound,
 		Body: restapi.ErrorResponse{
