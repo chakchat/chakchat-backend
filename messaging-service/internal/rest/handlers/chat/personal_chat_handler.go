@@ -6,8 +6,8 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/errmap"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/response"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/restapi"
-	"github.com/chakchat/chakchat-backend/shared/go/auth"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -51,7 +51,7 @@ func (h *PersonalChatHandler) CreateChat(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, newPersonalChatResponse(chat))
+	restapi.SendSuccess(c, response.PersonalGenericChat(chat))
 }
 
 func (h *PersonalChatHandler) BlockChat(c *gin.Context) {
@@ -71,7 +71,7 @@ func (h *PersonalChatHandler) BlockChat(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, newPersonalChatResponse(chat))
+	restapi.SendSuccess(c, response.PersonalGenericChat(chat))
 }
 
 func (h *PersonalChatHandler) UnblockChat(c *gin.Context) {
@@ -91,7 +91,7 @@ func (h *PersonalChatHandler) UnblockChat(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, newPersonalChatResponse(chat))
+	restapi.SendSuccess(c, response.PersonalGenericChat(chat))
 }
 
 func (h *PersonalChatHandler) DeleteChat(c *gin.Context) {
@@ -114,25 +114,21 @@ func (h *PersonalChatHandler) DeleteChat(c *gin.Context) {
 	restapi.SendSuccess(c, struct{}{})
 }
 
-type personalChatResponse struct {
-	ID      uuid.UUID    `json:"chat_id"`
-	Members [2]uuid.UUID `json:"members"`
+// type personalChatResponse struct {
+// 	ID      uuid.UUID    `json:"chat_id"`
+// 	Members [2]uuid.UUID `json:"members"`
 
-	Blocked   bool        `json:"blocked"`
-	BlockedBy []uuid.UUID `json:"blocked_by"`
-	CreatedAt int64       `json:"created_at"`
-}
+// 	Blocked   bool        `json:"blocked"`
+// 	BlockedBy []uuid.UUID `json:"blocked_by"`
+// 	CreatedAt int64       `json:"created_at"`
+// }
 
-func newPersonalChatResponse(dto *dto.PersonalChatDTO) personalChatResponse {
-	return personalChatResponse{
-		ID:        dto.ID,
-		Members:   dto.Members,
-		Blocked:   dto.Blocked,
-		BlockedBy: dto.BlockedBy,
-		CreatedAt: dto.CreatedAt,
-	}
-}
-
-func getUserID(ctx context.Context) uuid.UUID {
-	return uuid.MustParse(auth.GetClaims(ctx)[auth.ClaimId].(string))
-}
+// func newPersonalChatResponse(dto *dto.PersonalChatDTO) personalChatResponse {
+// 	return personalChatResponse{
+// 		ID:        dto.ID,
+// 		Members:   dto.Members,
+// 		Blocked:   dto.Blocked,
+// 		BlockedBy: dto.BlockedBy,
+// 		CreatedAt: dto.CreatedAt,
+// 	}
+// }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/errmap"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/response"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/restapi"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -41,7 +42,7 @@ func (h *GenericChatHandler) GetAllChats(c *gin.Context) {
 	}
 
 	for _, chat := range chats {
-		resp.Chats = append(resp.Chats, convertGenericChatResp(&chat))
+		resp.Chats = append(resp.Chats, response.GenericChat(&chat))
 	}
 
 	restapi.SendSuccess(c, resp)
@@ -61,5 +62,5 @@ func (h *GenericChatHandler) GetChat(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, convertGenericChatResp(chat))
+	restapi.SendSuccess(c, response.GenericChat(chat))
 }

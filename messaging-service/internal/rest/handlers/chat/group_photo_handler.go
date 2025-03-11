@@ -6,6 +6,7 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/errmap"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/response"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/restapi"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -52,7 +53,7 @@ func (h *GroupPhotoHandler) UpdatePhoto(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, newGroupResponse(group))
+	restapi.SendSuccess(c, response.GroupGenericChat(group))
 }
 
 func (h *GroupPhotoHandler) DeletePhoto(c *gin.Context) {
@@ -80,5 +81,5 @@ func (h *GroupPhotoHandler) DeletePhoto(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, newGroupResponse(group))
+	restapi.SendSuccess(c, response.GroupGenericChat(group))
 }
