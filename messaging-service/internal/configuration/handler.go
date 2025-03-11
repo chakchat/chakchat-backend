@@ -19,7 +19,7 @@ func NewHandlers(services *Services) *Handlers {
 		GroupPhoto:         chat.NewGroupPhotoHandler(services.GroupPhoto),
 		SecretPersonalChat: chat.NewSecretPersonalChatHandler(services.SecretPersonalChat),
 		SecretGroup:        chat.NewSecretGroupHandler(services.SecretGroup),
-		SecretGroupPhoto:   chat.NewSecretGroupPhotoHandler(services.GroupPhoto),
+		SecretGroupPhoto:   chat.NewSecretGroupPhotoHandler(services.SecretGroupPhoto),
 		GenericChat:        chat.NewGenericChatHandler(services.GenericChat),
 	}
 }

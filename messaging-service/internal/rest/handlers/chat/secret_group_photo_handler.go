@@ -6,14 +6,15 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/errmap"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/response"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/restapi"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 type SecretGroupPhotoService interface {
-	UpdatePhoto(ctx context.Context, req request.UpdateGroupPhoto) (*dto.GroupChatDTO, error)
-	DeletePhoto(ctx context.Context, req request.DeleteGroupPhoto) (*dto.GroupChatDTO, error)
+	UpdatePhoto(ctx context.Context, req request.UpdateGroupPhoto) (*dto.SecretGroupChatDTO, error)
+	DeletePhoto(ctx context.Context, req request.DeleteGroupPhoto) (*dto.SecretGroupChatDTO, error)
 }
 
 type SecretGroupPhotoHandler struct {
@@ -52,7 +53,7 @@ func (h *SecretGroupPhotoHandler) UpdatePhoto(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, newGroupResponse(group))
+	restapi.SendSuccess(c, response.SecretGroupGenericChat(group))
 }
 
 func (h *SecretGroupPhotoHandler) DeletePhoto(c *gin.Context) {
@@ -80,5 +81,5 @@ func (h *SecretGroupPhotoHandler) DeletePhoto(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, newGroupResponse(group))
+	restapi.SendSuccess(c, response.SecretGroupGenericChat(group))
 }
