@@ -51,7 +51,7 @@ func (h *PersonalChatHandler) CreateChat(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.PersonalGenericChat(chat))
+	restapi.SendSuccess(c, response.PersonalChat(chat))
 }
 
 func (h *PersonalChatHandler) BlockChat(c *gin.Context) {
@@ -71,7 +71,7 @@ func (h *PersonalChatHandler) BlockChat(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.PersonalGenericChat(chat))
+	restapi.SendSuccess(c, response.PersonalChat(chat))
 }
 
 func (h *PersonalChatHandler) UnblockChat(c *gin.Context) {
@@ -91,7 +91,7 @@ func (h *PersonalChatHandler) UnblockChat(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.PersonalGenericChat(chat))
+	restapi.SendSuccess(c, response.PersonalChat(chat))
 }
 
 func (h *PersonalChatHandler) DeleteChat(c *gin.Context) {
