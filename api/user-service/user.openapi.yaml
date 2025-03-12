@@ -13,6 +13,29 @@ tags:
     description: User info about requesting user
 # Response body follows the standard described in standard.md
 paths:
+  /username:
+    get:
+      summary: Get status of user's existency
+      description: Check existency of user by username.
+      tags:
+        - others
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  data:
+                    $ref: '#/components/schemas/GetUserStatus'
+
   /user/{userId}:
     get:
       summary: Get user info
@@ -531,3 +554,11 @@ components:
           type: string
           format: date
           nullable: true
+    GetUserStatus:
+      description: User existency by username without authorization.
+      type: object
+      properties:
+        status:
+          enum: [present, absent]
+          type: string
+          nullable: false
