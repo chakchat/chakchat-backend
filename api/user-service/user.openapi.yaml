@@ -13,7 +13,7 @@ tags:
     description: User info about requesting user
 # Response body follows the standard described in standard.md
 paths:
-  /username:
+  /username/{username}:
     get:
       summary: Get status of user's existency
       description: Check existency of user by username.
