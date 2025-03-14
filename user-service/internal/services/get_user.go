@@ -147,6 +147,20 @@ func (g *GetUserService) GetUsersByCriteria(ctx context.Context, req storage.Sea
 	return resp, nil
 }
 
+func (g *GetUserService) CheckUserByUsername(ctx context.Context, username string) (*string, error) {
+	var check string
+	_, err := g.getUserRepo.GetUserByUsername(ctx, username)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			check = "absent"
+			return &check, nil
+		}
+		return nil, err
+	}
+	check = "present"
+	return &check, nil
+}
+
 func canView(ownerId uuid.UUID, specifiedUsers []uuid.UUID) bool {
 	for _, id := range specifiedUsers {
 		if id == ownerId {
