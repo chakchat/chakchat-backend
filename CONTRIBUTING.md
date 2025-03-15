@@ -3,10 +3,10 @@ Direct commits in `main` branch are prohibited. \
 Every pull-request should be reviewed by at least one member of the team.
 
 ## Branch naming
-for **Features** create `feature/<brief-name>` brranches \
-for **Fixes** create `fix/<brief-name>` brranches \
-for **Docs** create `docs/<brief-name>` brranches \ 
-for **Others** create `chore/<brief-name>` brranches
+for **Features** create `feature/<brief-name>` branches \
+for **Fixes** create `fix/<brief-name>` branches \
+for **Docs** create `docs/<brief-name>` branches \ 
+for **Others** create `chore/<brief-name>` branches
 
 ## Pull-request naming
 **Features** should have `🚀 feature:` prefix \
