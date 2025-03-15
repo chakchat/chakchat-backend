@@ -84,10 +84,10 @@ func (r *GenericChatRepository) GetByMemberID(ctx context.Context, memberID doma
 			createdAt         time.Time
 			members           []uuid.UUID
 			blockedBy         []uuid.UUID
-			adminID           uuid.UUID
-			groupName         string
-			groupPhoto        string
-			groupDescription  string
+			adminID           *uuid.UUID
+			groupName         *string
+			groupPhoto        *string
+			groupDescription  *string
 			expirationSeconds *int
 		)
 		err := rows.Scan(&chatID, &chatType, &createdAt, &members, &blockedBy,
@@ -162,10 +162,10 @@ func (r *GenericChatRepository) GetByChatID(ctx context.Context, id domain.ChatI
 		createdAt         time.Time
 		members           []uuid.UUID
 		blockedBy         []uuid.UUID
-		adminID           uuid.UUID
-		groupName         string
-		groupPhoto        string
-		groupDescription  string
+		adminID           *uuid.UUID
+		groupName         *string
+		groupPhoto        *string
+		groupDescription  *string
 		expirationSeconds *int
 	)
 	err := row.Scan(&chatID, &chatType, &createdAt, &members, &blockedBy,
@@ -183,16 +183,23 @@ func (r *GenericChatRepository) GetByChatID(ctx context.Context, id domain.ChatI
 	return &chat, nil
 }
 
+func deref[T any](t *T, defaultVal T) T {
+	if t != nil {
+		return *t
+	}
+	return defaultVal
+}
+
 func (r *GenericChatRepository) buildGenericChat(
 	chatID uuid.UUID,
 	chatType string,
 	createdAt time.Time,
 	members []uuid.UUID,
 	blockedBy []uuid.UUID,
-	adminID uuid.UUID,
-	groupName string,
-	groupPhoto string,
-	groupDescription string,
+	adminID *uuid.UUID,
+	groupName *string,
+	groupPhoto *string,
+	groupDescription *string,
 	expirationSeconds *int,
 ) services.GenericChat {
 	if chatType == services.ChatTypePersonal {
@@ -203,10 +210,10 @@ func (r *GenericChatRepository) buildGenericChat(
 
 	if chatType == services.ChatTypeGroup {
 		return services.NewGroupGenericChat(chatID, createdAt.Unix(), members, services.GroupInfo{
-			Admin:            adminID,
-			GroupName:        groupName,
-			GroupDescription: groupDescription,
-			GroupPhoto:       groupPhoto,
+			Admin:            deref(adminID, uuid.Nil),
+			GroupName:        deref(groupName, ""),
+			GroupDescription: deref(groupDescription, ""),
+			GroupPhoto:       deref(groupPhoto, ""),
 		})
 	}
 
@@ -228,10 +235,10 @@ func (r *GenericChatRepository) buildGenericChat(
 			exp = &cp
 		}
 		return services.NewSecretGroupGenericChat(chatID, createdAt.Unix(), members, services.SecretGroupInfo{
-			Admin:            adminID,
-			GroupName:        groupName,
-			GroupDescription: groupDescription,
-			GroupPhoto:       groupPhoto,
+			Admin:            deref(adminID, uuid.Nil),
+			GroupName:        deref(groupName, ""),
+			GroupDescription: deref(groupDescription, ""),
+			GroupPhoto:       deref(groupPhoto, ""),
 			Expiration:       exp,
 		})
 	}
