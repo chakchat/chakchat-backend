@@ -55,7 +55,7 @@ func (r *GenericChatRepository) GetByMemberID(ctx context.Context, memberID doma
 		LEFT JOIN messaging.group_chat ON group_chat.chat_id = c.chat_id
 		LEFT JOIN messaging.secret_personal_chat ON secret_personal_chat.chat_id = c.chat_id
 		LEFT JOIN messaging.secret_group_chat ON secret_group_chat.chat_id = c.chat_id
-	WHERE m.user_id = '498aa85e-b4b8-41f6-928a-407872a075c1'
+	WHERE m.user_id = $1
 	GROUP BY 
 		c.chat_id, 
 		c.chat_type, 
