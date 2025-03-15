@@ -48,7 +48,21 @@ func (r *GenericChatRepository) GetByMemberID(ctx context.Context, memberID doma
 		LEFT JOIN messaging.group_chat ON group_chat.chat_id = c.chat_id
 		LEFT JOIN messaging.secret_personal_chat ON secret_personal_chat.chat_id = c.chat_id
 		LEFT JOIN messaging.secret_group_chat ON secret_group_chat.chat_id = c.chat_id
-	WHERE m.user_id = $1`
+	WHERE m.user_id = $1
+	GROUP BY 
+		c.chat_id, 
+		c.chat_type, 
+		c.created_at, 
+		group_chat.admin_id, 
+		secret_group_chat.admin_id, 
+		group_chat.group_name, 
+		secret_group_chat.group_name, 
+		group_chat.group_photo, 
+		secret_group_chat.group_photo, 
+		group_chat.group_description, 
+		secret_group_chat.group_description, 
+		secret_personal_chat.expiration_seconds, 
+		secret_group_chat.expiration_seconds`
 
 	rows, err := r.db.Query(ctx, q, memberID)
 	if err != nil {
@@ -110,7 +124,21 @@ func (r *GenericChatRepository) GetByChatID(ctx context.Context, id domain.ChatI
 		LEFT JOIN messaging.group_chat ON group_chat.chat_id = c.chat_id
 		LEFT JOIN messaging.secret_personal_chat ON secret_personal_chat.chat_id = c.chat_id
 		LEFT JOIN messaging.secret_group_chat ON secret_group_chat.chat_id = c.chat_id
-	WHERE m.chat_id = $1`
+	WHERE m.chat_id = $1
+	GROUP BY 
+		c.chat_id, 
+		c.chat_type, 
+		c.created_at, 
+		group_chat.admin_id, 
+		secret_group_chat.admin_id, 
+		group_chat.group_name, 
+		secret_group_chat.group_name, 
+		group_chat.group_photo, 
+		secret_group_chat.group_photo, 
+		group_chat.group_description, 
+		secret_group_chat.group_description, 
+		secret_personal_chat.expiration_seconds, 
+		secret_group_chat.expiration_seconds`
 
 	row := r.db.QueryRow(ctx, q, id)
 
