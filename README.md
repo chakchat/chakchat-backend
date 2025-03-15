@@ -16,7 +16,8 @@ Traces are visualized with **Jaeger** on `16686` port
 # Deployment
 For now all services are hosted on a single machine only for **Development** needs, so single docker-compose.yml file is used.
 
-**Note**: This setup is intended for development only and is not suitable for production use. For security reasons, access to the development environment is restricted.
+**Note**: This setup is intended for development only and is not suitable for production use. For security reasons, access to the development environment is restricted. \
+In the future this all will work in k8s.
 
 # Run
 [Makefile](Makefile) is used for some frequent scenarios. \
