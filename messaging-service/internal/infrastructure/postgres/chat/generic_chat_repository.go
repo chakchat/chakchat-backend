@@ -25,7 +25,7 @@ func NewGenericChatRepository(db *pgx.Conn) *GenericChatRepository {
 
 func (r *GenericChatRepository) GetByMemberID(ctx context.Context, memberID domain.UserID) ([]services.GenericChat, error) {
 	// I guess this query is so fucking slow in real production,
-	// but for now we have more microservices then users, so nobody cares.
+	// but for now we have more microservices than users, so nobody cares.
 	//
 	// TODO: optimize it.
 	q := `
@@ -33,7 +33,7 @@ func (r *GenericChatRepository) GetByMemberID(ctx context.Context, memberID doma
 		c.chat_id,
 		c.chat_type,
 		c.created_at,
-		(SELECT ARRAY_AGG(member_id) FROM messaging.membership WHERE chat_id = c.chat_id),
+		(SELECT ARRAY_AGG(m.user_id) FROM messaging.membership WHERE chat_id = c.chat_id),
 		CASE WHEN c.chat_type = 'personal' THEN (SELECT ARRAY_AGG(b.user_id) FROM messaging.blocking b WHERE b.chat_id = c.chat_id)
 			ELSE NULL
 		END,
@@ -48,7 +48,7 @@ func (r *GenericChatRepository) GetByMemberID(ctx context.Context, memberID doma
 		LEFT JOIN messaging.group_chat ON group_chat.chat_id = c.chat_id
 		LEFT JOIN messaging.secret_personal_chat ON secret_personal_chat.chat_id = c.chat_id
 		LEFT JOIN messaging.secret_group_chat ON secret_group_chat.chat_id = c.chat_id
-	WHERE m.member_id = $1`
+	WHERE m.user_id = $1`
 
 	rows, err := r.db.Query(ctx, q, memberID)
 	if err != nil {
@@ -88,7 +88,7 @@ func (r *GenericChatRepository) GetByMemberID(ctx context.Context, memberID doma
 
 func (r *GenericChatRepository) GetByChatID(ctx context.Context, id domain.ChatID) (*services.GenericChat, error) {
 	// I guess this query is so fucking slow in real production,
-	// but for now we have more microservices then users, so nobody cares.
+	// but for now we have more microservices than users, so nobody cares.
 	//
 	// TODO: optimize it.
 	q := `
@@ -96,7 +96,7 @@ func (r *GenericChatRepository) GetByChatID(ctx context.Context, id domain.ChatI
 		c.chat_id,
 		c.chat_type,
 		c.created_at,
-		(SELECT ARRAY_AGG(member_id) FROM messaging.membership WHERE chat_id = c.chat_id),
+		(SELECT ARRAY_AGG(m.user_id) FROM messaging.membership WHERE chat_id = c.chat_id),
 		CASE WHEN c.chat_type = 'personal' THEN (SELECT ARRAY_AGG(b.user_id) FROM messaging.blocking b WHERE b.chat_id = c.chat_id)
 			ELSE NULL
 		END,

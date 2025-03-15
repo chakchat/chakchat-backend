@@ -80,7 +80,7 @@ func NewGroupGenericChat(
 	return GenericChat{
 		ChatID:    id,
 		CreatedAt: createdAt,
-		ChatType:  ChatTypePersonal,
+		ChatType:  ChatTypeGroup,
 		Members:   members,
 		Info:      &genericChatInfo{group: &info},
 	}
@@ -95,7 +95,7 @@ func NewSecretPersonalGenericChat(
 	return GenericChat{
 		ChatID:    id,
 		CreatedAt: createdAt,
-		ChatType:  ChatTypePersonal,
+		ChatType:  ChatTypeSecretPersonal,
 		Members:   members,
 		Info:      &genericChatInfo{secretPersonal: &info},
 	}
@@ -110,7 +110,7 @@ func NewSecretGroupGenericChat(
 	return GenericChat{
 		ChatID:    id,
 		CreatedAt: createdAt,
-		ChatType:  ChatTypePersonal,
+		ChatType:  ChatTypeSecretGroup,
 		Members:   members,
 		Info:      &genericChatInfo{secretGroup: &info},
 	}
