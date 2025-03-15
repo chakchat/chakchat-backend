@@ -90,7 +90,7 @@ func (r *GenericChatRepository) GetByMemberID(ctx context.Context, memberID doma
 			groupDescription  string
 			expirationSeconds *int
 		)
-		err := rows.Scan(&chatID, &chatType, &createdAt, &members,
+		err := rows.Scan(&chatID, &chatType, &createdAt, &members, &blockedBy,
 			&adminID, &groupName, &groupPhoto, &groupDescription, &expirationSeconds)
 		if err != nil {
 			return nil, err
