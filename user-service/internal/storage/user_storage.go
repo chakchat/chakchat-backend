@@ -89,7 +89,7 @@ func (s *UserStorage) GetUsersByCriteria(ctx context.Context, req SearchUsersReq
 	}
 
 	if req.Username != nil {
-		query = query.Where("username LIKE ?", "%"+*req.Username+"%")
+		query = query.Where("LOWER(username) LIKE LOWER(?)", "%"+*req.Username+"%")
 		if err := query.Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return nil, ErrNotFound
