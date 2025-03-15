@@ -33,16 +33,14 @@ func (r *GenericChatRepository) GetByMemberID(ctx context.Context, memberID doma
 		c.chat_id,
 		c.chat_type,
 		c.created_at,
-		(SELECT ARRAY_AGG(m.user_id) 
-		 FROM messaging.membership 
-		 WHERE chat_id = c.chat_id 
-		 GROUP BY chat_id),
+		(SELECT ARRAY_AGG(me.user_id) 
+		 FROM messaging.membership me
+		 WHERE me.chat_id = c.chat_id),
 		CASE WHEN c.chat_type = 'personal' 
-			THEN (SELECT ARRAY_AGG(b.user_id) 
-				  FROM messaging.blocking b 
-				  WHERE b.chat_id = c.chat_id 
-				  GROUP BY b.chat_id)
-			ELSE NULL
+				THEN (SELECT ARRAY_AGG(b.user_id) 
+						  FROM messaging.blocking b 
+						  WHERE b.chat_id = c.chat_id)
+				ELSE NULL
 		END,
 		COALESCE(group_chat.admin_id, secret_group_chat.admin_id),
 		COALESCE(group_chat.group_name, secret_group_chat.group_name),
@@ -55,21 +53,7 @@ func (r *GenericChatRepository) GetByMemberID(ctx context.Context, memberID doma
 		LEFT JOIN messaging.group_chat ON group_chat.chat_id = c.chat_id
 		LEFT JOIN messaging.secret_personal_chat ON secret_personal_chat.chat_id = c.chat_id
 		LEFT JOIN messaging.secret_group_chat ON secret_group_chat.chat_id = c.chat_id
-	WHERE m.user_id = $1
-	GROUP BY 
-		c.chat_id, 
-		c.chat_type, 
-		c.created_at, 
-		group_chat.admin_id, 
-		secret_group_chat.admin_id, 
-		group_chat.group_name, 
-		secret_group_chat.group_name, 
-		group_chat.group_photo, 
-		secret_group_chat.group_photo, 
-		group_chat.group_description, 
-		secret_group_chat.group_description, 
-		secret_personal_chat.expiration_seconds, 
-		secret_group_chat.expiration_seconds`
+	WHERE m.user_id = $1`
 
 	rows, err := r.db.Query(ctx, q, memberID)
 	if err != nil {
@@ -117,16 +101,14 @@ func (r *GenericChatRepository) GetByChatID(ctx context.Context, id domain.ChatI
 		c.chat_id,
 		c.chat_type,
 		c.created_at,
-		(SELECT ARRAY_AGG(m.user_id) 
-		 FROM messaging.membership 
-		 WHERE chat_id = c.chat_id 
-		 GROUP BY chat_id),
+		(SELECT ARRAY_AGG(me.user_id) 
+		FROM messaging.membership me
+		WHERE me.chat_id = c.chat_id),
 		CASE WHEN c.chat_type = 'personal' 
-			THEN (SELECT ARRAY_AGG(b.user_id) 
-				  FROM messaging.blocking b 
-				  WHERE b.chat_id = c.chat_id 
-				  GROUP BY b.chat_id)
-			ELSE NULL
+				THEN (SELECT ARRAY_AGG(b.user_id) 
+						FROM messaging.blocking b 
+						WHERE b.chat_id = c.chat_id)
+				ELSE NULL
 		END,
 		COALESCE(group_chat.admin_id, secret_group_chat.admin_id),
 		COALESCE(group_chat.group_name, secret_group_chat.group_name),
@@ -138,21 +120,7 @@ func (r *GenericChatRepository) GetByChatID(ctx context.Context, id domain.ChatI
 		LEFT JOIN messaging.group_chat ON group_chat.chat_id = c.chat_id
 		LEFT JOIN messaging.secret_personal_chat ON secret_personal_chat.chat_id = c.chat_id
 		LEFT JOIN messaging.secret_group_chat ON secret_group_chat.chat_id = c.chat_id
-	WHERE m.chat_id = $1
-	GROUP BY 
-		c.chat_id, 
-		c.chat_type, 
-		c.created_at, 
-		group_chat.admin_id, 
-		secret_group_chat.admin_id, 
-		group_chat.group_name, 
-		secret_group_chat.group_name, 
-		group_chat.group_photo, 
-		secret_group_chat.group_photo, 
-		group_chat.group_description, 
-		secret_group_chat.group_description, 
-		secret_personal_chat.expiration_seconds, 
-		secret_group_chat.expiration_seconds`
+	WHERE c.chat_id = $1`
 
 	row := r.db.QueryRow(ctx, q, id)
 
@@ -210,8 +178,8 @@ func (r *GenericChatRepository) buildGenericChat(
 
 	if chatType == services.ChatTypeGroup {
 		return services.NewGroupGenericChat(chatID, createdAt.Unix(), members, services.GroupInfo{
-			Admin:            deref(adminID, uuid.Nil),
-			GroupName:        deref(groupName, ""),
+			Admin:            *adminID,
+			GroupName:        *groupName,
 			GroupDescription: deref(groupDescription, ""),
 			GroupPhoto:       deref(groupPhoto, ""),
 		})
@@ -235,8 +203,8 @@ func (r *GenericChatRepository) buildGenericChat(
 			exp = &cp
 		}
 		return services.NewSecretGroupGenericChat(chatID, createdAt.Unix(), members, services.SecretGroupInfo{
-			Admin:            deref(adminID, uuid.Nil),
-			GroupName:        deref(groupName, ""),
+			Admin:            *adminID,
+			GroupName:        *groupName,
 			GroupDescription: deref(groupDescription, ""),
 			GroupPhoto:       deref(groupPhoto, ""),
 			Expiration:       exp,
