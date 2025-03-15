@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/chakchat/chakchat-backend/user-service/internal/filestorage"
 	"github.com/chakchat/chakchat-backend/user-service/internal/models"
@@ -66,6 +67,9 @@ func (u *ProcessPhotoService) DeletePhoto(ctx context.Context, id uuid.UUID) (*m
 }
 
 func (u *ProcessPhotoService) fetchPhotoURL(ctx context.Context, photo string) (*filestorage.GetFileResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
 	photoURL, err := u.fileStorage.GetFile(ctx, &filestorage.GetFileRequest{
 		FileId: &filestorage.UUID{Value: photo},
 	})
