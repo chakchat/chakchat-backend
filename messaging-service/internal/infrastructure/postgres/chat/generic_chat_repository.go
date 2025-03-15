@@ -33,8 +33,15 @@ func (r *GenericChatRepository) GetByMemberID(ctx context.Context, memberID doma
 		c.chat_id,
 		c.chat_type,
 		c.created_at,
-		(SELECT ARRAY_AGG(m.user_id) FROM messaging.membership WHERE chat_id = c.chat_id),
-		CASE WHEN c.chat_type = 'personal' THEN (SELECT ARRAY_AGG(b.user_id) FROM messaging.blocking b WHERE b.chat_id = c.chat_id)
+		(SELECT ARRAY_AGG(m.user_id) 
+		 FROM messaging.membership 
+		 WHERE chat_id = c.chat_id 
+		 GROUP BY chat_id),
+		CASE WHEN c.chat_type = 'personal' 
+			THEN (SELECT ARRAY_AGG(b.user_id) 
+				  FROM messaging.blocking b 
+				  WHERE b.chat_id = c.chat_id 
+				  GROUP BY b.chat_id)
 			ELSE NULL
 		END,
 		COALESCE(group_chat.admin_id, secret_group_chat.admin_id),
@@ -48,7 +55,7 @@ func (r *GenericChatRepository) GetByMemberID(ctx context.Context, memberID doma
 		LEFT JOIN messaging.group_chat ON group_chat.chat_id = c.chat_id
 		LEFT JOIN messaging.secret_personal_chat ON secret_personal_chat.chat_id = c.chat_id
 		LEFT JOIN messaging.secret_group_chat ON secret_group_chat.chat_id = c.chat_id
-	WHERE m.user_id = $1
+	WHERE m.user_id = '498aa85e-b4b8-41f6-928a-407872a075c1'
 	GROUP BY 
 		c.chat_id, 
 		c.chat_type, 
@@ -110,8 +117,15 @@ func (r *GenericChatRepository) GetByChatID(ctx context.Context, id domain.ChatI
 		c.chat_id,
 		c.chat_type,
 		c.created_at,
-		(SELECT ARRAY_AGG(m.user_id) FROM messaging.membership WHERE chat_id = c.chat_id),
-		CASE WHEN c.chat_type = 'personal' THEN (SELECT ARRAY_AGG(b.user_id) FROM messaging.blocking b WHERE b.chat_id = c.chat_id)
+		(SELECT ARRAY_AGG(m.user_id) 
+		 FROM messaging.membership 
+		 WHERE chat_id = c.chat_id 
+		 GROUP BY chat_id),
+		CASE WHEN c.chat_type = 'personal' 
+			THEN (SELECT ARRAY_AGG(b.user_id) 
+				  FROM messaging.blocking b 
+				  WHERE b.chat_id = c.chat_id 
+				  GROUP BY b.chat_id)
 			ELSE NULL
 		END,
 		COALESCE(group_chat.admin_id, secret_group_chat.admin_id),
