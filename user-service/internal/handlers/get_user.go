@@ -284,7 +284,7 @@ func (s *GetUserHandler) CheckUserByUsername() gin.HandlerFunc {
 		if err != nil {
 			restapi.SendInternalError(c)
 		}
-		restapi.SendSuccess(c, res)
+		restapi.SendSuccess(c, gin.H{"user_exists": res})
 	}
 }
 
