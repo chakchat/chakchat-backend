@@ -559,6 +559,5 @@ components:
       type: object
       properties:
         status:
-          enum: [present, absent]
-          type: string
+          type: boolean
           nullable: false

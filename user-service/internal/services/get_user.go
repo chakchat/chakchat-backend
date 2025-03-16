@@ -147,17 +147,17 @@ func (g *GetUserService) GetUsersByCriteria(ctx context.Context, req storage.Sea
 	return resp, nil
 }
 
-func (g *GetUserService) CheckUserByUsername(ctx context.Context, username string) (*string, error) {
-	var check string
+func (g *GetUserService) CheckUserByUsername(ctx context.Context, username string) (*bool, error) {
+	var check bool
 	_, err := g.getUserRepo.GetUserByUsername(ctx, username)
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
-			check = "absent"
+			check = false
 			return &check, nil
 		}
 		return nil, err
 	}
-	check = "present"
+	check = true
 	return &check, nil
 }
 

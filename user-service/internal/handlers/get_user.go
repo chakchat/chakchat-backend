@@ -37,7 +37,7 @@ type GetUserServer interface {
 	GetUserByID(ctx context.Context, ownerId uuid.UUID, targetId uuid.UUID) (*models.User, error)
 	GetUserByUsername(ctx context.Context, ownerId uuid.UUID, username string) (*models.User, error)
 	GetUsersByCriteria(ctx context.Context, req storage.SearchUsersRequest) (*storage.SearchUsersResponse, error)
-	CheckUserByUsername(ctx context.Context, username string) (*string, error)
+	CheckUserByUsername(ctx context.Context, username string) (*bool, error)
 }
 
 type GetUserHandler struct {
