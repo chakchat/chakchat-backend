@@ -558,6 +558,6 @@ components:
       description: User existency by username without authorization.
       type: object
       properties:
-        status:
+        user_exists:
           type: boolean
           nullable: false
