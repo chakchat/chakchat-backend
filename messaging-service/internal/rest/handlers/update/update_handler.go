@@ -129,3 +129,60 @@ func (h *UpdateHandler) DeleteMessage(c *gin.Context) {
 
 	restapi.SendSuccess(c, response.UpdateDeleted(deleted))
 }
+
+func (h *UpdateHandler) SendReaction(c *gin.Context) {
+	chatID, err := uuid.Parse(c.Param(paramChatID))
+	if err != nil {
+		restapi.SendInvalidChatID(c)
+		return
+	}
+	userID := getUserID(c.Request.Context())
+
+	req := struct {
+		Reaction  string `json:"reaction_type"`
+		MessageID int64  `json:"message_id"`
+	}{}
+	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
+		restapi.SendUnprocessableJSON(c)
+		return
+	}
+
+	reaction, err := h.service.SendReaction(c.Request.Context(), request.SendReaction{
+		ChatID:       chatID,
+		SenderID:     userID,
+		MessageID:    req.MessageID,
+		ReactionType: req.Reaction,
+	})
+	if err != nil {
+		errmap.Respond(c, err)
+		return
+	}
+
+	restapi.SendSuccess(c, response.Reaction(reaction))
+}
+
+func (h *UpdateHandler) DeleteReaction(c *gin.Context) {
+	chatID, err := uuid.Parse(c.Param(paramChatID))
+	if err != nil {
+		restapi.SendInvalidChatID(c)
+		return
+	}
+	updateID, err := strconv.ParseInt(c.Param(paramChatID), 10, 64)
+	if err != nil {
+		restapi.SendInvalidChatID(c)
+		return
+	}
+	userID := getUserID(c.Request.Context())
+
+	deleted, err := h.service.DeleteReaction(c.Request.Context(), request.DeleteReaction{
+		ChatID:     chatID,
+		SenderID:   userID,
+		ReactionID: updateID,
+	})
+	if err != nil {
+		errmap.Respond(c, err)
+		return
+	}
+
+	restapi.SendSuccess(c, response.UpdateDeleted(deleted))
+}

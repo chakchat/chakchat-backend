@@ -58,6 +58,21 @@ func UpdateDeleted(ud *dto.UpdateDeletedDTO) JSONResponse {
 	})
 }
 
+func Reaction(r *dto.ReactionDTO) JSONResponse {
+	return GenericUpdate(&services.GenericUpdate{
+		UpdateID:   r.UpdateID,
+		ChatID:     r.ChatID,
+		SenderID:   r.SenderID,
+		UpdateType: services.UpdateTypeReaction,
+		CreatedAt:  r.CreatedAt,
+		Info: services.GenericUpdateInfo{
+			Reaction: &services.ReactionInfo{
+				Reaction: r.ReactionType,
+			},
+		},
+	})
+}
+
 func GenericUpdate(update *services.GenericUpdate) JSONResponse {
 	const (
 		ChatIDField    = "chat_id"
@@ -85,6 +100,8 @@ func GenericUpdate(update *services.GenericUpdate) JSONResponse {
 
 		DeletedIDField   = "deleted_id"
 		DeletedModeField = "deleted_mode"
+
+		ReactionField = "reaction"
 	)
 
 	resp := JSONResponse{
@@ -123,6 +140,10 @@ func GenericUpdate(update *services.GenericUpdate) JSONResponse {
 		resp[ContentField] = JSONResponse{
 			DeletedIDField:   update.Info.Deleted.DeletedID,
 			DeletedModeField: update.Info.Deleted.DeleteMode,
+		}
+	case services.UpdateTypeReaction:
+		resp[ContentField] = JSONResponse{
+			ReactionField: update.Info.Reaction.Reaction,
 		}
 	}
 

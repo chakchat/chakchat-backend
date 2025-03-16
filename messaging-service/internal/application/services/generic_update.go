@@ -29,6 +29,7 @@ type GenericUpdateInfo struct {
 	TextMessageEdited *TextMessageEditedInfo
 	FileMessage       *FileMessageInfo
 	Deleted           *DeletedInfo
+	Reaction          *ReactionInfo
 }
 
 type TextMessageInfo struct {
@@ -50,4 +51,8 @@ type FileMessageInfo struct {
 type DeletedInfo struct {
 	DeletedID  int64
 	DeleteMode string
+}
+
+type ReactionInfo struct {
+	Reaction string
 }
