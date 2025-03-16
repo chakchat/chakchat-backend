@@ -54,7 +54,7 @@ func (h *GroupChatHandler) CreateGroup(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.GroupGenericChat(group))
+	restapi.SendSuccess(c, response.GroupChat(group))
 }
 
 func (h *GroupChatHandler) UpdateGroup(c *gin.Context) {
@@ -85,7 +85,7 @@ func (h *GroupChatHandler) UpdateGroup(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.GroupGenericChat(group))
+	restapi.SendSuccess(c, response.GroupChat(group))
 }
 
 func (h GroupChatHandler) DeleteGroup(c *gin.Context) {
@@ -132,7 +132,7 @@ func (h *GroupChatHandler) AddMember(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.GroupGenericChat(group))
+	restapi.SendSuccess(c, response.GroupChat(group))
 }
 
 func (h *GroupChatHandler) DeleteMember(c *gin.Context) {
@@ -159,7 +159,7 @@ func (h *GroupChatHandler) DeleteMember(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.GroupGenericChat(group))
+	restapi.SendSuccess(c, response.GroupChat(group))
 }
 
 // type groupResponse struct {

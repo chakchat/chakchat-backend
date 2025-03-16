@@ -26,6 +26,17 @@ type Update struct {
 
 type DeleteMode string
 
+func NewDeleteMode(mode string) (DeleteMode, error) {
+	switch mode {
+	case DeleteModeForSender:
+		return DeleteModeForSender, nil
+	case DeleteModeForAll:
+		return DeleteModeForAll, nil
+	default:
+		return "", ErrInvalidDeleteMode
+	}
+}
+
 const (
 	DeleteModeForSender = "deleted_for_delition_sender"
 	DeleteModeForAll    = "deleted_for_all"

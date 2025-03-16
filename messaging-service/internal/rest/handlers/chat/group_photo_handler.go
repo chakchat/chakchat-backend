@@ -53,7 +53,7 @@ func (h *GroupPhotoHandler) UpdatePhoto(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.GroupGenericChat(group))
+	restapi.SendSuccess(c, response.GroupChat(group))
 }
 
 func (h *GroupPhotoHandler) DeletePhoto(c *gin.Context) {
@@ -81,5 +81,5 @@ func (h *GroupPhotoHandler) DeletePhoto(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.GroupGenericChat(group))
+	restapi.SendSuccess(c, response.GroupChat(group))
 }

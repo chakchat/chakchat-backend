@@ -44,6 +44,15 @@ func SendInvalidChatID(c *gin.Context) {
 	})
 }
 
+func SendInvalidUpdateID(c *gin.Context) {
+	SendValidationError(c, []ErrorDetail{
+		{
+			Field:   "updateId",
+			Message: "Invalid updateId route parameter",
+		},
+	})
+}
+
 func SendInvalidMemberID(c *gin.Context) {
 	SendValidationError(c, []ErrorDetail{
 		{

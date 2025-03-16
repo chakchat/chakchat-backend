@@ -54,7 +54,7 @@ func (h *SecretGroupHandler) Create(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.SecretGroupGenericChat(group))
+	restapi.SendSuccess(c, response.SecretGroupChat(group))
 }
 
 func (h *SecretGroupHandler) Update(c *gin.Context) {
@@ -85,7 +85,7 @@ func (h *SecretGroupHandler) Update(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.SecretGroupGenericChat(group))
+	restapi.SendSuccess(c, response.SecretGroupChat(group))
 }
 
 func (h *SecretGroupHandler) AddMember(c *gin.Context) {
@@ -112,7 +112,7 @@ func (h *SecretGroupHandler) AddMember(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.SecretGroupGenericChat(group))
+	restapi.SendSuccess(c, response.SecretGroupChat(group))
 }
 
 func (h *SecretGroupHandler) DeleteMember(c *gin.Context) {
@@ -139,7 +139,7 @@ func (h *SecretGroupHandler) DeleteMember(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.SecretGroupGenericChat(group))
+	restapi.SendSuccess(c, response.SecretGroupChat(group))
 }
 
 func (h *SecretGroupHandler) Delete(c *gin.Context) {
@@ -188,7 +188,7 @@ func (h *SecretGroupHandler) SetExpiration(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.SecretGroupGenericChat(group))
+	restapi.SendSuccess(c, response.SecretGroupChat(group))
 }
 
 // type secretGroupResponse struct {

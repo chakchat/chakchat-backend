@@ -49,7 +49,7 @@ func (h *SecretPersonalChatHandler) CreateChat(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.SecretPersonalGenericChat(chat))
+	restapi.SendSuccess(c, response.SecretPersonalChat(chat))
 }
 
 func (h *SecretPersonalChatHandler) SetExpiration(c *gin.Context) {
@@ -78,7 +78,7 @@ func (h *SecretPersonalChatHandler) SetExpiration(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.SecretPersonalGenericChat(chat))
+	restapi.SendSuccess(c, response.SecretPersonalChat(chat))
 }
 
 func (h *SecretPersonalChatHandler) DeleteChat(c *gin.Context) {

@@ -53,7 +53,7 @@ func (h *SecretGroupPhotoHandler) UpdatePhoto(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.SecretGroupGenericChat(group))
+	restapi.SendSuccess(c, response.SecretGroupChat(group))
 }
 
 func (h *SecretGroupPhotoHandler) DeletePhoto(c *gin.Context) {
@@ -81,5 +81,5 @@ func (h *SecretGroupPhotoHandler) DeletePhoto(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.SecretGroupGenericChat(group))
+	restapi.SendSuccess(c, response.SecretGroupChat(group))
 }

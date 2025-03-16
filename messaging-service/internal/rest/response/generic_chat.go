@@ -2,23 +2,21 @@ package response
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
-	"github.com/google/uuid"
 )
 
-type JSONResponse = any
+type JSONResponse = map[string]any
 
-func PersonalGenericChat(chat *dto.PersonalChatDTO) JSONResponse {
+func PersonalChat(chat *dto.PersonalChatDTO) JSONResponse {
 	generic := services.NewPersonalGenericChat(chat.ID, chat.CreatedAt, chat.Members[:], services.PersonalInfo{
 		BlockedBy: chat.BlockedBy,
 	})
 	return GenericChat(&generic)
 }
 
-func GroupGenericChat(chat *dto.GroupChatDTO) JSONResponse {
+func GroupChat(chat *dto.GroupChatDTO) JSONResponse {
 	generic := services.NewGroupGenericChat(chat.ID, chat.CreatedAt, chat.Members, services.GroupInfo{
 		Admin:            chat.Admin,
 		GroupName:        chat.Name,
@@ -28,14 +26,14 @@ func GroupGenericChat(chat *dto.GroupChatDTO) JSONResponse {
 	return GenericChat(&generic)
 }
 
-func SecretPersonalGenericChat(chat *dto.SecretPersonalChatDTO) JSONResponse {
+func SecretPersonalChat(chat *dto.SecretPersonalChatDTO) JSONResponse {
 	generic := services.NewSecretPersonalGenericChat(chat.ID, chat.CreatedAt, chat.Members[:], services.SecretPersonalInfo{
 		Expiration: chat.Expiration,
 	})
 	return GenericChat(&generic)
 }
 
-func SecretGroupGenericChat(chat *dto.SecretGroupChatDTO) JSONResponse {
+func SecretGroupChat(chat *dto.SecretGroupChatDTO) JSONResponse {
 	generic := services.NewSecretGroupGenericChat(chat.ID, chat.CreatedAt, chat.Members, services.SecretGroupInfo{
 		Admin:            chat.Admin,
 		GroupName:        chat.Name,
@@ -47,57 +45,53 @@ func SecretGroupGenericChat(chat *dto.SecretGroupChatDTO) JSONResponse {
 }
 
 func GenericChat(chat *services.GenericChat) JSONResponse {
-	resp := struct {
-		ChatID    uuid.UUID   `json:"chat_id"`
-		Type      string      `json:"type"`
-		Members   []uuid.UUID `json:"members"`
-		CreatedAt int64       `json:"created_at"`
-		Info      any         `json:"info"`
-	}{
-		ChatID:    chat.ChatID,
-		Type:      chat.ChatType,
-		Members:   chat.Members,
-		CreatedAt: chat.CreatedAt,
+	const (
+		ChatIDField    = "chat_id"
+		TypeField      = "type"
+		MembersField   = "members"
+		CreatedAtField = "created_at"
+		InfoField      = "info"
+
+		BlockedByField = "blocked_by"
+
+		AdminField       = "admin_id"
+		NameField        = "name"
+		DescriptionField = "description"
+		GroupPhotoField  = "group_photo"
+
+		ExpirationField = "expiration"
+	)
+
+	resp := JSONResponse{
+		ChatIDField:    chat.ChatID,
+		TypeField:      chat.ChatType,
+		MembersField:   chat.Members,
+		CreatedAtField: chat.CreatedAt,
 	}
 
 	switch chat.ChatType {
 	case services.ChatTypePersonal:
-		resp.Info = struct {
-			BlockedBy []uuid.UUID `json:"blocked_by"`
-		}{
-			BlockedBy: chat.Info.Personal().BlockedBy,
+		resp[InfoField] = JSONResponse{
+			BlockedByField: chat.Info.Personal().BlockedBy,
 		}
 	case services.ChatTypeGroup:
-		resp.Info = struct {
-			Admin       uuid.UUID `json:"admin_id"`
-			Name        string    `json:"name"`
-			Description string    `json:"description"`
-			GroupPhoto  string    `json:"group_photo"`
-		}{
-			Admin:       chat.Info.Group().Admin,
-			Name:        chat.Info.Group().GroupName,
-			Description: chat.Info.Group().GroupDescription,
-			GroupPhoto:  chat.Info.Group().GroupPhoto,
+		resp[InfoField] = JSONResponse{
+			AdminField:       chat.Info.Group().Admin,
+			NameField:        chat.Info.Group().GroupName,
+			DescriptionField: chat.Info.Group().GroupDescription,
+			GroupPhotoField:  chat.Info.Group().GroupPhoto,
 		}
 	case services.ChatTypeSecretPersonal:
-		resp.Info = struct {
-			Expiration *time.Duration `json:"expiration"`
-		}{
-			Expiration: chat.Info.SecretPersonal().Expiration,
+		resp[InfoField] = JSONResponse{
+			ExpirationField: chat.Info.SecretPersonal().Expiration,
 		}
 	case services.ChatTypeSecretGroup:
-		resp.Info = struct {
-			Admin       uuid.UUID      `json:"admin_id"`
-			Name        string         `json:"name"`
-			Description string         `json:"description"`
-			GroupPhoto  string         `json:"group_photo"`
-			Expiration  *time.Duration `json:"expiration"`
-		}{
-			Admin:       chat.Info.SecretGroup().Admin,
-			Name:        chat.Info.SecretGroup().GroupName,
-			Description: chat.Info.SecretGroup().GroupDescription,
-			GroupPhoto:  chat.Info.SecretGroup().GroupPhoto,
-			Expiration:  chat.Info.SecretPersonal().Expiration,
+		resp[InfoField] = JSONResponse{
+			AdminField:       chat.Info.SecretGroup().Admin,
+			NameField:        chat.Info.SecretGroup().GroupName,
+			DescriptionField: chat.Info.SecretGroup().GroupDescription,
+			GroupPhotoField:  chat.Info.SecretGroup().GroupPhoto,
+			ExpirationField:  chat.Info.SecretPersonal().Expiration,
 		}
 	default:
 		panic(fmt.Errorf("uknown chat type: %s", chat.ChatType))

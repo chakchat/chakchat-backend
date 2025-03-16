@@ -10,8 +10,9 @@ type TextMessageDTO struct {
 	UpdateID int64
 	SenderID uuid.UUID
 
-	Text   string
-	Edited *TextMessageEditedDTO
+	Text    string
+	Edited  *TextMessageEditedDTO
+	ReplyTo *int64
 
 	CreatedAt int64
 }
@@ -23,12 +24,19 @@ func NewTextMessageDTO(m *domain.TextMessage) TextMessageDTO {
 		edited = &editedDto
 	}
 
+	var replyTo *int64
+	if m.ReplyTo != nil {
+		cp := int64(m.ReplyTo.UpdateID)
+		replyTo = &cp
+	}
+
 	return TextMessageDTO{
 		ChatID:    uuid.UUID(m.ChatID),
 		UpdateID:  int64(m.UpdateID),
 		SenderID:  uuid.UUID(m.SenderID),
 		Text:      m.Text,
 		Edited:    edited,
+		ReplyTo:   replyTo,
 		CreatedAt: int64(m.CreatedAt),
 	}
 }
