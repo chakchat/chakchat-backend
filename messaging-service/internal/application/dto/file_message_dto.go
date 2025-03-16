@@ -10,7 +10,7 @@ type FileMetaDTO struct {
 	FileName  string
 	MimeType  string
 	FileSize  int64
-	FileUrl   string
+	FileURL   string
 	CreatedAt int64
 }
 
@@ -20,7 +20,7 @@ func NewFileMetaDTO(f *domain.FileMeta) FileMetaDTO {
 		FileName:  f.FileName,
 		MimeType:  f.MimeType,
 		FileSize:  f.FileSize,
-		FileUrl:   string(f.FileUrl),
+		FileURL:   string(f.FileUrl),
 		CreatedAt: int64(f.CreatedAt),
 	}
 }
@@ -30,17 +30,25 @@ type FileMessageDTO struct {
 	UpdateID int64
 	SenderID uuid.UUID
 
-	File FileMetaDTO
+	File    FileMetaDTO
+	ReplyTo *int64
 
 	CreatedAt int64
 }
 
 func NewFileMessageDTO(m *domain.FileMessage) FileMessageDTO {
+	var replyTo *int64
+	if m.ReplyTo != nil {
+		cp := int64(m.ReplyTo.UpdateID)
+		replyTo = &cp
+	}
+
 	return FileMessageDTO{
 		ChatID:    uuid.UUID(m.ChatID),
 		UpdateID:  int64(m.UpdateID),
 		SenderID:  uuid.UUID(m.SenderID),
 		File:      NewFileMetaDTO(&m.File),
+		ReplyTo:   replyTo,
 		CreatedAt: int64(m.CreatedAt),
 	}
 }

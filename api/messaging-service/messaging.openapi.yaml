@@ -1199,7 +1199,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponseWithDetails'
-  /{chatId}/update/message/{updateId}:
+  /{chatId}/update/message/{updateId}/{deleteMode}:
     delete:
       summary: Delete message
       description: Delete message

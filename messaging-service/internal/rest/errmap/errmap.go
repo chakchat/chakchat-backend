@@ -251,4 +251,11 @@ var domainErrMap = map[domain.Error]Response{
 			ErrorMessage: "User is not a sender",
 		},
 	},
+	domain.ErrInvalidDeleteMode: {
+		Code: http.StatusBadRequest,
+		Body: restapi.ErrorResponse{
+			ErrorType:    "invalid_delete_mode",
+			ErrorMessage: "Invalid delete mode",
+		},
+	},
 }

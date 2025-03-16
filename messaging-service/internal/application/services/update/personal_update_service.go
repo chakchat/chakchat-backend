@@ -164,7 +164,12 @@ func (s *PersonalUpdateService) DeleteMessage(ctx context.Context, req request.D
 		return nil, err
 	}
 
-	err = msg.Delete(chat, domain.UserID(req.SenderID), domain.DeleteMode(req.DeleteMode))
+	deleteMode, err := domain.NewDeleteMode(req.DeleteMode)
+	if err != nil {
+		return nil, err
+	}
+
+	err = msg.Delete(chat, domain.UserID(req.SenderID), deleteMode)
 
 	if err != nil {
 		return nil, err

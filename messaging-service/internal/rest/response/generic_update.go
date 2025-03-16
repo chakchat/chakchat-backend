@@ -1,8 +1,64 @@
 package response
 
-import "github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
+import (
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
+)
 
 func TextMessage(msg *dto.TextMessageDTO) JSONResponse {
+	return GenericUpdate(&services.GenericUpdate{
+		UpdateID:   msg.UpdateID,
+		ChatID:     msg.ChatID,
+		SenderID:   msg.SenderID,
+		UpdateType: services.UpdateTypeTextMessage,
+		CreatedAt:  msg.CreatedAt,
+		Info: services.GenericUpdateInfo{
+			TextMessage: &services.TextMessageInfo{
+				Text:    msg.Text,
+				Edited:  convertEdited(msg.Edited),
+				ReplyTo: msg.ReplyTo,
+			},
+		},
+	})
+}
+
+func TextMessageEdited(edited *dto.TextMessageEditedDTO) JSONResponse {
+	return GenericUpdate(convertEdited(edited))
+}
+
+func FileMessage(msg *dto.FileMessageDTO) JSONResponse {
+	return GenericUpdate(&services.GenericUpdate{
+		UpdateID:   msg.UpdateID,
+		ChatID:     msg.ChatID,
+		SenderID:   msg.SenderID,
+		UpdateType: services.UpdateTypeFileMessage,
+		CreatedAt:  msg.CreatedAt,
+		Info: services.GenericUpdateInfo{
+			FileMessage: &services.FileMessageInfo{
+				File:    msg.File,
+				ReplyTo: msg.ReplyTo,
+			},
+		},
+	})
+}
+
+func UpdateDeleted(ud *dto.UpdateDeletedDTO) JSONResponse {
+	return GenericUpdate(&services.GenericUpdate{
+		UpdateID:   ud.UpdateID,
+		ChatID:     ud.ChatID,
+		SenderID:   ud.SenderID,
+		UpdateType: services.UpdateTypeDeleted,
+		CreatedAt:  ud.CreatedAt,
+		Info: services.GenericUpdateInfo{
+			Deleted: &services.DeletedInfo{
+				DeletedID:  ud.DeletedID,
+				DeleteMode: ud.DeleteMode,
+			},
+		},
+	})
+}
+
+func GenericUpdate(update *services.GenericUpdate) JSONResponse {
 	const (
 		ChatIDField    = "chat_id"
 		UpdateIDField  = "update_id"
@@ -10,31 +66,85 @@ func TextMessage(msg *dto.TextMessageDTO) JSONResponse {
 		SenderIDField  = "sender_id"
 		CreatedAtField = "created_at"
 
-		ContentField  = "content"
-		TextField     = "text"
-		ReplyToField  = "reply_to"
-		EditedIDField = "edited"
+		ContentField = "content"
+
+		TextField    = "text"
+		ReplyToField = "reply_to"
+		EditedField  = "edited"
+
+		NewTextField   = "new_text"
+		MessageIDField = "message_id"
+
+		FileField = "file"
+
+		FileIDField       = "file_id"
+		FileNameField     = "file_name"
+		FileMimetypeField = "mime_type"
+		FileSizeField     = "file_size"
+		FileURLField      = "file_url"
+
+		DeletedIDField   = "deleted_id"
+		DeletedModeField = "deleted_mode"
 	)
-	const (
-		UpdateTypeTextMessage = "text_message"
-	)
-	var edited *int64
-	if msg.Edited != nil {
-		cp := int64(msg.Edited.UpdateID)
-		edited = &cp
+
+	resp := JSONResponse{
+		ChatIDField:    update.ChatID,
+		UpdateIDField:  update.UpdateID,
+		TypeField:      update.UpdateType,
+		SenderIDField:  update.SenderID,
+		CreatedAtField: update.CreatedAt,
 	}
 
-	return JSONResponse{
-		ChatIDField:    msg.ChatID,
-		UpdateIDField:  msg.UpdateID,
-		TypeField:      UpdateTypeTextMessage,
-		SenderIDField:  msg.SenderID,
-		CreatedAtField: msg.CreatedAt,
+	switch update.UpdateType {
+	case services.UpdateTypeTextMessage:
+		resp[ContentField] = JSONResponse{
+			TextField:    update.Info.TextMessage.Text,
+			ReplyToField: update.Info.TextMessage.ReplyTo,
+			EditedField:  GenericUpdate(update.Info.TextMessage.Edited),
+		}
+	case services.UpdateTypeTextMessageEdited:
+		resp[ContentField] = JSONResponse{
+			NewTextField:   update.Info.TextMessageEdited.NewText,
+			MessageIDField: update.Info.TextMessageEdited.MessageID,
+		}
+	case services.UpdateTypeFileMessage:
+		resp[ContentField] = JSONResponse{
+			FileField: JSONResponse{
+				FileIDField:       update.Info.FileMessage.File.FileId,
+				FileNameField:     update.Info.FileMessage.File.FileName,
+				FileMimetypeField: update.Info.FileMessage.File.MimeType,
+				FileSizeField:     update.Info.FileMessage.File.FileSize,
+				FileURLField:      update.Info.FileMessage.File.FileURL,
+				CreatedAtField:    update.Info.FileMessage.File.CreatedAt,
+			},
+			ReplyToField: update.Info.FileMessage.ReplyTo,
+		}
+	case services.UpdateTypeDeleted:
+		resp[ContentField] = JSONResponse{
+			DeletedIDField:   update.Info.Deleted.DeletedID,
+			DeletedModeField: update.Info.Deleted.DeleteMode,
+		}
+	}
 
-		ContentField: JSONResponse{
-			TextField:     msg.Text,
-			ReplyToField:  msg.ReplyTo,
-			EditedIDField: edited,
+	return resp
+}
+
+func convertEdited(edited *dto.TextMessageEditedDTO) *services.GenericUpdate {
+	if edited == nil {
+		return nil
+	}
+
+	return &services.GenericUpdate{
+		UpdateID:   edited.UpdateID,
+		ChatID:     edited.ChatID,
+		SenderID:   edited.SenderID,
+		UpdateType: services.UpdateTypeTextMessageEdited,
+		CreatedAt:  edited.CreatedAt,
+		Info: services.GenericUpdateInfo{
+			TextMessageEdited: &services.TextMessageEditedInfo{
+				MessageID: edited.MessageID,
+				NewText:   edited.NewText,
+			},
 		},
 	}
 }

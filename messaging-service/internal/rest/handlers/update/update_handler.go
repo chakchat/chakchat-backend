@@ -2,6 +2,7 @@ package update
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
@@ -22,7 +23,11 @@ type UpdateService interface {
 	ForwardFileMessage(ctx context.Context, req request.ForwardMessage) (*dto.FileMessageDTO, error)
 }
 
-const paramChatID = "chatId"
+const (
+	paramChatID     = "chatId"
+	paramUpdateID   = "updateId"
+	paramDeleteMode = "deleteMode"
+)
 
 type UpdateHandler struct {
 	service UpdateService
@@ -35,7 +40,7 @@ func NewUpdateHandler(service UpdateService) *UpdateHandler {
 }
 
 func (h *UpdateHandler) SendTextMessage(c *gin.Context) {
-	chatId, err := uuid.Parse(c.Param(paramChatID))
+	chatID, err := uuid.Parse(c.Param(paramChatID))
 	if err != nil {
 		restapi.SendInvalidChatID(c)
 		return
@@ -51,14 +56,76 @@ func (h *UpdateHandler) SendTextMessage(c *gin.Context) {
 	}
 
 	msg, err := h.service.SendTextMessage(c.Request.Context(), request.SendTextMessage{
-		ChatID:         chatId,
+		ChatID:         chatID,
 		SenderID:       userID,
 		Text:           req.Text,
 		ReplyToMessage: req.ReplyTo,
 	})
 	if err != nil {
 		errmap.Respond(c, err)
+		return
 	}
 
 	restapi.SendSuccess(c, response.TextMessage(msg))
+}
+
+func (h *UpdateHandler) EditTextMessage(c *gin.Context) {
+	chatID, err := uuid.Parse(c.Param(paramChatID))
+	if err != nil {
+		restapi.SendInvalidChatID(c)
+		return
+	}
+	updateID, err := strconv.ParseInt(c.Param(paramChatID), 10, 64)
+	if err != nil {
+		restapi.SendInvalidChatID(c)
+		return
+	}
+	userID := getUserID(c.Request.Context())
+
+	req := struct {
+		Text string `json:"text"`
+	}{}
+	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
+		restapi.SendUnprocessableJSON(c)
+	}
+
+	msg, err := h.service.EditTextMessage(c.Request.Context(), request.EditTextMessage{
+		ChatID:    chatID,
+		SenderID:  userID,
+		MessageID: updateID,
+		NewText:   req.Text,
+	})
+	if err != nil {
+		errmap.Respond(c, err)
+		return
+	}
+
+	restapi.SendSuccess(c, response.TextMessage(msg))
+}
+
+func (h *UpdateHandler) DeleteMessage(c *gin.Context) {
+	chatID, err := uuid.Parse(c.Param(paramChatID))
+	if err != nil {
+		restapi.SendInvalidChatID(c)
+		return
+	}
+	updateID, err := strconv.ParseInt(c.Param(paramChatID), 10, 64)
+	if err != nil {
+		restapi.SendInvalidChatID(c)
+		return
+	}
+	userID := getUserID(c.Request.Context())
+
+	deleted, err := h.service.DeleteMessage(c.Request.Context(), request.DeleteMessage{
+		ChatID:     chatID,
+		SenderID:   userID,
+		MessageID:  updateID,
+		DeleteMode: c.Param(paramDeleteMode),
+	})
+	if err != nil {
+		errmap.Respond(c, err)
+		return
+	}
+
+	restapi.SendSuccess(c, response.UpdateDeleted(deleted))
 }

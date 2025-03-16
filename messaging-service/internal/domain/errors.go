@@ -32,4 +32,5 @@ var (
 	ErrAlreadyUnblocked    = Error{"chat is already unblocked"}
 	ErrSenderNotAdmin      = Error{"sender is not admin"}
 	ErrUserNotMember       = Error{"user is not member of a chat"}
+	ErrInvalidDeleteMode   = Error{"invalid delete mode"}
 )
