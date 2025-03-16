@@ -186,3 +186,5 @@ func (h *UpdateHandler) DeleteReaction(c *gin.Context) {
 
 	restapi.SendSuccess(c, response.UpdateDeleted(deleted))
 }
+
+// TODO: I don't know how to implement message forwarding
