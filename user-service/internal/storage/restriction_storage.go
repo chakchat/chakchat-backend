@@ -2,11 +2,10 @@ package storage
 
 import (
 	"context"
-	"errors"
 
 	"github.com/chakchat/chakchat-backend/user-service/internal/models"
 	"github.com/google/uuid"
-	"gorm.io/gorm"
+	"github.com/jackc/pgx/v5"
 )
 
 type FieldRestrictions struct {
@@ -16,91 +15,96 @@ type FieldRestrictions struct {
 }
 
 type RestrictionStorage struct {
-	db *gorm.DB
+	db *pgx.Conn
 }
 
-func NewRestrictionStorage(db *gorm.DB) *RestrictionStorage {
+func NewRestrictionStorage(db *pgx.Conn) *RestrictionStorage {
 	return &RestrictionStorage{
 		db: db,
 	}
 }
 
 func (s *RestrictionStorage) GetRestrictions(ctx context.Context, id uuid.UUID, field string) (*FieldRestrictions, error) {
-	var fieldRestriction models.FieldRestriction
-	var fieldSpecifiedUsers []uuid.UUID
+	var fieldRestriction FieldRestrictions
+	q := `SELECT * 
+		FROM field_restrictions 
+		WHERE owner_user_id = $1 
+    	AND field_name = $2 
+    	AND permitted_user_id = $3`
 
-	if err := s.db.WithContext(ctx).Where("owner_id = ? AND field_name = ?", id, field).Preload("SpecifiedUsers").Find(&fieldRestriction).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+	row := s.db.QueryRow(ctx, q, id, field)
+	var specifiedUsers []uuid.UUID
+	err := row.Scan(&fieldRestriction.Field, &specifiedUsers)
+	if err != nil {
+		if err == pgx.ErrNoRows {
 			return nil, ErrNotFound
 		}
 		return nil, err
 	}
 
-	for _, user := range fieldRestriction.SpecifiedUsers {
-		fieldSpecifiedUsers = append(fieldSpecifiedUsers, user.UserID)
-	}
-
-	return &FieldRestrictions{
-		Field:          field,
-		SpecifiedUsers: fieldSpecifiedUsers,
-	}, nil
+	fieldRestriction.SpecifiedUsers = specifiedUsers
+	return &fieldRestriction, nil
 }
 
 func (s *RestrictionStorage) UpdateRestrictions(ctx context.Context, id uuid.UUID, restrictions FieldRestrictions) (*FieldRestrictions, error) {
 
-	var user models.User
-
-	if err := s.db.WithContext(ctx).First(&user, id).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrNotFound
-		}
+	tx, err := s.db.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
 		return nil, err
 	}
+	defer tx.Rollback(ctx)
 
+	var updateQuery string
 	if restrictions.Field == "Phone" {
-		user.PhoneVisibility = restrictions.OpenTo
+		updateQuery = `UPDATE users SET phone_visibility = $1 WHERE user_id = $2`
 	} else {
-		user.DateOfBirthVisibility = restrictions.OpenTo
+		updateQuery = `UPDATE users SET date_of_birth_visibility = $1 WHERE user_id = $2`
 	}
 
-	var add []uuid.UUID
-	var del []uuid.UUID
-	_, err := s.GetRestrictions(ctx, id, restrictions.Field)
-	if err != nil && err != gorm.ErrUnsupportedRelation {
+	_, err = tx.Exec(ctx, updateQuery, restrictions.OpenTo, id)
+	if err != nil {
 		return nil, err
 	}
-	if err == nil {
-		phoneRestr, err := s.GetRestrictions(ctx, id, restrictions.Field)
-		if err != nil {
-			return nil, err
-		}
 
-		add = recordMisses(phoneRestr.SpecifiedUsers, restrictions.SpecifiedUsers)
-		del = recordMisses(restrictions.SpecifiedUsers, phoneRestr.SpecifiedUsers)
+	var currentSpecifiedUsers []uuid.UUID
+	q := `SELECT permitted_user_id FROM field_restrictions WHERE owner_user_id = $1 AND field_name = $2::user_field", id, restrictions.Field)`
+	rows, err := tx.Query(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-		err = s.db.WithContext(ctx).Where("field_restriction_id = ?", id).Delete(&models.FieldRestrictionUser{}, del).Error
-		if err != nil {
+	for rows.Next() {
+		var userID uuid.UUID
+		if err := rows.Scan(&userID); err != nil {
 			return nil, err
 		}
-	} else {
-		fieldRestriction := models.FieldRestriction{
-			OwnerID:   id,
-			FieldName: restrictions.Field,
-		}
-		if err := s.db.Create(&fieldRestriction).Error; err != nil {
-			return nil, err
-		}
-		add = restrictions.SpecifiedUsers
+		currentSpecifiedUsers = append(currentSpecifiedUsers, userID)
 	}
 
-	for _, record := range add {
-		specifiedUser := models.FieldRestrictionUser{
-			UserID:             record,
-			FieldRestrictionId: id,
-		}
-		if err := s.db.Create(&specifiedUser).Error; err != nil {
+	add := recordMisses(currentSpecifiedUsers, restrictions.SpecifiedUsers)
+	del := recordMisses(restrictions.SpecifiedUsers, currentSpecifiedUsers)
+
+	if len(del) > 0 {
+		q := `DELETE FROM field_restrictions WHERE owner_user_id = $1 AND field_name = $2::user_field AND permitted_user_id = ANY($3)`
+		_, err = tx.Exec(ctx, q, id, restrictions.Field, del)
+		if err != nil {
 			return nil, err
 		}
+	}
+
+	if len(add) > 0 {
+		q := `INSERT INTO field_restrictions (owner_user_id, field_name, permitted_user_id) VALUES ($1, $2::user_field, $3)`
+
+		for _, userID := range add {
+			_, err = tx.Exec(ctx, q, id, restrictions.Field, userID)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	if err = tx.Commit(ctx); err != nil {
+		return nil, err
 	}
 
 	return &restrictions, nil
