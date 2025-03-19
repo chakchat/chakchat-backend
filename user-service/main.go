@@ -44,7 +44,7 @@ type Config struct {
 	Jwt JWTConfig `mapstructure:"jwt"`
 
 	DB struct {
-		ConnString string `mapstructure:"conn_string"`
+		DSN string `mapstructure:"dsn"`
 	} `mapstructure:"db"`
 
 	Server struct {
@@ -83,10 +83,12 @@ var conf *Config = loadConfig("/app/config.yml")
 
 func main() {
 	jwtConf := loadJWTConfig()
-	db, err := pgx.Connect(context.Background(), conf.DB.ConnString)
+
+	db, err := pgx.Connect(context.Background(), conf.DB.DSN)
 	if err != nil {
 		log.Fatalf("failed to connect DB: %v", err)
 	}
+
 	defer db.Close(context.Background())
 	log.Println("connected to DB")
 
