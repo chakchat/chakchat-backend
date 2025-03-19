@@ -14,7 +14,7 @@ import (
 )
 
 type updatePhotoRequest struct {
-	photoId string
+	PhotoId string `json:"photo_id"`
 }
 
 type UpdatePhotoServer interface {
@@ -43,7 +43,7 @@ func UpdatePhoto(u UpdatePhotoServer) gin.HandlerFunc {
 			return
 		}
 
-		user, err := u.UpdatePhoto(c.Request.Context(), ownerId, req.photoId)
+		user, err := u.UpdatePhoto(c.Request.Context(), ownerId, req.PhotoId)
 		if err != nil {
 			if errors.Is(err, services.ErrInvalidPhoto) {
 				c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
@@ -58,9 +58,11 @@ func UpdatePhoto(u UpdatePhotoServer) gin.HandlerFunc {
 					ErrorType:    restapi.ErrTypeNotFound,
 					ErrorMessage: "Can't find user with ownerId",
 				})
+				return
 			}
 
 			restapi.SendInternalError(c)
+			return
 		}
 		restapi.SendSuccess(c, User{
 			ID:          user.ID,
@@ -97,9 +99,11 @@ func DeletePhoto(u UpdatePhotoServer) gin.HandlerFunc {
 					ErrorType:    restapi.ErrTypeNotFound,
 					ErrorMessage: "Can't find user with owner id",
 				})
+				return
 			}
 
 			restapi.SendInternalError(c)
+			return
 		}
 		restapi.SendSuccess(c, User{
 			ID:          user.ID,
