@@ -16,7 +16,7 @@ import (
 	"github.com/chakchat/chakchat-backend/user-service/internal/restapi"
 	"github.com/chakchat/chakchat-backend/user-service/internal/services"
 	"github.com/chakchat/chakchat-backend/user-service/internal/storage"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
@@ -84,12 +84,12 @@ var conf *Config = loadConfig("/app/config.yml")
 func main() {
 	jwtConf := loadJWTConfig()
 
-	db, err := pgx.Connect(context.Background(), conf.DB.DSN)
+	db, err := pgxpool.New(context.Background(), conf.DB.DSN)
 	if err != nil {
 		log.Fatalf("failed to connect DB: %v", err)
 	}
 
-	defer db.Close(context.Background())
+	defer db.Close()
 	log.Println("connected to DB")
 
 	fileClient, close := createFileClient()

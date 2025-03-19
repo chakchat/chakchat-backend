@@ -6,6 +6,7 @@ import (
 	"github.com/chakchat/chakchat-backend/user-service/internal/models"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type FieldRestrictions struct {
@@ -15,10 +16,10 @@ type FieldRestrictions struct {
 }
 
 type RestrictionStorage struct {
-	db *pgx.Conn
+	db *pgxpool.Pool
 }
 
-func NewRestrictionStorage(db *pgx.Conn) *RestrictionStorage {
+func NewRestrictionStorage(db *pgxpool.Pool) *RestrictionStorage {
 	return &RestrictionStorage{
 		db: db,
 	}

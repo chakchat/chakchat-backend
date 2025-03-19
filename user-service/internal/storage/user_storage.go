@@ -8,6 +8,7 @@ import (
 	"github.com/chakchat/chakchat-backend/user-service/internal/models"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var ErrNotFound = errors.New("not found")
@@ -33,10 +34,10 @@ type SearchUsersResponse struct {
 }
 
 type UserStorage struct {
-	db *pgx.Conn
+	db *pgxpool.Pool
 }
 
-func NewUserStorage(db *pgx.Conn) *UserStorage {
+func NewUserStorage(db *pgxpool.Pool) *UserStorage {
 	return &UserStorage{db: db}
 }
 
