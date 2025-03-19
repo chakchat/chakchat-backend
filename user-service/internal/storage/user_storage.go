@@ -256,12 +256,14 @@ func (s *UserStorage) UpdateUser(ctx context.Context, user *models.User, req *Up
 
 func (s *UserStorage) UpdatePhoto(ctx context.Context, id uuid.UUID, photoURL string) (*models.User, error) {
 	updateQuery := `UPDATE users SET photo_url = $1 WHERE id = $2`
-	_, err := s.db.Exec(ctx, updateQuery, photoURL, id)
+	result, err := s.db.Exec(ctx, updateQuery, photoURL, id)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrNotFound
-		}
 		return nil, err
+	}
+	rowsAffected := result.RowsAffected()
+
+	if rowsAffected == 0 {
+		return nil, ErrNotFound
 	}
 
 	user, err := s.GetUserById(ctx, id)
