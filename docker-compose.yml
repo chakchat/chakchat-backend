@@ -77,6 +77,17 @@ services:
     restart: on-failure
     volumes:
       - user_postgres_data:/var/lib/postgresql/data
+  user-flyway:
+    image: flyway/flyway:latest
+    command: ["migrate"]
+    environment:
+      - FLYWAY_URL=jdbc:postgresql://user-postgres:5432/userdb
+      - FLYWAY_USER=user
+      - FLYWAY_PASSWORD=secret
+      - FLYWAY_LOCATIONS=filesystem:/app/migrations
+      - FLYWAY_VALIDATE_MIGRATION_NAMING=true
+    volumes:
+      - ./user-service/migrations:/app/migrations
 
   messaging-service:
     build: ./messaging-service
