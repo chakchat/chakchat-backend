@@ -37,7 +37,6 @@ type GetUserServer interface {
 	GetUserByID(ctx context.Context, ownerId uuid.UUID, targetId uuid.UUID) (*models.User, error)
 	GetUserByUsername(ctx context.Context, ownerId uuid.UUID, username string) (*models.User, error)
 	GetUsersByCriteria(ctx context.Context, req storage.SearchUsersRequest) (*storage.SearchUsersResponse, error)
-	CheckUserByUsername(ctx context.Context, username string) (*bool, error)
 }
 
 type GetUserHandler struct {
@@ -274,17 +273,6 @@ func (s *GetUserHandler) GetMe() gin.HandlerFunc {
 			DateOfBirth: toFormatDate(me.DateOfBirth),
 			CreatedAt:   me.CreatedAt,
 		})
-	}
-}
-
-func (s *GetUserHandler) CheckUserByUsername() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		username := c.Param("username")
-		res, err := s.service.CheckUserByUsername(c.Request.Context(), username)
-		if err != nil {
-			restapi.SendInternalError(c)
-		}
-		restapi.SendSuccess(c, gin.H{"user_exists": res})
 	}
 }
 
