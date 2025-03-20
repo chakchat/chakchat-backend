@@ -86,6 +86,7 @@ services:
       - FLYWAY_PASSWORD=secret
       - FLYWAY_LOCATIONS=filesystem:/app/migrations
       - FLYWAY_VALIDATE_MIGRATION_NAMING=true
+      - FLYWAY_BASELINE_ON_MIGRATE=true
     volumes:
       - ./user-service/migrations:/app/migrations
 
@@ -114,17 +115,18 @@ services:
       - POSTGRES_PASSWORD=secret
       - POSTGRES_USER=postgres
       - POSTGRES_DB=messaging
-  messaging-flyway:
-    image: flyway/flyway:latest
-    command: ["migrate"]
-    environment:
-      - FLYWAY_URL=jdbc:postgresql://messaging-postgres:5432/messaging
-      - FLYWAY_USER=postgres
-      - FLYWAY_PASSWORD=secret
-      - FLYWAY_LOCATIONS=filesystem:/app/migrations
-      - FLYWAY_VALIDATE_MIGRATION_NAMING=true
-    volumes:
-      - ./messaging-service/migrations:/app/migrations
+  # messaging-flyway:
+  #   image: flyway/flyway:latest
+  #   command: ["migrate"]
+  #   environment:
+  #     - FLYWAY_URL=jdbc:postgresql://messaging-postgres:5432/messaging
+  #     - FLYWAY_USER=postgres
+  #     - FLYWAY_PASSWORD=secret
+  #     - FLYWAY_LOCATIONS=filesystem:/app/migrations
+  #     - FLYWAY_VALIDATE_MIGRATION_NAMING=true
+  #     - FLYWAY_BASELINE_ON_MIGRATE=true
+  #   volumes:
+  #     - ./messaging-service/migrations:/app/migrations
 
   # Stubs
   sms-service-stub:
