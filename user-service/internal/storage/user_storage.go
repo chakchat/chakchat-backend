@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/chakchat/chakchat-backend/user-service/internal/models"
@@ -138,14 +139,17 @@ func (s *UserStorage) GetUsersByCriteria(ctx context.Context, req SearchUsersReq
 	FROM users
 	WHERE 1=1`
 
+	counter := 1
+
 	args := []interface{}{}
 	if req.Name != nil {
-		q += ` AND name ILIKE $1`
+		q += fmt.Sprintf(` AND name ILIKE $%d`, counter)
 		args = append(args, "%"+*req.Name+"%")
+		counter += 1
 	}
 
 	if req.Username != nil {
-		q += ` AND username ILIKE $2`
+		q += fmt.Sprintf(` AND username ILIKE $%d`, counter)
 		args = append(args, "%"+*req.Username+"%")
 	}
 
@@ -159,21 +163,28 @@ func (s *UserStorage) GetUsersByCriteria(ctx context.Context, req SearchUsersReq
 		limit = *req.Limit
 	}
 
+	paramCounter := 1
+	countArgs := []interface{}{}
+
 	countQuery := `SELECT COUNT(*) FROM users WHERE 1=1`
 	if req.Name != nil {
-		countQuery += ` AND name ILIKE $1`
+		countQuery += fmt.Sprintf(` AND name ILIKE $%d`, paramCounter)
+		countArgs = append(countArgs, "%"+*req.Name+"%")
+		paramCounter += 1
 	}
 	if req.Username != nil {
-		countQuery += ` AND username ILIKE $2`
+		countQuery += ` AND username ILIKE $1`
+		countArgs = append(countArgs, "%"+*req.Username+"%")
+		paramCounter += 1
 	}
 
 	var count int64
-	if err := s.db.QueryRow(ctx, countQuery, args...).Scan(&count); err != nil {
+	if err := s.db.QueryRow(ctx, countQuery, countArgs...).Scan(&count); err != nil {
 		return nil, err
 	}
 	count -= int64(offset)
 
-	q += ` LIMIT $3 OFFSET $4`
+	q += fmt.Sprintf(` LIMIT $%d OFFSET $%d`, paramCounter, paramCounter+1)
 	args = append(args, limit, offset)
 
 	rows, err := s.db.Query(ctx, q, args...)
@@ -184,7 +195,7 @@ func (s *UserStorage) GetUsersByCriteria(ctx context.Context, req SearchUsersReq
 
 	for rows.Next() {
 		var user models.User
-		err := rows.Scan(&user.ID, &user.Username, &user.Name, &user.Phone, &user.DateOfBirth, &user.PhotoURL, &user.CreatedAt)
+		err := rows.Scan(&user.ID, &user.Name, &user.Username, &user.Phone, &user.DateOfBirth, &user.PhotoURL, &user.CreatedAt, &user.DateOfBirthVisibility, &user.PhoneVisibility)
 		if err != nil {
 			return nil, err
 		}
