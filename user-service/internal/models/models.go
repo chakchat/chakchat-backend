@@ -30,7 +30,7 @@ type User struct {
 type FieldRestriction struct {
 	OwnerID        uuid.UUID `gorm:"primaryKey"`
 	FieldName      string
-	SpecifiedUsers []FieldRestrictionUser `gorm:"foreignKey:FieldRestrictionId;constraint:OnDelete:Cascade"`
+	SpecifiedUsers []uuid.UUID
 }
 
 type FieldRestrictionUser struct {

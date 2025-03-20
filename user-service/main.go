@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -14,19 +13,16 @@ import (
 	"github.com/chakchat/chakchat-backend/user-service/internal/filestorage"
 	"github.com/chakchat/chakchat-backend/user-service/internal/grpcservice"
 	"github.com/chakchat/chakchat-backend/user-service/internal/handlers"
-	"github.com/chakchat/chakchat-backend/user-service/internal/models"
 	"github.com/chakchat/chakchat-backend/user-service/internal/restapi"
 	"github.com/chakchat/chakchat-backend/user-service/internal/services"
 	"github.com/chakchat/chakchat-backend/user-service/internal/storage"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kostyay/gorm-opentelemetry"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -87,10 +83,13 @@ var conf *Config = loadConfig("/app/config.yml")
 
 func main() {
 	jwtConf := loadJWTConfig()
-	db, err := connectDB()
+
+	db, err := pgxpool.New(context.Background(), conf.DB.DSN)
 	if err != nil {
 		log.Fatalf("failed to connect DB: %v", err)
 	}
+
+	defer db.Close()
 	log.Println("connected to DB")
 
 	fileClient, close := createFileClient()
@@ -110,10 +109,6 @@ func main() {
 			log.Fatalf("ForceFlush failed: %s", err)
 		}
 	}()
-
-	if err := db.Use(otelgorm.NewPlugin()); err != nil {
-		log.Fatalf("Can't add OpenTelemetry for GORM: %v", err)
-	}
 
 	userStorage := storage.NewUserStorage(db)
 	userService := services.NewGetUserService(userStorage)
@@ -169,8 +164,9 @@ func main() {
 		PUT("v1.0/me/restrictions", handlers.UpdateRestrictions(updateRestrictions)).
 		PUT("v1.0/me/profile-photo", handlers.UpdatePhoto(processPhotoService)).
 		DELETE("v1.0/me/profile-photo", handlers.DeletePhoto(processPhotoService))
-	r.GET("/v1.0/are-you-a-real-teapot", handlers.AmITeapot())
-	r.GET("/v1.0/username/:username", getUserServer.CheckUserByUsername())
+	r.Group("/").
+		GET("/v1.0/are-you-a-real-teapot", handlers.AmITeapot()).
+		GET("/v1.0/username/:username", handlers.CheckUserByUsername(getUserService))
 
 	err = r.Run(":5004")
 	if err != nil {
@@ -190,18 +186,6 @@ func loadJWTConfig() *jwt.Config {
 		log.Fatal(err)
 	}
 	return config
-}
-
-func connectDB() (*gorm.DB, error) {
-	db, err := gorm.Open(postgres.Open(conf.DB.DSN))
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
-	}
-
-	if err := db.AutoMigrate(&models.User{}, &models.FieldRestriction{}, &models.FieldRestrictionUser{}); err != nil {
-		return nil, fmt.Errorf("failed to auto-migrate database: %w", err)
-	}
-	return db, nil
 }
 
 func readKey(path string) []byte {
