@@ -56,7 +56,7 @@ func UpdatePhoto(u UpdatePhotoServer) gin.HandlerFunc {
 			if errors.Is(err, services.ErrNotFound) {
 				c.JSON(http.StatusNotFound, restapi.ErrorResponse{
 					ErrorType:    restapi.ErrTypeNotFound,
-					ErrorMessage: "Can't find user with ownerId",
+					ErrorMessage: "Can't find photo",
 				})
 				return
 			}
