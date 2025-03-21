@@ -75,7 +75,7 @@ func (u *ProcessPhotoService) fetchPhotoURL(ctx context.Context, photo string) (
 	})
 
 	if err != nil {
-		return nil, errors.New("gRPC call error")
+		return nil, ErrNotFound
 	}
 
 	if err := validatePhoto(photoURL); err != nil {
