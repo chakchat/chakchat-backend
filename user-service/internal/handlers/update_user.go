@@ -16,16 +16,16 @@ import (
 )
 
 type updateUserRequest struct {
-	Name        string
-	Username    string
-	DateOfBirth *string
+	Name        string  `json:"name"`
+	Username    string  `json:"username"`
+	DateOfBirth *string `json:"date_of_birth"`
 }
 
-type UpdateUserserver interface {
+type UpdateUserServer interface {
 	UpdateUser(ctx context.Context, user *models.User, req *storage.UpdateUserRequest) (*models.User, error)
 }
 
-func UpdateUser(service UpdateUserserver, getter GetUserServer) gin.HandlerFunc {
+func UpdateUser(service UpdateUserServer, getter GetUserServer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req updateUserRequest
 		if err := c.ShouldBindBodyWithJSON(&req); err != nil {
@@ -55,7 +55,6 @@ func UpdateUser(service UpdateUserserver, getter GetUserServer) gin.HandlerFunc 
 				})
 				return
 			}
-			c.Error(err)
 			restapi.SendInternalError(c)
 			return
 		}
@@ -68,11 +67,13 @@ func UpdateUser(service UpdateUserserver, getter GetUserServer) gin.HandlerFunc 
 			})
 			return
 		}
+
 		updatedUser, err := service.UpdateUser(c.Request.Context(), user, &storage.UpdateUserRequest{
 			Name:        req.Name,
 			Username:    req.Username,
 			DateOfBirth: &date,
 		})
+
 		if err != nil {
 			if errors.Is(err, services.ErrValidationError) {
 				c.JSON(http.StatusBadRequest, restapi.ErrorResponse{

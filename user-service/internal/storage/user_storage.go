@@ -244,14 +244,16 @@ func (s *UserStorage) UpdateUser(ctx context.Context, user *models.User, req *Up
 	q := `SELECT id FROM users WHERE username = $1`
 	var existingId uuid.UUID
 	err := s.db.QueryRow(ctx, q, req.Username).Scan(&existingId)
+
 	if err == nil && existingId != user.ID {
 		return nil, ErrAlreadyExists
-	} else if !errors.Is(err, pgx.ErrNoRows) {
+	}
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return nil, err
 	}
 
 	updateQuery := `UPDATE users SET name = $1, username = $2, date_of_birth = $3 WHERE id = $4`
-	_, err = s.db.Exec(ctx, updateQuery, req.Name, req.Username, req.DateOfBirth, user.ID)
+	_, err = s.db.Exec(ctx, updateQuery, req.Name, req.Username, *req.DateOfBirth, user.ID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound
@@ -263,6 +265,7 @@ func (s *UserStorage) UpdateUser(ctx context.Context, user *models.User, req *Up
 	if err != nil {
 		return nil, err
 	}
+
 	return updatedUser, nil
 }
 
@@ -270,6 +273,9 @@ func (s *UserStorage) UpdatePhoto(ctx context.Context, id uuid.UUID, photoURL st
 	updateQuery := `UPDATE users SET photo_url = $1 WHERE id = $2`
 	result, err := s.db.Exec(ctx, updateQuery, photoURL, id)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
 	rowsAffected := result.RowsAffected()

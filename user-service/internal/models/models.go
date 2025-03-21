@@ -15,13 +15,13 @@ const (
 )
 
 type User struct {
-	ID          uuid.UUID `gorm:"type:uuid;primaryKey"`
+	ID          uuid.UUID
 	Name        string
 	Username    string
 	Phone       string
 	DateOfBirth *time.Time
 	PhotoURL    string
-	CreatedAt   int64 `gorm:"autoCreateTime"`
+	CreatedAt   int64
 
 	DateOfBirthVisibility Restriction `gorm:"default:everyone"`
 	PhoneVisibility       Restriction `gorm:"default:everyone"`
