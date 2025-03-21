@@ -42,6 +42,7 @@ services:
       - file-storage-postgres
   file-storage-postgres:
     image: postgres:latest
+    ports: ["5434:5432"]
     volumes:
       - file_storage_postgres_data:/var/lib/postgresql/data
     environment:
