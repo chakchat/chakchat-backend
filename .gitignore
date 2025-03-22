@@ -26,6 +26,7 @@ go.work.sum
 # Keys
 keys/
 ssl/
+minio-certs/
 
 # Xcode
 .DS_Store

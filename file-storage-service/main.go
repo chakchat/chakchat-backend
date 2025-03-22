@@ -186,7 +186,9 @@ func connectS3() *s3.Client {
 	if err != nil {
 		log.Fatalf("Err loading default config: %s", err)
 	}
-	return s3.NewFromConfig(cfg)
+	return s3.NewFromConfig(cfg, func(o *s3.Options) {
+		o.UsePathStyle = true
+	})
 }
 
 func createIdempStorage(redisClient *redis.Client) idempotency.IdempotencyStorage {
