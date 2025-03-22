@@ -65,6 +65,9 @@ type JWTConfig struct {
 func loadConfig(file string) *Config {
 	viper.AutomaticEnv()
 
+	viper.BindEnv("s3.bucket", "FILE_STORAGE_S3_BUCKET")
+	viper.BindEnv("s3.url_prefix", "FILE_STORAGE_S3_URL_PREFIX")
+
 	viper.BindEnv("aws.access_key_id", "FILE_STORAGE_AWS_ACCESS_KEY_ID")
 	viper.BindEnv("aws.secret_access_key", "FILE_STORAGE_AWS_SECRET_ACCESS_KEY")
 	viper.BindEnv("aws.region", "FILE_STORAGE_AWS_REGION")

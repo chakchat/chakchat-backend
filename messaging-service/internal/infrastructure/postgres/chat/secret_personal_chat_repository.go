@@ -29,7 +29,7 @@ func (r *SecretPersonalChatRepository) FindById(ctx context.Context, id domain.C
 		c.chat_id, 
 		c.created_at, 
 		p.expiration_seconds,
-		(SELECT ARRAY_AGG(m.user_id) FROM messaging.membership m WHERE m.chat_id = c.chat_id), 
+		(SELECT ARRAY_AGG(m.user_id) FROM messaging.membership m WHERE m.chat_id = c.chat_id)
 	FROM messaging.chat c
 		JOIN messaging.personal_chat p ON p.chat_id = c.chat_id
 	WHERE c.chat_id = $1`
@@ -74,7 +74,7 @@ func (r *SecretPersonalChatRepository) FindByMembers(ctx context.Context, member
 	SELECT 
 		c.chat_id, 
 		MAX(c.created_at),
-		MAX(sp.expiration_seconds),
+		MAX(sp.expiration_seconds)
 	FROM messaging.membership m
 		JOIN messaging.chat c ON c.chat_id = m.chat_id
 		JOIN messaging.secret_personal_chat sp ON sp.chat_id = c.chat_id

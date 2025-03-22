@@ -58,20 +58,23 @@ func UpdateUser(service UpdateUserServer, getter GetUserServer) gin.HandlerFunc 
 			restapi.SendInternalError(c)
 			return
 		}
-
-		date, err := time.Parse(time.DateOnly, *req.DateOfBirth)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
-				ErrorType:    restapi.ErrTypeInvalidJson,
-				ErrorMessage: "Wrong data format",
-			})
-			return
+		var date *time.Time
+		if req.DateOfBirth != nil {
+			cpDate, err := time.Parse(time.DateOnly, *req.DateOfBirth)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
+					ErrorType:    restapi.ErrTypeInvalidJson,
+					ErrorMessage: "Wrong data format",
+				})
+				return
+			}
+			date = &cpDate
 		}
 
 		updatedUser, err := service.UpdateUser(c.Request.Context(), user, &storage.UpdateUserRequest{
 			Name:        req.Name,
 			Username:    req.Username,
-			DateOfBirth: &date,
+			DateOfBirth: date,
 		})
 
 		if err != nil {
