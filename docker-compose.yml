@@ -9,6 +9,7 @@ services:
       - identity-service
       - file-storage-service
       - user-service
+    restart: on-failure
 
   # Identity service
   identity-service:
@@ -18,12 +19,14 @@ services:
       - ./keys:/app/keys:ro
     depends_on:
       - identity-redis
+    restart: on-failure
   identity-redis:
     image: redis:latest
     volumes:
       - identity_redis_data:/data
     environment:
       - REDIS_PASSWORD=secret
+    restart: on-failure
 
   # File storage service
   file-storage-service:
@@ -42,6 +45,7 @@ services:
     depends_on:
       - file-storage-redis
       - file-storage-postgres
+    restart: on-failure
   file-storage-postgres:
     image: postgres:latest
     ports: ["5434:5432"]
@@ -51,6 +55,7 @@ services:
       - POSTGRES_PASSWORD=secret
       - POSTGRES_USER=postgres
       - POSTGRES_DB=file_metadata
+    restart: on-failure
   file-storage-redis:
     image: redis:latest
     volumes:
@@ -68,7 +73,8 @@ services:
     environment:
       - MINIO_ROOT_USER=root
       - MINIO_ROOT_PASSWORD=secret
-    command: ["server", "/data", "--console-address", "\"9001\""]
+    command: ["server", "/data", "--address", ":9000", "--console-address", ":9001"]
+    restart: on-failure
       
   # User service
   user-service:
@@ -82,6 +88,7 @@ services:
     volumes:
       - ./user-service/config.yml:/app/config.yml
       - ./keys/rsa.pub:/app/keys/rsa.pub:ro
+    restart: on-failure
   user-postgres:
     image: postgres:latest
     ports: ["5433:5432"]
@@ -104,6 +111,7 @@ services:
       - FLYWAY_BASELINE_ON_MIGRATE=true
     volumes:
       - ./user-service/migrations:/app/migrations
+    restart: on-failure
 
   messaging-service:
     build: ./messaging-service
@@ -115,12 +123,14 @@ services:
       - messaging-postgres
     environment:
       - DB_CONN_STRING=postgres://postgres:secret@messaging-postgres:5432/messaging?sslmode=disable
+    restart: on-failure
   messaging-redis:
     image: redis:latest
     volumes:
       - messaging_redis_data:/data
     environment:
       - REDIS_PASSWORD=secret
+    restart: on-failure
   messaging-postgres:
     image: postgres:latest
     volumes:
@@ -130,6 +140,7 @@ services:
       - POSTGRES_PASSWORD=secret
       - POSTGRES_USER=postgres
       - POSTGRES_DB=messaging
+    restart: on-failure
   messaging-flyway:
     image: flyway/flyway:latest
     command: ["migrate"]
@@ -142,6 +153,7 @@ services:
       - FLYWAY_BASELINE_ON_MIGRATE=true
     volumes:
       - ./messaging-service/migrations:/app/migrations
+    restart: on-failure
 
   # Stubs
   sms-service-stub:
