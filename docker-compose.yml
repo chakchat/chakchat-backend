@@ -71,8 +71,8 @@ services:
     volumes:
       - file_storage_minio_data:/data
     environment:
-      - MINIO_ROOT_USER=root
-      - MINIO_ROOT_PASSWORD=secret
+      - MINIO_ROOT_USER=chakchat-admin
+      - MINIO_ROOT_PASSWORD=secret12345
     command: ["server", "/data", "--address", ":9000", "--console-address", ":9001"]
     restart: on-failure
       
