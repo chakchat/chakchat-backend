@@ -55,6 +55,10 @@ services:
       - file_storage_redis_data:/data
     environment:
       - REDIS_PASSWORD=secret
+    restart: on-failure
+  file-storage-minio:
+    image: minio/minio:latest
+    # TODO:
       
   # User service
   user-service:
