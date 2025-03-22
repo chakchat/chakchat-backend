@@ -68,6 +68,7 @@ services:
     environment:
       - MINIO_ROOT_USER=root
       - MINIO_ROOT_PASSWORD=secret
+    command: ["server", "/data", "--console-address", "\"9001\""]
       
   # User service
   user-service:
