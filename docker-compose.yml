@@ -60,6 +60,9 @@ services:
     restart: on-failure
   file-storage-minio:
     image: minio/minio:latest
+    ports:
+      - "9000:9000"
+      - "9001:9001"
     volumes:
       - file_storage_minio_data:/data
     environment:
