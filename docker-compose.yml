@@ -36,6 +36,8 @@ services:
       FILE_STORAGE_AWS_REGION: ${FILE_STORAGE_AWS_REGION}
       FILE_STORAGE_AWS_ENDPOINT_URL: ${FILE_STORAGE_AWS_ENDPOINT_URL}
       FILE_STORAGE_AWS_SECRET_ACCESS_KEY: ${FILE_STORAGE_AWS_SECRET_ACCESS_KEY}
+      FILE_STORAGE_S3_BUCKET: ${FILE_STORAGE_S3_BUCKET}
+      FILE_STORAGE_S3_URL_PREFIX: ${FILE_STORAGE_S3_URL_PREFIX}
       FILE_STORAGE_DB_DSN: host=file-storage-postgres port=5432 user=postgres password=secret dbname=file_metadata sslmode=disable
     depends_on:
       - file-storage-redis
@@ -58,7 +60,11 @@ services:
     restart: on-failure
   file-storage-minio:
     image: minio/minio:latest
-    # TODO:
+    volumes:
+      - file_storage_minio_data:/data
+    environment:
+      - MINIO_ROOT_USER=root
+      - MINIO_ROOT_PASSWORD=secret
       
   # User service
   user-service:
@@ -120,18 +126,18 @@ services:
       - POSTGRES_PASSWORD=secret
       - POSTGRES_USER=postgres
       - POSTGRES_DB=messaging
-  # messaging-flyway:
-  #   image: flyway/flyway:latest
-  #   command: ["migrate"]
-  #   environment:
-  #     - FLYWAY_URL=jdbc:postgresql://messaging-postgres:5432/messaging
-  #     - FLYWAY_USER=postgres
-  #     - FLYWAY_PASSWORD=secret
-  #     - FLYWAY_LOCATIONS=filesystem:/app/migrations
-  #     - FLYWAY_VALIDATE_MIGRATION_NAMING=true
-  #     - FLYWAY_BASELINE_ON_MIGRATE=true
-  #   volumes:
-  #     - ./messaging-service/migrations:/app/migrations
+  messaging-flyway:
+    image: flyway/flyway:latest
+    command: ["migrate"]
+    environment:
+      - FLYWAY_URL=jdbc:postgresql://messaging-postgres:5432/messaging
+      - FLYWAY_USER=postgres
+      - FLYWAY_PASSWORD=secret
+      - FLYWAY_LOCATIONS=filesystem:/app/migrations
+      - FLYWAY_VALIDATE_MIGRATION_NAMING=true
+      - FLYWAY_BASELINE_ON_MIGRATE=true
+    volumes:
+      - ./messaging-service/migrations:/app/migrations
 
   # Stubs
   sms-service-stub:
