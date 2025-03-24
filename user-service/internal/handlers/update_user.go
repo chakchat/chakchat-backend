@@ -69,6 +69,8 @@ func UpdateUser(service UpdateUserServer, getter GetUserServer) gin.HandlerFunc 
 				return
 			}
 			date = &cpDate
+		} else {
+			date = nil
 		}
 
 		updatedUser, err := service.UpdateUser(c.Request.Context(), user, &storage.UpdateUserRequest{

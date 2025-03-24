@@ -252,13 +252,24 @@ func (s *UserStorage) UpdateUser(ctx context.Context, user *models.User, req *Up
 		return nil, err
 	}
 
-	updateQuery := `UPDATE users.user SET name = $1, username = $2, date_of_birth = $3 WHERE id = $4`
-	_, err = s.db.Exec(ctx, updateQuery, req.Name, req.Username, *req.DateOfBirth, user.ID)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrNotFound
+	if req.DateOfBirth == nil {
+		updateQuery := `UPDATE users.user SET name = $1, username = $2, WHERE id = $3`
+		_, err = s.db.Exec(ctx, updateQuery, req.Name, req.Username, user.ID)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return nil, ErrNotFound
+			}
+			return nil, err
 		}
-		return nil, err
+	} else {
+		updateQuery := `UPDATE users.user SET name = $1, username = $2, date_of_birth = $3 WHERE id = $4`
+		_, err = s.db.Exec(ctx, updateQuery, req.Name, req.Username, *req.DateOfBirth, user.ID)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return nil, ErrNotFound
+			}
+			return nil, err
+		}
 	}
 
 	updatedUser, err := s.GetUserById(ctx, user.ID)
