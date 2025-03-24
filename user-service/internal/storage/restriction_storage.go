@@ -28,7 +28,7 @@ func NewRestrictionStorage(db *pgxpool.Pool) *RestrictionStorage {
 func (s *RestrictionStorage) GetRestrictions(ctx context.Context, id uuid.UUID, field string) (*FieldRestrictions, error) {
 	var fieldRestriction FieldRestrictions
 	q := `SELECT * 
-		FROM field_restrictions 
+		FROM users.field_restrictions 
 		WHERE owner_user_id = $1 
     	AND field_name = $2 
     	AND permitted_user_id = $3`
@@ -57,9 +57,9 @@ func (s *RestrictionStorage) UpdateRestrictions(ctx context.Context, id uuid.UUI
 
 	var updateQuery string
 	if restrictions.Field == "Phone" {
-		updateQuery = `UPDATE users SET phone_visibility = $1 WHERE user_id = $2`
+		updateQuery = `UPDATE user.users SET phone_visibility = $1 WHERE user_id = $2`
 	} else {
-		updateQuery = `UPDATE users SET date_of_birth_visibility = $1 WHERE user_id = $2`
+		updateQuery = `UPDATE user.users SET date_of_birth_visibility = $1 WHERE user_id = $2`
 	}
 
 	_, err = tx.Exec(ctx, updateQuery, restrictions.OpenTo, id)
@@ -68,7 +68,7 @@ func (s *RestrictionStorage) UpdateRestrictions(ctx context.Context, id uuid.UUI
 	}
 
 	var currentSpecifiedUsers []uuid.UUID
-	q := `SELECT permitted_user_id FROM field_restrictions WHERE owner_user_id = $1 AND field_name = $2::user_field", id, restrictions.Field)`
+	q := `SELECT permitted_user_id FROM users.field_restrictions WHERE owner_user_id = $1 AND field_name = $2::users.user_field", id, restrictions.Field)`
 	rows, err := tx.Query(ctx, q)
 	if err != nil {
 		return nil, err
@@ -87,7 +87,7 @@ func (s *RestrictionStorage) UpdateRestrictions(ctx context.Context, id uuid.UUI
 	del := recordMisses(restrictions.SpecifiedUsers, currentSpecifiedUsers)
 
 	if len(del) > 0 {
-		q := `DELETE FROM field_restrictions WHERE owner_user_id = $1 AND field_name = $2::user_field AND permitted_user_id = ANY($3)`
+		q := `DELETE FROM users.field_restrictions WHERE owner_user_id = $1 AND field_name = $2::users.user_field AND permitted_user_id = ANY($3)`
 		_, err = tx.Exec(ctx, q, id, restrictions.Field, del)
 		if err != nil {
 			return nil, err
@@ -95,7 +95,7 @@ func (s *RestrictionStorage) UpdateRestrictions(ctx context.Context, id uuid.UUI
 	}
 
 	if len(add) > 0 {
-		q := `INSERT INTO field_restrictions (owner_user_id, field_name, permitted_user_id) VALUES ($1, $2::user_field, $3)`
+		q := `INSERT INTO users.field_restrictions (owner_user_id, field_name, permitted_user_id) VALUES ($1, $2::users.user_field, $3)`
 
 		for _, userID := range add {
 			_, err = tx.Exec(ctx, q, id, restrictions.Field, userID)

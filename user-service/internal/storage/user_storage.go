@@ -44,7 +44,7 @@ func NewUserStorage(db *pgxpool.Pool) *UserStorage {
 
 func (s *UserStorage) GetUserByPhone(ctx context.Context, phone string) (*models.User, error) {
 	var user models.User
-	q := `SELECT
+	q := `SELECT 
 		id,
 		name,
 		username,
@@ -54,7 +54,7 @@ func (s *UserStorage) GetUserByPhone(ctx context.Context, phone string) (*models
 		created_at,
 		date_of_birth_visibility,
 		phone_visibility 
-	FROM users
+	FROM users.user
 	WHERE phone = $1`
 
 	row := s.db.QueryRow(ctx, q, phone)
@@ -81,7 +81,7 @@ func (s *UserStorage) GetUserById(ctx context.Context, id uuid.UUID) (*models.Us
 		created_at,
 		date_of_birth_visibility,
 		phone_visibility 
-	FROM users
+	FROM users.user
 	WHERE id = $1`
 
 	row := s.db.QueryRow(ctx, q, id)
@@ -109,7 +109,7 @@ func (s *UserStorage) GetUserByUsername(ctx context.Context, username string) (*
 		created_at,
 		date_of_birth_visibility,
 		phone_visibility 
-	FROM users
+	FROM users.user
 	WHERE username = $1`
 
 	row := s.db.QueryRow(ctx, q, username)
@@ -136,7 +136,7 @@ func (s *UserStorage) GetUsersByCriteria(ctx context.Context, req SearchUsersReq
 		created_at,
 		date_of_birth_visibility,
 		phone_visibility 
-	FROM users
+	FROM users.user
 	WHERE 1=1`
 
 	counter := 1
@@ -166,7 +166,7 @@ func (s *UserStorage) GetUsersByCriteria(ctx context.Context, req SearchUsersReq
 	paramCounter := 1
 	countArgs := []interface{}{}
 
-	countQuery := `SELECT COUNT(*) FROM users WHERE 1=1`
+	countQuery := `SELECT COUNT(*) FROM users.user WHERE 1=1`
 	if req.Name != nil {
 		countQuery += fmt.Sprintf(` AND name ILIKE $%d`, paramCounter)
 		countArgs = append(countArgs, "%"+*req.Name+"%")
@@ -211,7 +211,7 @@ func (s *UserStorage) GetUsersByCriteria(ctx context.Context, req SearchUsersReq
 
 func (s *UserStorage) CreateUser(ctx context.Context, user *models.User) (*models.User, error) {
 
-	q := `SELECT id FROM users WHERE username = $1 OR phone = $2`
+	q := `SELECT id FROM users.user WHERE username = $1 OR phone = $2`
 	var existingID uuid.UUID
 	err := s.db.QueryRow(ctx, q, user.Username, user.Phone).Scan(&existingID)
 	if err == nil {
@@ -230,7 +230,7 @@ func (s *UserStorage) CreateUser(ctx context.Context, user *models.User) (*model
 		CreatedAt:   time.Now().Unix(),
 	}
 
-	insertQuery := `INSERT INTO users (id, username, name, phone, date_of_birth, photo_url, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)`
+	insertQuery := `INSERT INTO users.user (id, username, name, phone, date_of_birth, photo_url, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)`
 	_, err = s.db.Exec(ctx, insertQuery, newUser.ID, newUser.Username, newUser.Name, newUser.Phone, newUser.DateOfBirth, newUser.PhotoURL, newUser.CreatedAt)
 	if err != nil {
 		return nil, err
@@ -241,7 +241,7 @@ func (s *UserStorage) CreateUser(ctx context.Context, user *models.User) (*model
 
 func (s *UserStorage) UpdateUser(ctx context.Context, user *models.User, req *UpdateUserRequest) (*models.User, error) {
 
-	q := `SELECT id FROM users WHERE username = $1`
+	q := `SELECT id FROM users.user WHERE username = $1`
 	var existingId uuid.UUID
 	err := s.db.QueryRow(ctx, q, req.Username).Scan(&existingId)
 
@@ -252,7 +252,7 @@ func (s *UserStorage) UpdateUser(ctx context.Context, user *models.User, req *Up
 		return nil, err
 	}
 
-	updateQuery := `UPDATE users SET name = $1, username = $2, date_of_birth = $3 WHERE id = $4`
+	updateQuery := `UPDATE users.user SET name = $1, username = $2, date_of_birth = $3 WHERE id = $4`
 	_, err = s.db.Exec(ctx, updateQuery, req.Name, req.Username, *req.DateOfBirth, user.ID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -270,7 +270,7 @@ func (s *UserStorage) UpdateUser(ctx context.Context, user *models.User, req *Up
 }
 
 func (s *UserStorage) UpdatePhoto(ctx context.Context, id uuid.UUID, photoURL string) (*models.User, error) {
-	updateQuery := `UPDATE users SET photo_url = $1 WHERE id = $2`
+	updateQuery := `UPDATE users.user SET photo_url = $1 WHERE id = $2`
 	result, err := s.db.Exec(ctx, updateQuery, photoURL, id)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -292,7 +292,7 @@ func (s *UserStorage) UpdatePhoto(ctx context.Context, id uuid.UUID, photoURL st
 }
 
 func (s *UserStorage) DeletePhoto(ctx context.Context, id uuid.UUID) (*models.User, error) {
-	updateQuery := `UPDATE users SET photo_url = '' WHERE id = $1`
+	updateQuery := `UPDATE users.user SET photo_url = '' WHERE id = $1`
 	_, err := s.db.Exec(ctx, updateQuery, id)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

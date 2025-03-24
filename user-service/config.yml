@@ -11,6 +11,3 @@ jwt:
 
 otlp:
   grpc_addr: otel-collector:4317
-
-db:
-  dsn: "postgres://user:secret@postgres:5432/userdb?sslmode=disable"

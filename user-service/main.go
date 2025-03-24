@@ -59,7 +59,7 @@ type Config struct {
 func loadConfig(file string) *Config {
 	viper.AutomaticEnv()
 
-	viper.BindEnv("db.dsn", "DB_DSN")
+	viper.MustBindEnv("db.dsn", "DB_DSN")
 	viper.BindEnv("server.port", "SERVER_PORT")
 
 	viper.SetConfigFile(file)
