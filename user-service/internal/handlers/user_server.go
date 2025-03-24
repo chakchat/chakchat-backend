@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"errors"
+	"log"
 	"regexp"
 
 	pb "github.com/chakchat/chakchat-backend/user-service/internal/grpcservice"
@@ -24,14 +25,17 @@ func (s *UserServer) GetUser(ctx context.Context, req *pb.UserRequest) (*pb.User
 	user, err := s.userService.GetUser(ctx, req.PhoneNumber)
 	if err != nil {
 		if errors.Is(err, services.ErrNotFound) {
+			log.Printf("Failed find user and returns not found, %s", err)
 			return &pb.UserResponse{
 				Status: pb.UserResponseStatus_NOT_FOUND,
 			}, nil
 		}
+		log.Printf("Unknown fail: %s", err)
 		return &pb.UserResponse{
 			Status: pb.UserResponseStatus_FAILED,
 		}, nil
 	}
+	log.Println("Pass finding")
 	return &pb.UserResponse{
 		Status:   pb.UserResponseStatus_SUCCESS,
 		Name:     &user.Name,
