@@ -1,4 +1,4 @@
-CREATE SCHEMA IF NOT EXISTS "messaging";
+CREATE SCHEMA "messaging";
 
 CREATE TYPE messaging.chat_type AS ENUM ('personal', 'group', 'secret_personal', 'secret_group');
 
