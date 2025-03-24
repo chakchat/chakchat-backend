@@ -18,7 +18,7 @@ type UploadFileRequest struct {
 	MimeType string
 	FileSize int64
 
-	File io.Reader
+	File io.ReadSeeker
 }
 
 type FileMeta struct {
@@ -61,6 +61,10 @@ func (s *UploadService) Upload(ctx context.Context, req *UploadFileRequest) (*Fi
 		return nil, fmt.Errorf("failed to compute SHA-256 hash: %s", err)
 	}
 	hash := hex.EncodeToString(hasher.Sum(nil))
+
+	if _, err := req.File.Seek(0, io.SeekStart); err != nil {
+		return nil, err
+	}
 
 	_, err := s.client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket:         aws.String(s.conf.Bucket),
