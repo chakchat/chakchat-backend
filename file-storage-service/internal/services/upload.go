@@ -3,7 +3,7 @@ package services
 import (
 	"context"
 	"crypto/sha256"
-	"encoding/hex"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"time"
@@ -60,7 +60,7 @@ func (s *UploadService) Upload(ctx context.Context, req *UploadFileRequest) (*Fi
 	if _, err := io.Copy(hasher, req.File); err != nil {
 		return nil, fmt.Errorf("failed to compute SHA-256 hash: %s", err)
 	}
-	hash := hex.EncodeToString(hasher.Sum(nil))
+	hash := base64.StdEncoding.EncodeToString(hasher.Sum(nil))
 
 	if _, err := req.File.Seek(0, io.SeekStart); err != nil {
 		return nil, err
