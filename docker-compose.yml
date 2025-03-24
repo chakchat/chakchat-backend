@@ -180,7 +180,6 @@ volumes:
   file_storage_redis_data:
   file_storage_postgres_data:
   file_storage_minio_data:
-  minio_config:
   identity_redis_data:
   user_postgres_data:
   messaging_redis_data:
