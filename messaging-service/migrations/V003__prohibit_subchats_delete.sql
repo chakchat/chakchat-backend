@@ -4,6 +4,7 @@ BEGIN
         RAISE EXCEPTION 'cannot delete a row from % table because you should delete from messaging.chat table instead',
             TG_TABLE_NAME;
     END IF;
+    RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;
 
