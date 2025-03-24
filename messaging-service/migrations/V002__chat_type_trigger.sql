@@ -3,21 +3,21 @@ DECLARE
     must_chat_type VARCHAR(255);
 BEGIN
     IF TG_TABLE_NAME = 'personal_chat' THEN
-        must_chat_type := 'personal'
-    ELSE IF TG_TABLE_NAME = 'group_chat' THEN
-        must_chat_type := 'group'
-    ELSE IF TG_TABLE_NAME = 'secret_personal_chat' THEN
-        must_chat_type := 'personal'
-    ELSE IF TG_TABLE_NAME = 'secret_group_chat' THEN
-        must_chat_type := 'group'
+        must_chat_type := 'personal';
+    ELSIF TG_TABLE_NAME = 'group_chat' THEN
+        must_chat_type := 'group';
+    ELSIF TG_TABLE_NAME = 'secret_personal_chat' THEN
+        must_chat_type := 'personal';
+    ELSIF TG_TABLE_NAME = 'secret_group_chat' THEN
+        must_chat_type := 'group';
     ELSE
-        RAISE EXCEPTION 'Unknown chat relation %', TG_TABLE_NAME
+        RAISE EXCEPTION 'Unknown chat relation %', TG_TABLE_NAME;
     END IF;
 
-    IF (SELECT chat_type IS DISTINCT FROM must_chat_type FROM messaging.chat WHERE chat_id = NEW.chat_id)
-    THEN
+    IF (SELECT chat_type IS DISTINCT FROM must_chat_type FROM messaging.chat WHERE chat_id = NEW.chat_id) THEN
         RAISE EXCEPTION 'The created chat must be of type %', must_chat_type;
     END IF;
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
