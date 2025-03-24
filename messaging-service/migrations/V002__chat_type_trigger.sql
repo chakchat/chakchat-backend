@@ -1,6 +1,6 @@
-CREATE FUNCTION messaging.check_chat_type() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION messaging.check_chat_type() RETURNS TRIGGER AS $$
 DECLARE
-    must_chat_type VARCHAR(255);
+    must_chat_type messaging.chat_type;
 BEGIN
     IF TG_TABLE_NAME = 'personal_chat' THEN
         must_chat_type := 'personal';
@@ -14,7 +14,7 @@ BEGIN
         RAISE EXCEPTION 'Unknown chat relation %', TG_TABLE_NAME;
     END IF;
 
-    IF (SELECT chat_type IS DISTINCT FROM must_chat_type FROM messaging.chat WHERE chat_id = NEW.chat_id) THEN
+    IF (SELECT chat_type != must_chat_type FROM messaging.chat WHERE chat_id = NEW.chat_id) THEN
         RAISE EXCEPTION 'The created chat must be of type %', must_chat_type;
     END IF;
 
