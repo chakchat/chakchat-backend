@@ -151,7 +151,7 @@ func (g *GetUserService) CheckUserByUsername(ctx context.Context, username strin
 	var check bool
 	_, err := g.getUserRepo.GetUserByUsername(ctx, username)
 	if err != nil {
-		if errors.Is(err, ErrNotFound) {
+		if errors.Is(err, storage.ErrNotFound) {
 			check = false
 			return &check, nil
 		}
