@@ -23,7 +23,7 @@ type User struct {
 	Name        string    `json:"name"`
 	Phone       *string   `json:"phone,omitempty"`
 	DateOfBirth *string   `json:"dateOfBirth,omitempty"`
-	PhotoURL    *string   `json:"photo"`
+	PhotoURL    *string   `json:"photo_url"`
 	CreatedAt   int64     `json:"createdAt"`
 }
 
