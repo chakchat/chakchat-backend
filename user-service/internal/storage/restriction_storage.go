@@ -57,9 +57,9 @@ func (s *RestrictionStorage) UpdateRestrictions(ctx context.Context, id uuid.UUI
 
 	var updateQuery string
 	if restrictions.Field == "Phone" {
-		updateQuery = `UPDATE users.user SET phone_visibility = $1 WHERE user_id = $2`
+		updateQuery = `UPDATE users.user SET phone_visibility = $1 WHERE id = $2`
 	} else {
-		updateQuery = `UPDATE users.user SET date_of_birth_visibility = $1 WHERE user_id = $2`
+		updateQuery = `UPDATE users.user SET date_of_birth_visibility = $1 WHERE id = $2`
 	}
 
 	_, err = tx.Exec(ctx, updateQuery, restrictions.OpenTo, id)

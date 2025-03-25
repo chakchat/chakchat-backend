@@ -51,6 +51,10 @@ type Config struct {
 		GRPCPort string `mapstructure:"grpc-port"`
 	} `mapstructure:"server"`
 
+	FileStorage struct {
+		GrpcAddr string `mapstructure:"grpc_addr"`
+	} `mapstructure:"filestorage"`
+
 	Otlp struct {
 		GrpcAddr string `mapstructure:"grpc_addr"`
 	} `mapstructure:"otlp"`
@@ -197,7 +201,7 @@ func readKey(path string) []byte {
 }
 
 func createFileClient() (filestorage.FileStorageServiceClient, func() error) {
-	addr := conf.Server.GRPCPort
+	addr := conf.FileStorage.GrpcAddr
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatal(err)
