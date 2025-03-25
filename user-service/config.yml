@@ -13,4 +13,4 @@ otlp:
   grpc_addr: otel-collector:4317
 
 filestorage:
-  grpc_addr: file-storage:50051
+  grpc_addr: file-storage-service:9090
