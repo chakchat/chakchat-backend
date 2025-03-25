@@ -3,12 +3,13 @@ package services
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/chakchat/chakchat-backend/user-service/internal/filestorage"
 	"github.com/chakchat/chakchat-backend/user-service/internal/models"
 	"github.com/chakchat/chakchat-backend/user-service/internal/storage"
 	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var ErrInvalidPhoto = errors.New("Invalid photo")
@@ -67,15 +68,15 @@ func (u *ProcessPhotoService) DeletePhoto(ctx context.Context, id uuid.UUID) (*m
 }
 
 func (u *ProcessPhotoService) fetchPhotoURL(ctx context.Context, photo string) (*filestorage.GetFileResponse, error) {
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
-
 	photoURL, err := u.fileStorage.GetFile(ctx, &filestorage.GetFileRequest{
 		FileId: &filestorage.UUID{Value: photo},
 	})
 
 	if err != nil {
-		return nil, ErrNotFound
+		if status, ok := status.FromError(err); ok && status.Code() == codes.NotFound {
+			return nil, ErrNotFound
+		}
+		return nil, err
 	}
 
 	if err := validatePhoto(photoURL); err != nil {
