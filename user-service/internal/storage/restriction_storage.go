@@ -68,8 +68,8 @@ func (s *RestrictionStorage) UpdateRestrictions(ctx context.Context, id uuid.UUI
 	}
 
 	var currentSpecifiedUsers []uuid.UUID
-	q := `SELECT permitted_user_id FROM users.field_restrictions WHERE owner_user_id = $1 AND field_name = $2::users.user_field", id, restrictions.Field)`
-	rows, err := tx.Query(ctx, q)
+	q := `SELECT permitted_user_id FROM users.field_restrictions WHERE owner_user_id = $1 AND field_name = $2::users.user_field`
+	rows, err := tx.Query(ctx, q, id, restrictions.Field)
 	if err != nil {
 		return nil, err
 	}
