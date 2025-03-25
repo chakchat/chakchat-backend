@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/chakchat/chakchat-backend/user-service/internal/models"
@@ -284,11 +285,16 @@ func (s *UserStorage) UpdatePhoto(ctx context.Context, id uuid.UUID, photoURL st
 	updateQuery := `UPDATE users.user SET photo_url = $1 WHERE id = $2`
 	_, err := s.db.Exec(ctx, updateQuery, photoURL, id)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		log.Println("Error in updating photo")
 		return nil, err
 	}
 
 	user, err := s.GetUserById(ctx, id)
 	if err != nil {
+		log.Println("Error finding user")
 		return nil, err
 	}
 	return user, nil

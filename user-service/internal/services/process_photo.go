@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/chakchat/chakchat-backend/user-service/internal/filestorage"
 	"github.com/chakchat/chakchat-backend/user-service/internal/models"
@@ -73,6 +74,7 @@ func (u *ProcessPhotoService) fetchPhotoURL(ctx context.Context, photo string) (
 	})
 
 	if err != nil {
+		log.Println("Error fetching photo")
 		if status, ok := status.FromError(err); ok && status.Code() == codes.NotFound {
 			return nil, ErrNotFound
 		}
