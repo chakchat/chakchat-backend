@@ -19,7 +19,7 @@ import (
 )
 
 func main() {
-	config, err := configuration.LoadConfig("/app/config.yml")
+	config, err := configuration.LoadConfig("/etc/messaging/config.yml")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -57,7 +57,7 @@ func main() {
 
 	db, err := pgx.Connect(context.Background(), config.DB.ConnString)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Connect to pg failed: %s\n", err)
 	}
 	defer db.Close(context.Background())
 

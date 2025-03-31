@@ -1,3 +1,15 @@
+# [DEPRECATED]
+# [DEPRECATED]
+# [DEPRECATED]
+# [DEPRECATED]
+#
+# This `docker-compose.yml` is deprecated due to future Kubernetes usage. 
+# Watch `k8s` folder in this repo.
+#
+# [DEPRECATED]
+# [DEPRECATED]
+# [DEPRECATED]
+# [DEPRECATED]
 services:
   nginx:
     image: nginx:latest
@@ -15,7 +27,7 @@ services:
   identity-service:
     build: ./identity-service
     volumes:
-      - ./identity-service/config.yml:/app/config.yml:ro
+      - ./identity-service/config.yml:/etc/identity/config.yml:ro
       - ./keys:/app/keys:ro
     depends_on:
       - identity-redis
@@ -117,13 +129,13 @@ services:
   messaging-service:
     build: ./messaging-service
     volumes:
-      - ./messaging-service/config.yml:/app/config.yml:ro
+      - ./messaging-service/config.yml:/etc/messaging/config.yml:ro
       - ./keys/rsa.pub:/app/keys/rsa.pub:ro
     depends_on:
       - messaging-redis
       - messaging-postgres
     environment:
-      - DB_CONN_STRING=postgres://postgres:secret@messaging-postgres:5432/messaging?sslmode=disable
+      - PG_CONN_STRING=postgres://postgres:secret@messaging-postgres:5432/messaging?sslmode=disable
     restart: on-failure
   messaging-redis:
     image: redis:latest

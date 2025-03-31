@@ -1,0 +1,16 @@
+{{- range $key, $value := .Values.jobs }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ $.Release.Name }}
+  name: {{ $key }}
+  namespace: {{ $.Release.Namespace }}
+  {{- with $value.annotations }}
+  annotations:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{ toYaml $value | nindent 2 }}
+---
+{{- end }}
