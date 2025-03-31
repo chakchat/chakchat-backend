@@ -1,0 +1,20 @@
+{{- range $key, $value := .Values.pg }}
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: {{ $key }}
+  labels:
+    app.kubernetes.io/name: {{ $key }}
+spec:
+  instances: {{ $value.instances }}
+  imageName: ghcr.io/cloudnative-pg/postgresql:17
+  storage:
+    size: {{ $value.storage.size | default "5Gi" }}
+  bootstrap:
+    initdb:
+      database: {{ $value.database }}
+      owner: {{ $value.owner }}
+      secret:
+        name: {{ $value.secret }}
+---
+{{- end }}
