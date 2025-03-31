@@ -1,0 +1,132 @@
+openapi: 3.0.3
+info:
+  title: Live Connection Service REST API
+  description: Live Connection Service REST API
+  version: "1.0"
+servers:
+  - url: http://localhost:80/api/live-connection/v1.0/
+    description: nginx reverse-proxied localhost
+
+# Response body follows the standard described in standard.md
+paths:
+  /status/{users}:
+    get:
+      summary: Get status of user's status onpine
+      description: Gets status online and last time user was online.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: users
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  data:
+                    $ref: '#/components/schemas/GetOnlineStatuses'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found users by id.
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    EmptySuccessResponse:
+      type: object
+      example: {}
+
+    ErrorResponseWithDetails:
+      type: object
+      description: Error response specified by standard.md
+      properties:
+        error_type:
+          type: string
+          nullable: false
+        error_message:
+          type: string
+          nullable: false
+        error_details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                nullable: false
+              message:
+                type: string
+                nullable: false
+      example:
+        error_type: invalid_input
+        error_message: Input is invalid
+        error_details:
+          - field: some_field
+            message: Some field is invalid    
+    ErrorResponse:
+      type: object
+      description: Error response specified by standard.md
+      properties:
+        error_type:
+          type: string
+          nullable: false
+        error_message:
+          type: string
+          nullable: false
+        error_details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                nullable: false
+              message:
+                type: string
+                nullable: false
+      example:
+        error_type: invalid_input
+        error_message: Input is invalid
+        error_details: []
+    GetOnlineStatuses:
+      description: Online status of user and ladt time he was online.
+      type: object
+      properties:
+        statuses:
+          type: array
+          items: 
+            "$ref": "#/components/schemas/OnlineStatus"
+          nullable: false
+    OnlineStatus:
+      description: Online status of user and ladt time he was online.
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          nullable: false
+        status:
+          enum: [online, offline]
+          type: string
+          nullable: false
+        last_online:
+          type: string
+          format: date
+          nullable: false
