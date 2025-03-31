@@ -17,8 +17,7 @@ paths:
         - bearerAuth: []
       parameters:
         - name: users
-          in: path
-          required: true
+          in: query
           schema:
             type: string
       responses:
