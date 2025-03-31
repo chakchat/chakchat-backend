@@ -103,10 +103,12 @@ For text messages structure is:
 }
 ```
 
-Data for file messages have such structure:
+All file messages have such structure:
 
 ```json
 {
+  "receivers": ["57a85f64-5717-4562-b3fc-2c54636a123"],
+  "type": "update",
   "data": {
     "chat_id": "b4c3f591-ef52-4b85-a04e-cf61ee243449",
     "update_id": 126,
@@ -125,9 +127,12 @@ Data for file messages have such structure:
 }
 ```
 
-Data for reactions have such structure:
+All reactions have such structure:
 ```json
 {
+  
+  "receivers": ["57a85f64-5717-4562-b3fc-2c54636a123"],
+  "type": "update",
   "data": {
     "chat_id": "b4c3f591-ef52-4b85-a04e-cf61ee243449",
     "update_id": 126,
@@ -142,9 +147,11 @@ Data for reactions have such structure:
 }
 ```
 
-Data for deleting message have such structure:
+All deleting message have such structure:
 ```json
 {
+  "receivers": ["57a85f64-5717-4562-b3fc-2c54636a123"],
+  "type": "update",
   "data": {
     "chat_id": "b4c3f591-ef52-4b85-a04e-cf61ee243449",
     "update_id": 128,
@@ -166,7 +173,7 @@ Information about chat updates should have format:
 
 All update chat messages have the same structure as update messages(previous).
 
-# Created chat
+## Created chat
 
 ```json
 {
@@ -191,7 +198,7 @@ All update chat messages have the same structure as update messages(previous).
 }
 ```
 
-# Delete/Block/Unblock chat
+## Delete/Block/Unblock chat
 ```json
 {
   "receivers": ["57a85f64-5717-4562-b3fc-2c54636a123"],
@@ -202,7 +209,7 @@ All update chat messages have the same structure as update messages(previous).
   }
 }
 ```
-# Chat expiration set
+## Chat expiration set
 
 ```json
 {
@@ -216,7 +223,7 @@ All update chat messages have the same structure as update messages(previous).
 }
 ```
 
-# Update group info
+## Update group info
 
 Update only info about group< not about members.
 
@@ -239,7 +246,7 @@ If any of fields name/description/group-photo was removed then value is empty st
 }
 ```
 
-# Update group members
+## Update group members
 
 
 ```json
