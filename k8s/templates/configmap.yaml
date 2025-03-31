@@ -1,0 +1,18 @@
+{{- range $key, $value := .Values.configMaps }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $key }}
+  labels:
+    app.kubernetes.io/name: {{ $key }}
+  namespace: {{ $.Release.Namespace }}
+data:
+{{- with $value.data }}
+{{- range $datakey, $datavalue := . }}
+  {{ $datakey }}: {{- if typeIs "string" $datavalue }} {{$datavalue | quote}} {{- else }} {{"|"}}
+  {{- $datavalue | toYaml | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}
+---
+{{- end }}

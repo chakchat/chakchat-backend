@@ -1,0 +1,99 @@
+{{- range $key, $value := .Values.deployments }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $key }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ $key }}
+    app: {{ $key }}
+  {{- with $value.annotations }}
+  annotations:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ $key }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      namespace: {{ $.Release.Namespace }}
+      labels:
+        app.kubernetes.io/name: {{ $key }}
+        app: {{ $key }}
+
+      {{- with $value.template }}
+      {{- with .annotations }}
+      annotations:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- end }}
+    spec:
+      restartPolicy: Always
+      {{- with $value.initContainers }}
+      initContainers:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      containers:
+        {{- range $container := $value.containers }}
+        - name: {{ $container.name }}
+          image: {{ $container.image }}
+          imagePullPolicy: {{ $container.imagePullPolicy | default "IfNotPresent" }}
+
+          {{- with $container.command }}
+          command: {{ $container.command }}
+          {{- end }}
+
+          {{- with $container.args }}
+          args:
+          {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+          {{- with $container.livenessProbe }}
+          livenessProbe:
+          {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+          {{- with $container.readinessProbe }}
+          readinessProbe:
+          {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+          {{- with $container.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+          {{- with $container.env }}
+          env:
+          {{- tpl (toYaml .) $ | nindent 12 }}
+          {{- end }}
+
+          {{- with $container.envFrom }}
+          envFrom:
+          {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+          {{- with $container.volumeMounts }}
+          volumeMounts:
+          {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+          {{- with $container.ports }}
+          ports:
+          {{- toYaml . | nindent 12}}
+          {{- end }}
+        {{- end }}
+
+      {{- with $value.volumes }}
+      volumes:
+      {{- toYaml . | nindent 10 }}
+      {{- end }}
+---
+{{- end }}

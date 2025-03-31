@@ -1,0 +1,333 @@
+deployments:
+  messaging:
+    annotations:
+      "helm.sh/hook": post-install 
+      "helm.sh/hook-weight": "1" 
+    replicas: 1
+    containers:
+      - name: messaging
+        image: docker.io/library/messaging:local
+        imagePullPolicy: Always
+        volumeMounts:
+          - name: messaging-conf
+            mountPath: /etc/messaging
+            readOnly: true
+          - name: public-rsa-key-sec
+            mountPath: /app/keys
+            readOnly: true
+        envFrom:
+          - secretRef:
+              name: messaging-sec-env
+    volumes:
+      - name: messaging-conf
+        configMap:
+          name: messaging-conf
+      - name: public-rsa-key-sec
+        secret:
+          secretName: public-rsa-key-sec
+  identity:
+    replicas: 1
+    containers:
+      - name: identity
+        image: identity:local
+        imagePullPolicy: Always
+        volumeMounts:
+          - name: identity-conf
+            mountPath: /etc/identity
+            readOnly: true
+          - name: private-rsa-key-sec
+            mountPath: /app/keys
+            readOnly: true
+        envFrom:
+          - secretRef:
+              name: identity-sec-env
+    volumes:
+      - name: identity-conf
+        configMap:
+          name: identity-conf
+      - name: private-rsa-key-sec
+        secret:
+          name: private-rsa-key-sec
+  nginx:
+    replicas: 1
+    containers: 
+      - name: nginx
+        image: nginx:latest
+        volumeMounts:
+          - name: nginx-conf
+            mountPath: /etc/nginx
+            readOnly: true
+    volumes:
+      - name: nginx-conf
+        configMap:
+          name: nginx-conf
+        
+services:
+  nginx:
+    type: NodePort
+    selector:
+      name: nginx
+
+redis:
+  messaging-redis:
+    secret: messaging-redis-sec-env
+  identity-redis:
+    secret: identity-redis-sec-env
+
+pg:
+  messaging-pg:
+    instances: 1
+    database: messaging
+    owner: messaging
+    secret: messaging-pg-sec
+    storage:
+      size: 10Gi
+
+configMaps:
+  messaging-conf:
+    data:
+      config.yml: |
+        jwt:
+          signing_method: RS256
+          issuer: identity_service
+          audience:
+            - messaging_service
+          key_file_path: /app/keys/rsa.pub
+        redis:
+          addr: messaging-redis:6379
+          password: secret
+          db: 0
+        file_storage:
+          grpc_addr: file-storage-service:9090
+        otlp:
+          grpc_addr: otel-collector:4317
+  identity-conf:
+    data:
+      config.yml: |
+        access_token:
+          signing_method: HS512
+          lifetime: 5m 
+          issuer: identity_service
+          audience: 
+            - client
+          key_file_path: /app/keys/sym
+        refresh_token:
+          signing_method: HS512
+          lifetime: 30m 
+          issuer: identity_service
+          audience: 
+            - client
+          key_file_path: /app/keys/sym
+        internal_token:
+          signing_method: RS256
+          lifetime: 1m 
+          issuer: identity_service
+          audience: 
+            - identity_service
+          key_file_path: /app/keys/rsa
+        invalidated_token_storage:
+          exp: 4m # A little bit longer than refresh_token.lifetime
+        userservice:
+          grpc_addr: user-service:50051
+        redis:
+          addr: identity-redis:6379
+          password: secret
+          db: 0
+        signin_meta:
+          lifetime: 2m
+        signup_meta:
+          lifetime: 2m
+        idempotency:
+          data_exp: 10m
+        phone_code:
+          send_frequency: 1m
+        sms:
+          type: stub
+          stub:
+            addr: http://sms-service-stub:5023
+        otlp:
+          grpc_addr: otel-collector:4317
+  nginx-conf:
+    data:
+      nginx.conf: |
+        events{
+            worker_connections 1024;
+        }
+
+        http {
+            server {
+                listen 80;
+
+                listen 443 ssl;
+
+                # Path to the SSL certificate and private key
+                ssl_certificate /etc/nginx/ssl/self-signed.crt;
+                ssl_certificate_key /etc/nginx/ssl/self-signed.key;
+
+                # SSL protocols and ciphers
+                ssl_protocols TLSv1.2 TLSv1.3;
+                ssl_ciphers HIGH:!aNULL:!MD5;
+
+                # Additional security headers (optional)
+                add_header Strict-Transport-Security "max-age=31536000" always;
+
+                # 10M plus reserved 1M
+                client_max_body_size 11M;
+
+                location / {
+                    return 200 "Hello World!";
+                }
+
+                location /api/identity/ {
+                    proxy_pass http://identity-service:5000/;
+                }
+
+                location /api/file-storage/ {
+                    auth_request /auth;
+                    auth_request_set $x_internal_token $upstream_http_x_internal_token;
+
+                    # Internal services shouldn't know about the Authorization header.
+                    proxy_set_header Authorization "";
+                    proxy_set_header X-Internal-Token $x_internal_token;
+                    proxy_pass http://file-storage-service:5004/;
+                    # To prevent the client from seeing the Authorization header.
+                    proxy_hide_header X-Internal-Token;
+                }
+                
+                location /api/user/v1.0/are-you-a-real-teapot/ {
+                    proxy_pass http://user-service:5004/v1.0/are-you-a-real-teapot;
+                }
+
+                location /api/user/v1.0/username/ {
+                    proxy_pass http://user-service:5004/v1.0/username/;
+                }
+                
+                location /api/user/ {
+                    auth_request /auth;
+                    auth_request_set $x_internal_token $upstream_http_x_internal_token;
+
+                    # Internal services shouldn't know about the Authorization header.
+                    proxy_set_header Authorization "";
+                    proxy_set_header X-Internal-Token $x_internal_token;
+                    proxy_pass http://user-service:5004/;
+                    # To prevent the client from seeing the Authorization header.
+                    proxy_hide_header X-Internal-Token;
+                }
+
+                location /api/messaging/ {
+                    auth_request /auth;
+                    auth_request_set $x_internal_token $upstream_http_x_internal_token;
+
+                    # Internal services shouldn't know about the Authorization header.
+                    proxy_set_header Authorization "";
+                    proxy_set_header X-Internal-Token $x_internal_token;
+                    proxy_pass http://messaging-service:5000/;
+                    # To prevent the client from seeing the Authorization header.
+                    proxy_hide_header X-Internal-Token;
+                }
+
+                location /auth {
+                    proxy_pass http://identity-service:5000/v1.0/identity;
+                    internal; # Ensure this location is not directly accessible by the client
+                }
+
+                location /sms/ {
+                    proxy_pass http://sms-service-stub:5023/;
+                }
+
+                error_page 401 @401.json;
+                location @401.json {
+                    default_type application/json;
+                    return 401 '{\n\t"error_type": "unauthorized",\n\t"error_message": "Unauthorized."\n}';
+                }
+
+                error_page 413 @413.json;
+                location @413.json {
+                    default_type application/json;
+                    return 413 '{\n\t"error_type": "body_too_large",\n\t"error_message": "Request body is too large."\n}';
+                }
+
+                error_page 404 @404.json;
+                location @404.json {
+                    default_type application/json;
+                    return 404 '{\n\t"error_type": "not_found",\n\t"error_message": "Not Found"\n}';
+                }
+                
+                error_page 500 @500.json;
+                location @500.json {
+                    default_type application/json;
+                    return 500 '{\n\t"error_type": "internal_error",\n\t"error_message": "Internal Server Error (nginx)"\n}';
+                }
+                
+                error_page 502 @502.json;
+                location @502.json {
+                    default_type application/json;
+                    return 502 '{\n\t"error_type": "internal_error",\n\t"error_message": "Bad gateway (nginx)"\n}';
+                }
+            }
+        }
+
+localSecrets:
+  # Messaging service
+  messaging-sec-env:
+    stringData:
+      PG_CONN_STRING: postgres://messaging:secret@messaging-pg-rw:5432/messaging
+  messaging-pg-sec:
+    stringData:
+      username: messaging
+      password: secret
+  messaging-redis-sec-env:
+    stringData:
+      REDIS_PASSWORD: secret
+  # Identity service
+  identity-redis-sec-env:
+    stringData:
+      REDIS_PASSWORD: secret
+  # JWT signing keys
+  sym-key-sec:
+    stringData:
+      sym: ee2273552ddeb48b8012691417a0d17ef24feb1a53cf3fd936e999e5827436334861878b8d22a0278a659323d1b2605ab5ccafd4bf38c8417df998035f2f2558
+  public-rsa-key-sec:
+    stringData:
+      rsa.pub: &rsapub |
+        -----BEGIN PUBLIC KEY-----
+        MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnbN5PLBLOiEdxNkvTHLM
+        7Xj8rec3Vmcp1pMo2tCk5Ga4PycwEidpdxuDsW+OuA6k6ZqUof72iY8sAeq+RVyD
+        165u7MEWmPrMbPaaDBB1N6GqV3Ux00G3acR0BvF/4TrsIxVHKnl4MMkDkX6m0zM/
+        wVGWxZWbs+t5R3Vzn85L2ldEl/ZOk0HVyKV7tCeJme1pwztsGUscuShPVXwsdbpl
+        dyo29/WvvxGfawKeFYrIYrTxXmRC2kLuGQ3YS6evTFuSNMVQVcESNxQRJTsQTWDk
+        5Abz97Smis+A375AeyMVbwa7g/QprxvFL0+8JQkEExxKGwsuH+EmB4TV2O/Mj9hG
+        pwIDAQAB
+        -----END PUBLIC KEY-----
+  private-rsa-key-sec:
+    stringData:
+      rsa.pub: *rsapub
+      rsa: |
+        -----BEGIN PRIVATE KEY-----
+        MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCds3k8sEs6IR3E
+        2S9McsztePyt5zdWZynWkyja0KTkZrg/JzASJ2l3G4Oxb464DqTpmpSh/vaJjywB
+        6r5FXIPXrm7swRaY+sxs9poMEHU3oapXdTHTQbdpxHQG8X/hOuwjFUcqeXgwyQOR
+        fqbTMz/BUZbFlZuz63lHdXOfzkvaV0SX9k6TQdXIpXu0J4mZ7WnDO2wZSxy5KE9V
+        fCx1umV3Kjb39a+/EZ9rAp4VishitPFeZELaQu4ZDdhLp69MW5I0xVBVwRI3FBEl
+        OxBNYOTkBvP3tKaKz4DfvkB7IxVvBruD9CmvG8UvT7wlCQQTHEobCy4f4SYHhNXY
+        78yP2EanAgMBAAECggEABJdzVLkx/4fI+kXJPZnBbg/4lMb80qcJ+KWWlMRqwKcI
+        VKJl9mlaW0LxqIATMOMQRH2hN+mYsQmk94tSWJT91mZNntbCZdg2N91NlUNXaQlr
+        0G8Tm8833BGsaoABQAQQrbbSuHcKm6pb+xJWdiNxsZsYCjm1wQfT+KjVTIEGWV2R
+        t+cdNw1PsxNV6N2DF5IUU83iMJ4TfYAmgClTfRWSXkGI1L/81q003LQZikBh6qIq
+        P19h6aSBKhXMd6AehMbepNiTd/fIMmLHMPDOVJxA+zXzgemJi0FpHwv4m9lxHu+K
+        NydBDemRaT4VIs/h85fV7tk/iM0esvLSz3RoHFmtHQKBgQDWaNkvd56zl3VkhMgB
+        3qq4Feb2DJTr6WdEwezpHuwgXTyVYZVq8gpI5tziIvUM7NYgXa37241j9V9ieOnj
+        hMCNTq4JsAI03jTs3RJFarNFXAXjOmjjiBgKw8wmhhfuFjWO67blgnFQA7RjPYpY
+        4+eT8pge0QRjixsYnJlgv6SfhQKBgQC8SpgnKFtHhrXT8aARJSgwUUpEB7ZJu5ED
+        BYeSy9o3cKdMFtYd2Zx/HJprvWDfevUgFc1tKQDI3p3FyviJ8YA4V7eqv1YnIpW5
+        MVSDxPkIAIimUvIU4EnNS/C3cMyvC0X2dR2kys1Lwzsl+3W2MFSBBzhyjr8h9EKB
+        4JC0eKVnOwKBgQCEjSVX1xfh50zH697KaSIZ1FCI5JZcklspgso4BMnt6DZAE6gQ
+        CbqZ/z+m/f2JFBH8yG17OuxaU6O4eQ//fF6d/XpSuuFiVc1acgGNsL1Lr+xj4gRe
+        RhC29v0LA/NfWZOa29aiZNYwpVmr0Kvq8FqGeH/a7VVNRP5nZMjdqxzXEQKBgBwj
+        ga2IaGu+A/pSh7tINENUQqb8CA/oyfkLoIEdmdTjLv0+BG2dkbelTKaBPLLpKyzK
+        VVLU59sc+bMPbCkhQCorYbVQts1Oa9WrO5gdnaHGgqVoi+j2w9C8YpLndo9KPgBg
+        7DcuX5PM70/zzlmVy2sk6xijoIiweifyqW1vAjj1AoGBANMbgbfNdeZEF1d9X04d
+        e0kbra97p0k1I1E09L4895/3lZU+HkSrbnlPHGZ9aKB2VIlY0+8xwHgUN8HvT5/a
+        6fX7MPkRSFszgmydJIg5emxb6zhQCRlh7M4EOMmRqjJrnv22VoGaSZYD6SW6ItLa
+        vHasSnqsYHwoGeirQr2ACOkX
+        -----END PRIVATE KEY-----
