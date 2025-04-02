@@ -10,29 +10,42 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish/events"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 )
 
 type SecretGroupPhotoService struct {
-	repo  repository.SecretGroupChatRepository
-	files external.FileStorage
-	pub   publish.Publisher
+	txProvider storage.TxProvider
+	repo       repository.SecretGroupChatRepository
+	files      external.FileStorage
+	pub        publish.Publisher
 }
 
-func NewSecretGroupPhotoService(repo repository.SecretGroupChatRepository,
+func NewSecretGroupPhotoService(
+	txProvider storage.TxProvider,
+	repo repository.SecretGroupChatRepository,
 	files external.FileStorage,
 	pub publish.Publisher,
 ) *SecretGroupPhotoService {
 	return &SecretGroupPhotoService{
-		repo:  repo,
-		files: files,
-		pub:   pub,
+		repo:       repo,
+		files:      files,
+		pub:        pub,
+		txProvider: txProvider,
 	}
 }
 
-func (s *SecretGroupPhotoService) UpdatePhoto(ctx context.Context, req request.UpdateGroupPhoto) (*dto.SecretGroupChatDTO, error) {
-	g, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *SecretGroupPhotoService) UpdatePhoto(
+	ctx context.Context, req request.UpdateGroupPhoto,
+) (_ *dto.SecretGroupChatDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	g, err := s.repo.FindById(ctx, tx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -58,7 +71,7 @@ func (s *SecretGroupPhotoService) UpdatePhoto(ctx context.Context, req request.U
 		return nil, err
 	}
 
-	g, err = s.repo.Update(ctx, g)
+	g, err = s.repo.Update(ctx, tx, g)
 	if err != nil {
 		return nil, err
 	}
@@ -78,8 +91,16 @@ func (s *SecretGroupPhotoService) UpdatePhoto(ctx context.Context, req request.U
 	return &gDto, nil
 }
 
-func (s *SecretGroupPhotoService) DeletePhoto(ctx context.Context, req request.DeleteGroupPhoto) (*dto.SecretGroupChatDTO, error) {
-	g, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *SecretGroupPhotoService) DeletePhoto(
+	ctx context.Context, req request.DeleteGroupPhoto,
+) (_ *dto.SecretGroupChatDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	g, err := s.repo.FindById(ctx, tx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, external.ErrFileNotFound) {
 			return nil, services.ErrFileNotFound
@@ -93,7 +114,7 @@ func (s *SecretGroupPhotoService) DeletePhoto(ctx context.Context, req request.D
 		return nil, err
 	}
 
-	g, err = s.repo.Update(ctx, g)
+	g, err = s.repo.Update(ctx, tx, g)
 	if err != nil {
 		return nil, err
 	}

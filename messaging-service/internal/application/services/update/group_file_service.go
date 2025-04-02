@@ -10,12 +10,14 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish/events"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 	"github.com/google/uuid"
 )
 
 type GroupFileService struct {
+	txProvider storage.TxProvider
 	groupRepo  repository.GroupChatRepository
 	updateRepo repository.UpdateRepository
 	files      external.FileStorage
@@ -23,6 +25,7 @@ type GroupFileService struct {
 }
 
 func NewGroupFileService(
+	txProvider storage.TxProvider,
 	groupRepo repository.GroupChatRepository,
 	updateRepo repository.UpdateRepository,
 	files external.FileStorage,
@@ -33,11 +36,20 @@ func NewGroupFileService(
 		updateRepo: updateRepo,
 		files:      files,
 		pub:        pub,
+		txProvider: txProvider,
 	}
 }
 
-func (s *GroupFileService) SendFileMessage(ctx context.Context, req request.SendFileMessage) (*dto.FileMessageDTO, error) {
-	chat, err := s.groupRepo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *GroupFileService) SendFileMessage(
+	ctx context.Context, req request.SendFileMessage,
+) (_ *dto.FileMessageDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	chat, err := s.groupRepo.FindById(ctx, tx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -47,7 +59,11 @@ func (s *GroupFileService) SendFileMessage(ctx context.Context, req request.Send
 
 	var replyToMessage *domain.Message
 	if req.ReplyToMessage != nil {
-		replyToMessage, err = s.updateRepo.FindGenericMessage(ctx, domain.ChatID(req.ChatID), domain.UpdateID(*req.ReplyToMessage))
+		replyToMessage, err = s.updateRepo.FindGenericMessage(
+			ctx, tx,
+			domain.ChatID(req.ChatID),
+			domain.UpdateID(*req.ReplyToMessage),
+		)
 		if err != nil {
 			if errors.Is(err, repository.ErrNotFound) {
 				return nil, services.ErrMessageNotFound
@@ -72,7 +88,7 @@ func (s *GroupFileService) SendFileMessage(ctx context.Context, req request.Send
 		return nil, err
 	}
 
-	msg, err = s.updateRepo.CreateFileMessage(ctx, msg)
+	msg, err = s.updateRepo.CreateFileMessage(ctx, tx, msg)
 	if err != nil {
 		return nil, err
 	}

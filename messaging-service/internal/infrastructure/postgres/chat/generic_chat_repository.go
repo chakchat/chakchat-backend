@@ -7,23 +7,22 @@ import (
 	"time"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
-type GenericChatRepository struct {
-	db *pgx.Conn
+type GenericChatRepository struct{}
+
+func NewGenericChatRepository() *GenericChatRepository {
+	return &GenericChatRepository{}
 }
 
-func NewGenericChatRepository(db *pgx.Conn) *GenericChatRepository {
-	return &GenericChatRepository{
-		db: db,
-	}
-}
-
-func (r *GenericChatRepository) GetByMemberID(ctx context.Context, memberID domain.UserID) ([]services.GenericChat, error) {
+func (r *GenericChatRepository) GetByMemberID(
+	ctx context.Context, db storage.ExecQuerier, memberID domain.UserID,
+) ([]services.GenericChat, error) {
 	// I guess this query is so fucking slow in real production,
 	// but for now we have more microservices than users, so nobody cares.
 	//
@@ -55,7 +54,7 @@ func (r *GenericChatRepository) GetByMemberID(ctx context.Context, memberID doma
 		LEFT JOIN messaging.secret_group_chat ON secret_group_chat.chat_id = c.chat_id
 	WHERE m.user_id = $1`
 
-	rows, err := r.db.Query(ctx, q, memberID)
+	rows, err := db.Query(ctx, q, memberID)
 	if err != nil {
 		return nil, fmt.Errorf("getting chats by memberID failed: %s", err)
 	}
@@ -91,7 +90,9 @@ func (r *GenericChatRepository) GetByMemberID(ctx context.Context, memberID doma
 	return res, nil
 }
 
-func (r *GenericChatRepository) GetByChatID(ctx context.Context, id domain.ChatID) (*services.GenericChat, error) {
+func (r *GenericChatRepository) GetByChatID(
+	ctx context.Context, db storage.ExecQuerier, id domain.ChatID,
+) (*services.GenericChat, error) {
 	// I guess this query is so fucking slow in real production,
 	// but for now we have more microservices than users, so nobody cares.
 	//
@@ -122,7 +123,7 @@ func (r *GenericChatRepository) GetByChatID(ctx context.Context, id domain.ChatI
 		LEFT JOIN messaging.secret_group_chat ON secret_group_chat.chat_id = c.chat_id
 	WHERE c.chat_id = $1`
 
-	row := r.db.QueryRow(ctx, q, id)
+	row := db.QueryRow(ctx, q, id)
 
 	var (
 		chatID            uuid.UUID
@@ -191,9 +192,14 @@ func (r *GenericChatRepository) buildGenericChat(
 			cp := time.Duration(*expirationSeconds) * time.Second
 			exp = &cp
 		}
-		return services.NewSecretPersonalGenericChat(chatID, createdAt.Unix(), members, services.SecretPersonalInfo{
-			Expiration: exp,
-		})
+		return services.NewSecretPersonalGenericChat(
+			chatID,
+			createdAt.Unix(),
+			members,
+			services.SecretPersonalInfo{
+				Expiration: exp,
+			},
+		)
 	}
 
 	if chatType == services.ChatTypeSecretGroup {
@@ -202,21 +208,28 @@ func (r *GenericChatRepository) buildGenericChat(
 			cp := time.Duration(*expirationSeconds) * time.Second
 			exp = &cp
 		}
-		return services.NewSecretGroupGenericChat(chatID, createdAt.Unix(), members, services.SecretGroupInfo{
-			Admin:            *adminID,
-			GroupName:        *groupName,
-			GroupDescription: deref(groupDescription, ""),
-			GroupPhoto:       deref(groupPhoto, ""),
-			Expiration:       exp,
-		})
+		return services.NewSecretGroupGenericChat(
+			chatID,
+			createdAt.Unix(),
+			members,
+			services.SecretGroupInfo{
+				Admin:            *adminID,
+				GroupName:        *groupName,
+				GroupDescription: deref(groupDescription, ""),
+				GroupPhoto:       deref(groupPhoto, ""),
+				Expiration:       exp,
+			},
+		)
 	}
 
 	panic(fmt.Errorf("unknown chat type is gotten from db: %s", chatType))
 }
 
-func (r *GenericChatRepository) GetChatType(ctx context.Context, id domain.ChatID) (string, error) {
+func (r *GenericChatRepository) GetChatType(
+	ctx context.Context, db storage.ExecQuerier, id domain.ChatID,
+) (string, error) {
 	q := `SELECT chat_type FROM messaging.chat WHERE chat_id = $1`
-	row := r.db.QueryRow(ctx, q, id)
+	row := db.QueryRow(ctx, q, id)
 
 	var chatType string
 	if err := row.Scan(&chatType); err != nil {

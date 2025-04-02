@@ -9,6 +9,7 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish/events"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/group"
@@ -16,18 +17,27 @@ import (
 )
 
 type GroupChatService struct {
-	repo repository.GroupChatRepository
-	pub  publish.Publisher
+	txProvider storage.TxProvider
+	repo       repository.GroupChatRepository
+	pub        publish.Publisher
 }
 
-func NewGroupChatService(repo repository.GroupChatRepository, pub publish.Publisher) *GroupChatService {
+func NewGroupChatService(
+	txProvider storage.TxProvider, repo repository.GroupChatRepository, pub publish.Publisher,
+) *GroupChatService {
 	return &GroupChatService{
-		repo: repo,
-		pub:  pub,
+		repo:       repo,
+		pub:        pub,
+		txProvider: txProvider,
 	}
 }
 
-func (s *GroupChatService) CreateGroup(ctx context.Context, req request.CreateGroup) (*dto.GroupChatDTO, error) {
+func (s *GroupChatService) CreateGroup(ctx context.Context, req request.CreateGroup) (_ *dto.GroupChatDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
 	members := make([]domain.UserID, len(req.Members))
 	for i, m := range req.Members {
 		members[i] = domain.UserID(m)
@@ -39,7 +49,7 @@ func (s *GroupChatService) CreateGroup(ctx context.Context, req request.CreateGr
 		return nil, err
 	}
 
-	g, err = s.repo.Create(ctx, g)
+	g, err = s.repo.Create(ctx, tx, g)
 	if err != nil {
 		return nil, err
 	}
@@ -57,8 +67,14 @@ func (s *GroupChatService) CreateGroup(ctx context.Context, req request.CreateGr
 	return &gDto, nil
 }
 
-func (s *GroupChatService) UpdateGroupInfo(ctx context.Context, req request.UpdateGroupInfo) (*dto.GroupChatDTO, error) {
-	g, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *GroupChatService) UpdateGroupInfo(ctx context.Context, req request.UpdateGroupInfo) (_ *dto.GroupChatDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	g, err := s.repo.FindById(ctx, tx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -72,7 +88,7 @@ func (s *GroupChatService) UpdateGroupInfo(ctx context.Context, req request.Upda
 		return nil, err
 	}
 
-	g, err = s.repo.Update(ctx, g)
+	g, err = s.repo.Update(ctx, tx, g)
 	if err != nil {
 		return nil, err
 	}
@@ -92,8 +108,14 @@ func (s *GroupChatService) UpdateGroupInfo(ctx context.Context, req request.Upda
 	return &gDto, nil
 }
 
-func (s *GroupChatService) DeleteGroup(ctx context.Context, req request.DeleteChat) error {
-	g, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *GroupChatService) DeleteGroup(ctx context.Context, req request.DeleteChat) (err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	g, err := s.repo.FindById(ctx, tx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return services.ErrChatNotFound
@@ -106,7 +128,7 @@ func (s *GroupChatService) DeleteGroup(ctx context.Context, req request.DeleteCh
 		return err
 	}
 
-	if err := s.repo.Delete(ctx, g.ID); err != nil {
+	if err := s.repo.Delete(ctx, tx, g.ID); err != nil {
 		return err
 	}
 
@@ -120,8 +142,14 @@ func (s *GroupChatService) DeleteGroup(ctx context.Context, req request.DeleteCh
 	return nil
 }
 
-func (s *GroupChatService) AddMember(ctx context.Context, req request.AddMember) (*dto.GroupChatDTO, error) {
-	g, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *GroupChatService) AddMember(ctx context.Context, req request.AddMember) (_ *dto.GroupChatDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	g, err := s.repo.FindById(ctx, tx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -134,7 +162,7 @@ func (s *GroupChatService) AddMember(ctx context.Context, req request.AddMember)
 		return nil, err
 	}
 
-	g, err = s.repo.Update(ctx, g)
+	g, err = s.repo.Update(ctx, tx, g)
 	if err != nil {
 		return nil, err
 	}
@@ -152,8 +180,14 @@ func (s *GroupChatService) AddMember(ctx context.Context, req request.AddMember)
 	return &gDto, nil
 }
 
-func (s *GroupChatService) DeleteMember(ctx context.Context, req request.DeleteMember) (*dto.GroupChatDTO, error) {
-	g, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *GroupChatService) DeleteMember(ctx context.Context, req request.DeleteMember) (_ *dto.GroupChatDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	g, err := s.repo.FindById(ctx, tx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -166,7 +200,7 @@ func (s *GroupChatService) DeleteMember(ctx context.Context, req request.DeleteM
 		return nil, err
 	}
 
-	g, err = s.repo.Update(ctx, g)
+	g, err = s.repo.Update(ctx, tx, g)
 	if err != nil {
 		return nil, err
 	}

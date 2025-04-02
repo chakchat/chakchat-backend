@@ -3,30 +3,31 @@ package repository
 import (
 	"context"
 
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 )
 
 type UpdateRepository interface {
-	FindGenericMessage(context.Context, domain.ChatID, domain.UpdateID) (*domain.Message, error)
-	DeleteMessage(context.Context, domain.ChatID, domain.UpdateID) error
-	CreateUpdateDeleted(context.Context, *domain.UpdateDeleted) (*domain.UpdateDeleted, error)
+	FindGenericMessage(context.Context, storage.ExecQuerier, domain.ChatID, domain.UpdateID) (*domain.Message, error)
+	DeleteMessage(context.Context, storage.ExecQuerier, domain.ChatID, domain.UpdateID) error
+	CreateUpdateDeleted(context.Context, storage.ExecQuerier, *domain.UpdateDeleted) (*domain.UpdateDeleted, error)
 
-	CreateTextMessage(context.Context, *domain.TextMessage) (*domain.TextMessage, error)
-	CreateTextMessageEdited(context.Context, *domain.TextMessageEdited) (*domain.TextMessageEdited, error)
-	FindTextMessage(context.Context, domain.ChatID, domain.UpdateID) (*domain.TextMessage, error)
-	UpdateTextMessage(context.Context, *domain.TextMessage) (*domain.TextMessage, error)
+	CreateTextMessage(context.Context, storage.ExecQuerier, *domain.TextMessage) (*domain.TextMessage, error)
+	CreateTextMessageEdited(context.Context, storage.ExecQuerier, *domain.TextMessageEdited) (*domain.TextMessageEdited, error)
+	FindTextMessage(context.Context, storage.ExecQuerier, domain.ChatID, domain.UpdateID) (*domain.TextMessage, error)
+	UpdateTextMessage(context.Context, storage.ExecQuerier, *domain.TextMessage) (*domain.TextMessage, error)
 
-	CreateReaction(context.Context, *domain.Reaction) (*domain.Reaction, error)
-	FindReaction(context.Context, domain.ChatID, domain.UpdateID) (*domain.Reaction, error)
-	DeleteReaction(context.Context, domain.ChatID, domain.UpdateID) error
+	CreateReaction(context.Context, storage.ExecQuerier, *domain.Reaction) (*domain.Reaction, error)
+	FindReaction(context.Context, storage.ExecQuerier, domain.ChatID, domain.UpdateID) (*domain.Reaction, error)
+	DeleteReaction(context.Context, storage.ExecQuerier, domain.ChatID, domain.UpdateID) error
 
-	FindFileMessage(context.Context, domain.ChatID, domain.UpdateID) (*domain.FileMessage, error)
-	CreateFileMessage(context.Context, *domain.FileMessage) (*domain.FileMessage, error)
+	FindFileMessage(context.Context, storage.ExecQuerier, domain.ChatID, domain.UpdateID) (*domain.FileMessage, error)
+	CreateFileMessage(context.Context, storage.ExecQuerier, *domain.FileMessage) (*domain.FileMessage, error)
 }
 
 type SecretUpdateRepository interface {
-	CreateSecretUpdate(context.Context, *domain.SecretUpdate) (*domain.SecretUpdate, error)
-	FindSecretUpdate(context.Context, domain.ChatID, domain.UpdateID) (*domain.SecretUpdate, error)
-	DeleteSecretUpdate(context.Context, domain.ChatID, domain.UpdateID) error
-	CreateUpdateDeleted(context.Context, *domain.UpdateDeleted) (*domain.UpdateDeleted, error)
+	CreateSecretUpdate(context.Context, storage.ExecQuerier, *domain.SecretUpdate) (*domain.SecretUpdate, error)
+	FindSecretUpdate(context.Context, storage.ExecQuerier, domain.ChatID, domain.UpdateID) (*domain.SecretUpdate, error)
+	DeleteSecretUpdate(context.Context, storage.ExecQuerier, domain.ChatID, domain.UpdateID) error
+	CreateUpdateDeleted(context.Context, storage.ExecQuerier, *domain.UpdateDeleted) (*domain.UpdateDeleted, error)
 }

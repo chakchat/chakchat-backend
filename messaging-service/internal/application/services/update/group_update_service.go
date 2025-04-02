@@ -16,18 +16,18 @@ import (
 )
 
 type GroupUpdateService struct {
+	txProvider  storage.TxProvider
 	groupRepo   repository.GroupChatRepository
 	updateRepo  repository.UpdateRepository
 	chatterRepo repository.ChatterRepository
-	txProvider  storage.TxProvider
 	pub         publish.Publisher
 }
 
 func NewGroupUpdateService(
+	txProvider storage.TxProvider,
 	groupRepo repository.GroupChatRepository,
 	updateRepo repository.UpdateRepository,
 	chatterRepo repository.ChatterRepository,
-	txProvider storage.TxProvider,
 	pub publish.Publisher,
 ) *GroupUpdateService {
 	return &GroupUpdateService{
@@ -39,8 +39,16 @@ func NewGroupUpdateService(
 	}
 }
 
-func (s *GroupUpdateService) SendTextMessage(ctx context.Context, req request.SendTextMessage) (*dto.TextMessageDTO, error) {
-	chat, err := s.groupRepo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *GroupUpdateService) SendTextMessage(
+	ctx context.Context, req request.SendTextMessage,
+) (_ *dto.TextMessageDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	chat, err := s.groupRepo.FindById(ctx, tx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -50,7 +58,7 @@ func (s *GroupUpdateService) SendTextMessage(ctx context.Context, req request.Se
 
 	var replyToMessage *domain.Message
 	if req.ReplyToMessage != nil {
-		replyToMessage, err = s.updateRepo.FindGenericMessage(ctx, domain.ChatID(req.ChatID), domain.UpdateID(*req.ReplyToMessage))
+		replyToMessage, err = s.updateRepo.FindGenericMessage(ctx, tx, domain.ChatID(req.ChatID), domain.UpdateID(*req.ReplyToMessage))
 		if err != nil {
 			if errors.Is(err, repository.ErrNotFound) {
 				return nil, services.ErrMessageNotFound
@@ -69,7 +77,7 @@ func (s *GroupUpdateService) SendTextMessage(ctx context.Context, req request.Se
 		return nil, err
 	}
 
-	msg, err = s.updateRepo.CreateTextMessage(ctx, msg)
+	msg, err = s.updateRepo.CreateTextMessage(ctx, tx, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -89,8 +97,16 @@ func (s *GroupUpdateService) SendTextMessage(ctx context.Context, req request.Se
 	return &msgDto, nil
 }
 
-func (s *GroupUpdateService) EditTextMessage(ctx context.Context, req request.EditTextMessage) (*dto.TextMessageDTO, error) {
-	chat, err := s.groupRepo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *GroupUpdateService) EditTextMessage(
+	ctx context.Context, req request.EditTextMessage,
+) (_ *dto.TextMessageDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	chat, err := s.groupRepo.FindById(ctx, tx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -98,7 +114,7 @@ func (s *GroupUpdateService) EditTextMessage(ctx context.Context, req request.Ed
 		return nil, err
 	}
 
-	msg, err := s.updateRepo.FindTextMessage(ctx, domain.ChatID(req.ChatID), domain.UpdateID(req.MessageID))
+	msg, err := s.updateRepo.FindTextMessage(ctx, tx, domain.ChatID(req.ChatID), domain.UpdateID(req.MessageID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrMessageNotFound
@@ -112,17 +128,15 @@ func (s *GroupUpdateService) EditTextMessage(ctx context.Context, req request.Ed
 		return nil, err
 	}
 
-	err = storage.RunInTx(ctx, s.txProvider, func(ctx context.Context) error {
-		msg.Edited, err = s.updateRepo.CreateTextMessageEdited(ctx, msg.Edited)
-		if err != nil {
-			return err
-		}
-		msg, err = s.updateRepo.UpdateTextMessage(ctx, msg)
-		if err != nil {
-			return err
-		}
-		return nil
-	})
+	msg.Edited, err = s.updateRepo.CreateTextMessageEdited(ctx, tx, msg.Edited)
+	if err != nil {
+		return nil, err
+	}
+	msg, err = s.updateRepo.UpdateTextMessage(ctx, tx, msg)
+	if err != nil {
+		return nil, err
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -143,8 +157,16 @@ func (s *GroupUpdateService) EditTextMessage(ctx context.Context, req request.Ed
 	return &msgDto, nil
 }
 
-func (s *GroupUpdateService) DeleteMessage(ctx context.Context, req request.DeleteMessage) (*dto.UpdateDeletedDTO, error) {
-	chat, err := s.groupRepo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *GroupUpdateService) DeleteMessage(
+	ctx context.Context, req request.DeleteMessage,
+) (_ *dto.UpdateDeletedDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	chat, err := s.groupRepo.FindById(ctx, tx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -152,7 +174,7 @@ func (s *GroupUpdateService) DeleteMessage(ctx context.Context, req request.Dele
 		return nil, err
 	}
 
-	msg, err := s.updateRepo.FindTextMessage(ctx, domain.ChatID(req.ChatID), domain.UpdateID(req.MessageID))
+	msg, err := s.updateRepo.FindTextMessage(ctx, tx, domain.ChatID(req.ChatID), domain.UpdateID(req.MessageID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrMessageNotFound
@@ -171,16 +193,19 @@ func (s *GroupUpdateService) DeleteMessage(ctx context.Context, req request.Dele
 		return nil, err
 	}
 
-	err = storage.RunInTx(ctx, s.txProvider, func(ctx context.Context) error {
-		if msg.DeletedForAll() {
-			err := s.updateRepo.DeleteMessage(ctx, msg.ChatID, msg.UpdateID)
-			if err != nil {
-				return err
-			}
+	if msg.DeletedForAll() {
+		err := s.updateRepo.DeleteMessage(ctx, tx, msg.ChatID, msg.UpdateID)
+		if err != nil {
+			return nil, err
 		}
-		msg.Deleted[len(msg.Deleted)-1], err = s.updateRepo.CreateUpdateDeleted(ctx, msg.Deleted[len(msg.Deleted)-1])
-		return err
-	})
+	}
+	msg.Deleted[len(msg.Deleted)-1], err = s.updateRepo.CreateUpdateDeleted(
+		ctx, tx, msg.Deleted[len(msg.Deleted)-1],
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -204,8 +229,16 @@ func (s *GroupUpdateService) DeleteMessage(ctx context.Context, req request.Dele
 	return &deletedDto, nil
 }
 
-func (s *GroupUpdateService) SendReaction(ctx context.Context, req request.SendReaction) (*dto.ReactionDTO, error) {
-	chat, err := s.groupRepo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *GroupUpdateService) SendReaction(
+	ctx context.Context, req request.SendReaction,
+) (_ *dto.ReactionDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	chat, err := s.groupRepo.FindById(ctx, tx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -213,7 +246,7 @@ func (s *GroupUpdateService) SendReaction(ctx context.Context, req request.SendR
 		return nil, err
 	}
 
-	msg, err := s.updateRepo.FindGenericMessage(ctx, domain.ChatID(req.ChatID), domain.UpdateID(req.MessageID))
+	msg, err := s.updateRepo.FindGenericMessage(ctx, tx, domain.ChatID(req.ChatID), domain.UpdateID(req.MessageID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrMessageNotFound
@@ -226,7 +259,7 @@ func (s *GroupUpdateService) SendReaction(ctx context.Context, req request.SendR
 		return nil, err
 	}
 
-	reaction, err = s.updateRepo.CreateReaction(ctx, reaction)
+	reaction, err = s.updateRepo.CreateReaction(ctx, tx, reaction)
 	if err != nil {
 		return nil, err
 	}
@@ -246,8 +279,16 @@ func (s *GroupUpdateService) SendReaction(ctx context.Context, req request.SendR
 	return &reactionDto, nil
 }
 
-func (s *GroupUpdateService) DeleteReaction(ctx context.Context, req request.DeleteReaction) (*dto.UpdateDeletedDTO, error) {
-	chat, err := s.groupRepo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *GroupUpdateService) DeleteReaction(
+	ctx context.Context, req request.DeleteReaction,
+) (_ *dto.UpdateDeletedDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	chat, err := s.groupRepo.FindById(ctx, tx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -255,7 +296,7 @@ func (s *GroupUpdateService) DeleteReaction(ctx context.Context, req request.Del
 		return nil, err
 	}
 
-	reaction, err := s.updateRepo.FindReaction(ctx, domain.ChatID(req.ChatID), domain.UpdateID(req.ReactionID))
+	reaction, err := s.updateRepo.FindReaction(ctx, tx, domain.ChatID(req.ChatID), domain.UpdateID(req.ReactionID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrReactionNotFound
@@ -268,19 +309,19 @@ func (s *GroupUpdateService) DeleteReaction(ctx context.Context, req request.Del
 		return nil, err
 	}
 
-	err = storage.RunInTx(ctx, s.txProvider, func(ctx context.Context) error {
-		reaction.Deleted[len(reaction.Deleted)-1], err = s.updateRepo.CreateUpdateDeleted(ctx, reaction.Deleted[len(reaction.Deleted)-1])
-		if err != nil {
-			return err
-		}
+	reaction.Deleted[len(reaction.Deleted)-1], err = s.updateRepo.CreateUpdateDeleted(
+		ctx, tx, reaction.Deleted[len(reaction.Deleted)-1],
+	)
+	if err != nil {
+		return nil, err
+	}
 
-		// For now reaction is always deleted for all users. And no `if reaction.DeletedForAll() {...}` check is performed.
-		err = s.updateRepo.DeleteReaction(ctx, reaction.ChatID, reaction.UpdateID)
-		if err != nil {
-			return err
-		}
-		return nil
-	})
+	// For now reaction is always deleted for all users. And no `if reaction.DeletedForAll() {...}` check is performed.
+	err = s.updateRepo.DeleteReaction(ctx, tx, reaction.ChatID, reaction.UpdateID)
+	if err != nil {
+		return nil, err
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -302,8 +343,16 @@ func (s *GroupUpdateService) DeleteReaction(ctx context.Context, req request.Del
 	return &deletedDto, nil
 }
 
-func (s *GroupUpdateService) ForwardTextMessage(ctx context.Context, req request.ForwardMessage) (*dto.TextMessageDTO, error) {
-	fromChat, err := s.chatterRepo.FindChatter(ctx, domain.ChatID(req.FromChatID))
+func (s *GroupUpdateService) ForwardTextMessage(
+	ctx context.Context, req request.ForwardMessage,
+) (_ *dto.TextMessageDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	fromChat, err := s.chatterRepo.FindChatter(ctx, tx, domain.ChatID(req.FromChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -311,7 +360,7 @@ func (s *GroupUpdateService) ForwardTextMessage(ctx context.Context, req request
 		return nil, err
 	}
 
-	toChat, err := s.groupRepo.FindById(ctx, domain.ChatID(req.ToChatID))
+	toChat, err := s.groupRepo.FindById(ctx, tx, domain.ChatID(req.ToChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -319,7 +368,11 @@ func (s *GroupUpdateService) ForwardTextMessage(ctx context.Context, req request
 		return nil, err
 	}
 
-	msg, err := s.updateRepo.FindTextMessage(ctx, domain.ChatID(req.FromChatID), domain.UpdateID(req.MessageID))
+	msg, err := s.updateRepo.FindTextMessage(
+		ctx, tx,
+		domain.ChatID(req.FromChatID),
+		domain.UpdateID(req.MessageID),
+	)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrMessageNotFound
@@ -332,7 +385,7 @@ func (s *GroupUpdateService) ForwardTextMessage(ctx context.Context, req request
 		return nil, err
 	}
 
-	forwarded, err = s.updateRepo.CreateTextMessage(ctx, forwarded)
+	forwarded, err = s.updateRepo.CreateTextMessage(ctx, tx, forwarded)
 	if err != nil {
 		return nil, err
 	}
@@ -352,8 +405,16 @@ func (s *GroupUpdateService) ForwardTextMessage(ctx context.Context, req request
 	return &forwardedDto, nil
 }
 
-func (s *GroupUpdateService) ForwardFileMessage(ctx context.Context, req request.ForwardMessage) (*dto.FileMessageDTO, error) {
-	fromChat, err := s.chatterRepo.FindChatter(ctx, domain.ChatID(req.FromChatID))
+func (s *GroupUpdateService) ForwardFileMessage(
+	ctx context.Context, req request.ForwardMessage,
+) (_ *dto.FileMessageDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	fromChat, err := s.chatterRepo.FindChatter(ctx, tx, domain.ChatID(req.FromChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -361,7 +422,7 @@ func (s *GroupUpdateService) ForwardFileMessage(ctx context.Context, req request
 		return nil, err
 	}
 
-	toChat, err := s.groupRepo.FindById(ctx, domain.ChatID(req.ToChatID))
+	toChat, err := s.groupRepo.FindById(ctx, tx, domain.ChatID(req.ToChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -369,7 +430,7 @@ func (s *GroupUpdateService) ForwardFileMessage(ctx context.Context, req request
 		return nil, err
 	}
 
-	msg, err := s.updateRepo.FindFileMessage(ctx, domain.ChatID(req.FromChatID), domain.UpdateID(req.MessageID))
+	msg, err := s.updateRepo.FindFileMessage(ctx, tx, domain.ChatID(req.FromChatID), domain.UpdateID(req.MessageID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrMessageNotFound
@@ -382,7 +443,7 @@ func (s *GroupUpdateService) ForwardFileMessage(ctx context.Context, req request
 		return nil, err
 	}
 
-	forwarded, err = s.updateRepo.CreateFileMessage(ctx, forwarded)
+	forwarded, err = s.updateRepo.CreateFileMessage(ctx, tx, forwarded)
 	if err != nil {
 		return nil, err
 	}

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/group"
@@ -14,17 +15,15 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-type GroupChatRepository struct {
-	db *pgx.Conn
+type GroupChatRepository struct{}
+
+func NewGroupChatRepository() *GroupChatRepository {
+	return &GroupChatRepository{}
 }
 
-func NewGroupChatRepository(db *pgx.Conn) *GroupChatRepository {
-	return &GroupChatRepository{
-		db: db,
-	}
-}
-
-func (r *GroupChatRepository) FindById(ctx context.Context, id domain.ChatID) (*group.GroupChat, error) {
+func (r *GroupChatRepository) FindById(
+	ctx context.Context, db storage.ExecQuerier, id domain.ChatID,
+) (*group.GroupChat, error) {
 	q := `
 	SELECT c.chat_id, c.created_at, g.admin_id, g.group_name, g.group_photo, g.group_description,
 		(SELECT ARRAY_AGG(m.user_id) FROM messaging.membership m WHERE m.chat_id = c.chat_id)
@@ -32,7 +31,7 @@ func (r *GroupChatRepository) FindById(ctx context.Context, id domain.ChatID) (*
 		JOIN messaging.group_chat g ON g.chat_id = c.chat_id
 	WHERE c.chat_id = $1`
 
-	row := r.db.QueryRow(ctx, q, id)
+	row := db.QueryRow(ctx, q, id)
 
 	var (
 		chatID      uuid.UUID
@@ -64,22 +63,24 @@ func (r *GroupChatRepository) FindById(ctx context.Context, id domain.ChatID) (*
 	}, nil
 }
 
-func (r *GroupChatRepository) Update(ctx context.Context, g *group.GroupChat) (*group.GroupChat, error) {
-	members, err := r.getMembers(ctx, g.ID)
+func (r *GroupChatRepository) Update(
+	ctx context.Context, db storage.ExecQuerier, g *group.GroupChat,
+) (*group.GroupChat, error) {
+	members, err := r.getMembers(ctx, db, g.ID)
 	if err != nil {
 		return nil, err
 	}
 
 	toAdd := sliceMisses(g.Members, members)
 	if len(toAdd) != 0 {
-		if err := r.addMembers(ctx, g.ID, toAdd); err != nil {
+		if err := r.addMembers(ctx, db, g.ID, toAdd); err != nil {
 			return nil, err
 		}
 	}
 
 	toDelete := sliceMisses(members, g.Members)
 	if len(toDelete) != 0 {
-		if err := r.deleteMembers(ctx, uuid.UUID(g.ID), uuids(toDelete)); err != nil {
+		if err := r.deleteMembers(ctx, db, uuid.UUID(g.ID), uuids(toDelete)); err != nil {
 			return nil, err
 		}
 	}
@@ -92,7 +93,7 @@ func (r *GroupChatRepository) Update(ctx context.Context, g *group.GroupChat) (*
 		group_description = $5
 	WHERE chat_id = $1`
 
-	_, err = r.db.Exec(ctx, q, g.ID, g.Admin, g.Name, g.GroupPhoto, g.Description)
+	_, err = db.Exec(ctx, q, g.ID, g.Admin, g.Name, g.GroupPhoto, g.Description)
 	if err != nil {
 		return nil, fmt.Errorf("updating group chat failed: %s", err)
 	}
@@ -100,7 +101,9 @@ func (r *GroupChatRepository) Update(ctx context.Context, g *group.GroupChat) (*
 	return g, err
 }
 
-func (r *GroupChatRepository) Create(ctx context.Context, g *group.GroupChat) (*group.GroupChat, error) {
+func (r *GroupChatRepository) Create(
+	ctx context.Context, db storage.ExecQuerier, g *group.GroupChat,
+) (*group.GroupChat, error) {
 	{
 		q := `
 		INSERT INTO messaging.chat
@@ -108,7 +111,7 @@ func (r *GroupChatRepository) Create(ctx context.Context, g *group.GroupChat) (*
 		VALUES ($1, 'group', $2)`
 
 		now := time.Now()
-		_, err := r.db.Exec(ctx, q, g.ID, now)
+		_, err := db.Exec(ctx, q, g.ID, now)
 		if err != nil {
 			return nil, err
 		}
@@ -119,7 +122,7 @@ func (r *GroupChatRepository) Create(ctx context.Context, g *group.GroupChat) (*
 		INSERT INTO messaging.group_chat
 		(chat_id, admin_id, group_name, group_photo, group_description)
 		VALUES ($1, $2, $3, $4, $5)`
-		_, err := r.db.Exec(ctx, q, g.ID, g.Admin, g.Name, g.GroupPhoto, g.Description)
+		_, err := db.Exec(ctx, q, g.ID, g.Admin, g.Name, g.GroupPhoto, g.Description)
 		if err != nil {
 			return nil, err
 		}
@@ -137,7 +140,7 @@ func (r *GroupChatRepository) Create(ctx context.Context, g *group.GroupChat) (*
 
 		q += strings.Join(valExprs, ", ")
 
-		_, err := r.db.Exec(ctx, q, args...)
+		_, err := db.Exec(ctx, q, args...)
 		if err != nil {
 			return nil, err
 		}
@@ -146,13 +149,17 @@ func (r *GroupChatRepository) Create(ctx context.Context, g *group.GroupChat) (*
 	return g, nil
 }
 
-func (r *GroupChatRepository) Delete(ctx context.Context, id domain.ChatID) error {
+func (r *GroupChatRepository) Delete(
+	ctx context.Context, db storage.ExecQuerier, id domain.ChatID,
+) error {
 	q := `DELETE FROM messaging.chat WHERE chat_id = $1`
-	_, err := r.db.Exec(ctx, q, id)
+	_, err := db.Exec(ctx, q, id)
 	return err
 }
 
-func (r *GroupChatRepository) addMembers(ctx context.Context, id domain.ChatID, toAdd []domain.UserID) error {
+func (r *GroupChatRepository) addMembers(
+	ctx context.Context, db storage.ExecQuerier, id domain.ChatID, toAdd []domain.UserID,
+) error {
 	q := `INSERT INTO messaging.membership (chat_id, user_id) VALUES `
 
 	valExprs := make([]string, 0, len(toAdd))
@@ -165,21 +172,25 @@ func (r *GroupChatRepository) addMembers(ctx context.Context, id domain.ChatID, 
 
 	q += strings.Join(valExprs, ", ")
 
-	_, err := r.db.Exec(ctx, q, args...)
+	_, err := db.Exec(ctx, q, args...)
 	return err
 }
 
-func (r *GroupChatRepository) deleteMembers(ctx context.Context, id uuid.UUID, toDelete []uuid.UUID) error {
+func (r *GroupChatRepository) deleteMembers(
+	ctx context.Context, db storage.ExecQuerier, id uuid.UUID, toDelete []uuid.UUID,
+) error {
 	q := `DELETE FROM messaging.membership WHERE chat_id = $1 AND user_id = ANY($2)`
 
-	_, err := r.db.Exec(ctx, q, id, toDelete)
+	_, err := db.Exec(ctx, q, id, toDelete)
 	return err
 }
 
-func (r *GroupChatRepository) getMembers(ctx context.Context, id domain.ChatID) ([]domain.UserID, error) {
+func (r *GroupChatRepository) getMembers(
+	ctx context.Context, db storage.ExecQuerier, id domain.ChatID,
+) ([]domain.UserID, error) {
 	q := `SELECT user_id FROM messaging.membership WHERE chat_id = $1`
 
-	rows, err := r.db.Query(ctx, q, id)
+	rows, err := db.Query(ctx, q, id)
 	if err != nil {
 		return nil, fmt.Errorf("get members query failed: %s", err)
 	}

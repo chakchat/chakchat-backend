@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/personal"
@@ -14,17 +15,15 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-type PersonalChatRepository struct {
-	db *pgx.Conn
+type PersonalChatRepository struct{}
+
+func NewPersonalChatRepository() *PersonalChatRepository {
+	return &PersonalChatRepository{}
 }
 
-func NewPersonalChatRepository(db *pgx.Conn) *PersonalChatRepository {
-	return &PersonalChatRepository{
-		db: db,
-	}
-}
-
-func (r *PersonalChatRepository) FindById(ctx context.Context, id domain.ChatID) (*personal.PersonalChat, error) {
+func (r *PersonalChatRepository) FindById(
+	ctx context.Context, db storage.ExecQuerier, id domain.ChatID,
+) (*personal.PersonalChat, error) {
 	q := `
 	SELECT 
 		c.chat_id, 
@@ -35,7 +34,7 @@ func (r *PersonalChatRepository) FindById(ctx context.Context, id domain.ChatID)
 		JOIN messaging.personal_chat p ON p.chat_id = c.chat_id
 	WHERE c.chat_id = $1`
 
-	row := r.db.QueryRow(ctx, q, id)
+	row := db.QueryRow(ctx, q, id)
 
 	var (
 		chatID    uuid.UUID
@@ -62,7 +61,9 @@ func (r *PersonalChatRepository) FindById(ctx context.Context, id domain.ChatID)
 	}, nil
 }
 
-func (r *PersonalChatRepository) FindByMembers(ctx context.Context, members [2]domain.UserID) (*personal.PersonalChat, error) {
+func (r *PersonalChatRepository) FindByMembers(
+	ctx context.Context, db storage.ExecQuerier, members [2]domain.UserID,
+) (*personal.PersonalChat, error) {
 	q := `
 	SELECT 
 		m.chat_id, 
@@ -75,7 +76,7 @@ func (r *PersonalChatRepository) FindByMembers(ctx context.Context, members [2]d
 	GROUP BY m.chat_id
 	HAVING COUNT(DISTINCT m.user_id) = 2`
 
-	row := r.db.QueryRow(ctx, q, uuid.UUID(members[0]), uuid.UUID(members[1]))
+	row := db.QueryRow(ctx, q, uuid.UUID(members[0]), uuid.UUID(members[1]))
 
 	var (
 		chatID    uuid.UUID
@@ -101,22 +102,24 @@ func (r *PersonalChatRepository) FindByMembers(ctx context.Context, members [2]d
 	}, nil
 }
 
-func (r *PersonalChatRepository) Update(ctx context.Context, chat *personal.PersonalChat) (*personal.PersonalChat, error) {
-	blockings, err := r.getBlockings(ctx, uuid.UUID(chat.ID))
+func (r *PersonalChatRepository) Update(
+	ctx context.Context, db storage.ExecQuerier, chat *personal.PersonalChat,
+) (*personal.PersonalChat, error) {
+	blockings, err := r.getBlockings(ctx, db, uuid.UUID(chat.ID))
 	if err != nil {
 		return nil, err
 	}
 
 	toAdd := sliceMisses(chat.BlockedBy, blockings)
 	if len(toAdd) != 0 {
-		if err := r.addBlocking(ctx, uuid.UUID(chat.ID), uuids(toAdd)); err != nil {
+		if err := r.addBlocking(ctx, db, uuid.UUID(chat.ID), uuids(toAdd)); err != nil {
 			return nil, err
 		}
 	}
 
 	toDelete := sliceMisses(blockings, chat.BlockedBy)
 	if len(toDelete) != 0 {
-		if err := r.deleteBlocking(ctx, uuid.UUID(chat.ID), uuids(toDelete)); err != nil {
+		if err := r.deleteBlocking(ctx, db, uuid.UUID(chat.ID), uuids(toDelete)); err != nil {
 			return nil, err
 		}
 	}
@@ -124,7 +127,9 @@ func (r *PersonalChatRepository) Update(ctx context.Context, chat *personal.Pers
 	return chat, nil
 }
 
-func (r *PersonalChatRepository) Create(ctx context.Context, chat *personal.PersonalChat) (*personal.PersonalChat, error) {
+func (r *PersonalChatRepository) Create(
+	ctx context.Context, db storage.ExecQuerier, chat *personal.PersonalChat,
+) (*personal.PersonalChat, error) {
 	{
 		q := `
 		INSERT INTO messaging.chat
@@ -132,7 +137,7 @@ func (r *PersonalChatRepository) Create(ctx context.Context, chat *personal.Pers
 		VALUES ($1, 'personal', $2)`
 
 		now := time.Now()
-		_, err := r.db.Exec(ctx, q, chat.ID, now)
+		_, err := db.Exec(ctx, q, chat.ID, now)
 		if err != nil {
 			return nil, err
 		}
@@ -140,14 +145,14 @@ func (r *PersonalChatRepository) Create(ctx context.Context, chat *personal.Pers
 	}
 	{
 		q := `INSERT INTO messaging.personal_chat (chat_id) VALUES ($1)`
-		_, err := r.db.Exec(ctx, q, chat.ID)
+		_, err := db.Exec(ctx, q, chat.ID)
 		if err != nil {
 			return nil, err
 		}
 	}
 	{
 		q := `INSERT INTO messaging.membership (chat_id, user_id) VALUES ($1, $2), ($1, $3)`
-		_, err := r.db.Exec(ctx, q, chat.ID, chat.Members[0], chat.Members[1])
+		_, err := db.Exec(ctx, q, chat.ID, chat.Members[0], chat.Members[1])
 		if err != nil {
 			return nil, err
 		}
@@ -155,13 +160,17 @@ func (r *PersonalChatRepository) Create(ctx context.Context, chat *personal.Pers
 	return chat, nil
 }
 
-func (r *PersonalChatRepository) Delete(ctx context.Context, id domain.ChatID) error {
+func (r *PersonalChatRepository) Delete(
+	ctx context.Context, db storage.ExecQuerier, id domain.ChatID,
+) error {
 	q := `DELETE FROM messaging.chat WHERE chat_id = $1`
-	_, err := r.db.Exec(ctx, q, id)
+	_, err := db.Exec(ctx, q, id)
 	return err
 }
 
-func (r *PersonalChatRepository) addBlocking(ctx context.Context, chatId uuid.UUID, toAdd []uuid.UUID) error {
+func (r *PersonalChatRepository) addBlocking(
+	ctx context.Context, db storage.ExecQuerier, chatId uuid.UUID, toAdd []uuid.UUID,
+) error {
 	q := `INSERT INTO messaging.blocking (chat_id, user_id) VALUES `
 
 	valExprs := make([]string, 0, len(toAdd))
@@ -174,21 +183,25 @@ func (r *PersonalChatRepository) addBlocking(ctx context.Context, chatId uuid.UU
 
 	q += strings.Join(valExprs, ", ")
 
-	_, err := r.db.Exec(ctx, q, args...)
+	_, err := db.Exec(ctx, q, args...)
 	return err
 }
 
-func (r *PersonalChatRepository) deleteBlocking(ctx context.Context, chatId uuid.UUID, toDelete []uuid.UUID) error {
+func (r *PersonalChatRepository) deleteBlocking(
+	ctx context.Context, db storage.ExecQuerier, chatId uuid.UUID, toDelete []uuid.UUID,
+) error {
 	q := `DELETE FROM messaging.blocking WHERE chat_id = $1 AND user_id = ANY($2)`
 
-	_, err := r.db.Exec(ctx, q, chatId, toDelete)
+	_, err := db.Exec(ctx, q, chatId, toDelete)
 	return err
 }
 
-func (r *PersonalChatRepository) getBlockings(ctx context.Context, id uuid.UUID) ([]domain.UserID, error) {
+func (r *PersonalChatRepository) getBlockings(
+	ctx context.Context, db storage.ExecQuerier, id uuid.UUID,
+) ([]domain.UserID, error) {
 	q := `SELECT user_id FROM messaging.blocking WHERE chat_id = $1`
 
-	rows, err := r.db.Query(ctx, q, id)
+	rows, err := db.Query(ctx, q, id)
 	if err != nil {
 		return nil, fmt.Errorf("get blockings query failed: %s", err)
 	}

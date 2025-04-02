@@ -3,9 +3,9 @@ package configuration
 import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/infrastructure/postgres"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/infrastructure/postgres/chat"
-	"github.com/jackc/pgx/v5"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/infrastructure/postgres/tx"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -22,15 +22,15 @@ type DB struct {
 	Redis *redis.Client
 }
 
-func NewDB(db *pgx.Conn, redis *redis.Client) *DB {
+func NewDB(db *pgxpool.Pool, redis *redis.Client) *DB {
 	return &DB{
-		PersonalChat:       chat.NewPersonalChatRepository(db),
-		GroupChat:          chat.NewGroupChatRepository(db),
-		SecretPersonalChat: chat.NewSecretPersonalChatRepository(db),
-		SecretGroupChat:    chat.NewSecretGroupChatRepository(db),
-		Chatter:            chat.NewChatterRepository(db),
-		GenericChat:        *chat.NewGenericChatRepository(db),
-		TxProvider:         postgres.TxProviderStub{},
+		PersonalChat:       chat.NewPersonalChatRepository(),
+		GroupChat:          chat.NewGroupChatRepository(),
+		SecretPersonalChat: chat.NewSecretPersonalChatRepository(),
+		SecretGroupChat:    chat.NewSecretGroupChatRepository(),
+		Chatter:            chat.NewChatterRepository(),
+		GenericChat:        *chat.NewGenericChatRepository(),
+		TxProvider:         tx.NewTxProvider(db),
 		Redis:              redis,
 	}
 }
