@@ -1,5 +1,6 @@
 build:
-    scripts/build.sh
+    @scripts/build.sh
 
 run: build
-    scripts/run-local.sh
+    echo "Installing local Helm chart..."
+    helm install chakchat k8s --values k8s/values-local.yaml

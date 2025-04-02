@@ -9,7 +9,7 @@ spec:
   instances: {{ $value.instances }}
   imageName: ghcr.io/cloudnative-pg/postgresql:17
   storage:
-    size: {{ $value.storage.size | default "5Gi" }}
+    size: 1Gi
   bootstrap:
     initdb:
       database: {{ $value.database }}

@@ -7,7 +7,6 @@ deployments:
     containers:
       - name: messaging
         image: docker.io/library/messaging:local
-        imagePullPolicy: Always
         volumeMounts:
           - name: messaging-conf
             mountPath: /etc/messaging
@@ -30,49 +29,110 @@ deployments:
     containers:
       - name: identity
         image: identity:local
-        imagePullPolicy: Always
         volumeMounts:
           - name: identity-conf
             mountPath: /etc/identity
             readOnly: true
-          - name: private-rsa-key-sec
+          - name: identity-key-sec
             mountPath: /app/keys
             readOnly: true
-        envFrom:
-          - secretRef:
-              name: identity-sec-env
     volumes:
       - name: identity-conf
         configMap:
           name: identity-conf
-      - name: private-rsa-key-sec
+      - name: identity-key-sec
         secret:
-          name: private-rsa-key-sec
-  nginx:
+          secretName: identity-key-sec
+  file-storage:
     replicas: 1
-    containers: 
-      - name: nginx
-        image: nginx:latest
+    containers:
+      - name: file-storage
+        image: file-storage:local
         volumeMounts:
-          - name: nginx-conf
-            mountPath: /etc/nginx
+          - name: file-storage-conf
+            mountPath: /etc/file-storage
             readOnly: true
+          - name: public-rsa-key-sec
+            mountPath: /app/keys
+            readOnly: true
+        envFrom:
+          - secretRef:
+              name: file-storage-sec-env
     volumes:
-      - name: nginx-conf
+      - name: file-storage-conf
         configMap:
-          name: nginx-conf
-        
+          name: file-storage-conf
+      - name: public-rsa-key-sec
+        secret:
+          secretName: public-rsa-key-sec
+  user:
+    replicas: 1
+    containers:
+      - name: user
+        image: user:local
+        volumeMounts:
+          - name: user-conf
+            mountPath: /etc/user
+            readOnly: true
+          - name: public-rsa-key-sec
+            mountPath: /app/keys
+            readOnly: true
+        envFrom: 
+          - secretRef:
+              name: user-sec-env
+    volumes:
+      - name: user-conf
+        configMap:
+          name: user-conf
+      - name: public-rsa-key-sec
+        secret:
+          secretName: public-rsa-key-sec
+
 services:
-  nginx:
-    type: NodePort
+  messaging:
     selector:
-      name: nginx
+      name: messaging
+    ports:
+      - name: http
+        port: 8080
+        targetPort: 8080
+        protocol: TCP
+  identity:
+    selector:
+      name: identity
+    ports:
+      - name: http
+        port: 5000
+        targetPort: 5000
+        protocol: TCP
+  file-storage:
+    selector:
+      name: file-storage
+    ports:
+      - name: http
+        port: 5004
+        targetPort: 5004
+        protocol: TCP
+      - name: grpc
+        port: 9090
+        targetPort: 9090
+        protocol: TCP
+  user:
+    selector:
+      name: user
+    ports:
+      - name: http
+        port: 5004
+        targetPort: 5004
+        protocol: TCP
 
 redis:
   messaging-redis:
     secret: messaging-redis-sec-env
   identity-redis:
     secret: identity-redis-sec-env
+  file-storage-redis:
+    secret: file-storage-redis-sec-env
 
 pg:
   messaging-pg:
@@ -80,8 +140,11 @@ pg:
     database: messaging
     owner: messaging
     secret: messaging-pg-sec
-    storage:
-      size: 10Gi
+  file-storage-pg:
+    instances: 1
+    database: filemetadata
+    owner: filestorage
+    secret: file-storage-pg-sec-env
 
 configMaps:
   messaging-conf:
@@ -147,125 +210,45 @@ configMaps:
             addr: http://sms-service-stub:5023
         otlp:
           grpc_addr: otel-collector:4317
-  nginx-conf:
+  file-storage-conf:
     data:
-      nginx.conf: |
-        events{
-            worker_connections 1024;
-        }
-
-        http {
-            server {
-                listen 80;
-
-                listen 443 ssl;
-
-                # Path to the SSL certificate and private key
-                ssl_certificate /etc/nginx/ssl/self-signed.crt;
-                ssl_certificate_key /etc/nginx/ssl/self-signed.key;
-
-                # SSL protocols and ciphers
-                ssl_protocols TLSv1.2 TLSv1.3;
-                ssl_ciphers HIGH:!aNULL:!MD5;
-
-                # Additional security headers (optional)
-                add_header Strict-Transport-Security "max-age=31536000" always;
-
-                # 10M plus reserved 1M
-                client_max_body_size 11M;
-
-                location / {
-                    return 200 "Hello World!";
-                }
-
-                location /api/identity/ {
-                    proxy_pass http://identity-service:5000/;
-                }
-
-                location /api/file-storage/ {
-                    auth_request /auth;
-                    auth_request_set $x_internal_token $upstream_http_x_internal_token;
-
-                    # Internal services shouldn't know about the Authorization header.
-                    proxy_set_header Authorization "";
-                    proxy_set_header X-Internal-Token $x_internal_token;
-                    proxy_pass http://file-storage-service:5004/;
-                    # To prevent the client from seeing the Authorization header.
-                    proxy_hide_header X-Internal-Token;
-                }
-                
-                location /api/user/v1.0/are-you-a-real-teapot/ {
-                    proxy_pass http://user-service:5004/v1.0/are-you-a-real-teapot;
-                }
-
-                location /api/user/v1.0/username/ {
-                    proxy_pass http://user-service:5004/v1.0/username/;
-                }
-                
-                location /api/user/ {
-                    auth_request /auth;
-                    auth_request_set $x_internal_token $upstream_http_x_internal_token;
-
-                    # Internal services shouldn't know about the Authorization header.
-                    proxy_set_header Authorization "";
-                    proxy_set_header X-Internal-Token $x_internal_token;
-                    proxy_pass http://user-service:5004/;
-                    # To prevent the client from seeing the Authorization header.
-                    proxy_hide_header X-Internal-Token;
-                }
-
-                location /api/messaging/ {
-                    auth_request /auth;
-                    auth_request_set $x_internal_token $upstream_http_x_internal_token;
-
-                    # Internal services shouldn't know about the Authorization header.
-                    proxy_set_header Authorization "";
-                    proxy_set_header X-Internal-Token $x_internal_token;
-                    proxy_pass http://messaging-service:5000/;
-                    # To prevent the client from seeing the Authorization header.
-                    proxy_hide_header X-Internal-Token;
-                }
-
-                location /auth {
-                    proxy_pass http://identity-service:5000/v1.0/identity;
-                    internal; # Ensure this location is not directly accessible by the client
-                }
-
-                location /sms/ {
-                    proxy_pass http://sms-service-stub:5023/;
-                }
-
-                error_page 401 @401.json;
-                location @401.json {
-                    default_type application/json;
-                    return 401 '{\n\t"error_type": "unauthorized",\n\t"error_message": "Unauthorized."\n}';
-                }
-
-                error_page 413 @413.json;
-                location @413.json {
-                    default_type application/json;
-                    return 413 '{\n\t"error_type": "body_too_large",\n\t"error_message": "Request body is too large."\n}';
-                }
-
-                error_page 404 @404.json;
-                location @404.json {
-                    default_type application/json;
-                    return 404 '{\n\t"error_type": "not_found",\n\t"error_message": "Not Found"\n}';
-                }
-                
-                error_page 500 @500.json;
-                location @500.json {
-                    default_type application/json;
-                    return 500 '{\n\t"error_type": "internal_error",\n\t"error_message": "Internal Server Error (nginx)"\n}';
-                }
-                
-                error_page 502 @502.json;
-                location @502.json {
-                    default_type application/json;
-                    return 502 '{\n\t"error_type": "internal_error",\n\t"error_message": "Bad gateway (nginx)"\n}';
-                }
-            }
-        }
+      config.yml: |
+        jwt:
+          signing_method: RS256
+          lifetime: 3m
+          issuer: identity_service
+          audience: 
+            - file_storage_service
+          key_file_path: /app/keys/rsa.pub
+        redis:
+          addr: file-storage-redis:6379
+          password: secret
+          db: 0
+        idempotency:
+          data_exp: 10m
+        upload:
+          file_size_limit: 10485760 # 10MB
+        multipart_upload:
+          min_file_size: 524288000 # 10MB
+          max_part_size: 1048576 # 100MB
+        otlp:
+          grpc_addr: otel-collector:4317
+        grpc_service:
+          port: 9090
+  user-conf:
+    data:
+      config.yml: |
+        server:
+          grpc-port: "50051" 
+        jwt:
+          signing_method: RS256
+          lifetime: 3m
+          issuer: identity_service
+          audience: 
+            - user_service
+          key_file_path: /app/keys/rsa.pub
+        otlp:
+          grpc_addr: otel-collector:4317
 
 localSecrets:
   # Messaging service
@@ -283,10 +266,24 @@ localSecrets:
   identity-redis-sec-env:
     stringData:
       REDIS_PASSWORD: secret
-  # JWT signing keys
-  sym-key-sec:
+  # File storage service
+  file-storage-sec-env:
     stringData:
-      sym: ee2273552ddeb48b8012691417a0d17ef24feb1a53cf3fd936e999e5827436334861878b8d22a0278a659323d1b2605ab5ccafd4bf38c8417df998035f2f2558
+      FILE_STORAGE_AWS_ACCESS_KEY_ID: dummy
+      FILE_STORAGE_AWS_REGION: dummy
+      FILE_STORAGE_AWS_ENDPOINT_URL: dummy
+      FILE_STORAGE_AWS_SECRET_ACCESS_KEY: dummy
+      FILE_STORAGE_S3_BUCKET: dummy
+      FILE_STORAGE_S3_URL_PREFIX: dummy
+      FILE_STORAGE_DB_DSN: host=file-storage-postgres port=5432 user=postgres password=secret dbname=file_metadata sslmode=disable
+  file-storage-redis-sec-env:
+    stringData:
+      REDIS_PASSWORD: secret
+  # User service
+  user-sec-env:
+    stringData:
+
+  # JWT signing keys
   public-rsa-key-sec:
     stringData:
       rsa.pub: &rsapub |
@@ -299,8 +296,9 @@ localSecrets:
         5Abz97Smis+A375AeyMVbwa7g/QprxvFL0+8JQkEExxKGwsuH+EmB4TV2O/Mj9hG
         pwIDAQAB
         -----END PUBLIC KEY-----
-  private-rsa-key-sec:
+  identity-key-sec:
     stringData:
+      sym: ee2273552ddeb48b8012691417a0d17ef24feb1a53cf3fd936e999e5827436334861878b8d22a0278a659323d1b2605ab5ccafd4bf38c8417df998035f2f2558
       rsa.pub: *rsapub
       rsa: |
         -----BEGIN PRIVATE KEY-----
