@@ -9,6 +9,7 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish/events"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/secgroup"
@@ -16,18 +17,30 @@ import (
 )
 
 type SecretGroupChatService struct {
-	repo repository.SecretGroupChatRepository
-	pub  publish.Publisher
+	txProvider storage.TxProvider
+	repo       repository.SecretGroupChatRepository
+	pub        publish.Publisher
 }
 
-func NewSecretGroupChatService(repo repository.SecretGroupChatRepository, pub publish.Publisher) *SecretGroupChatService {
+func NewSecretGroupChatService(
+	txProvider storage.TxProvider, repo repository.SecretGroupChatRepository, pub publish.Publisher,
+) *SecretGroupChatService {
 	return &SecretGroupChatService{
-		repo: repo,
-		pub:  pub,
+		txProvider: txProvider,
+		repo:       repo,
+		pub:        pub,
 	}
 }
 
-func (s *SecretGroupChatService) CreateGroup(ctx context.Context, req request.CreateSecretGroup) (*dto.SecretGroupChatDTO, error) {
+func (s *SecretGroupChatService) CreateGroup(
+	ctx context.Context, req request.CreateSecretGroup,
+) (_ *dto.SecretGroupChatDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
 	members := make([]domain.UserID, len(req.Members))
 	for i, m := range req.Members {
 		members[i] = domain.UserID(m)
@@ -39,7 +52,7 @@ func (s *SecretGroupChatService) CreateGroup(ctx context.Context, req request.Cr
 		return nil, err
 	}
 
-	g, err = s.repo.Create(ctx, g)
+	g, err = s.repo.Create(ctx, tx, g)
 	if err != nil {
 		return nil, err
 	}
@@ -57,8 +70,16 @@ func (s *SecretGroupChatService) CreateGroup(ctx context.Context, req request.Cr
 	return &gDto, nil
 }
 
-func (s *SecretGroupChatService) UpdateGroupInfo(ctx context.Context, req request.UpdateSecretGroupInfo) (*dto.SecretGroupChatDTO, error) {
-	g, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *SecretGroupChatService) UpdateGroupInfo(
+	ctx context.Context, req request.UpdateSecretGroupInfo,
+) (_ *dto.SecretGroupChatDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	g, err := s.repo.FindById(ctx, tx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -72,7 +93,7 @@ func (s *SecretGroupChatService) UpdateGroupInfo(ctx context.Context, req reques
 		return nil, err
 	}
 
-	g, err = s.repo.Update(ctx, g)
+	g, err = s.repo.Update(ctx, tx, g)
 	if err != nil {
 		return nil, err
 	}
@@ -92,8 +113,14 @@ func (s *SecretGroupChatService) UpdateGroupInfo(ctx context.Context, req reques
 	return &gDto, nil
 }
 
-func (s *SecretGroupChatService) DeleteGroup(ctx context.Context, req request.DeleteChat) error {
-	g, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *SecretGroupChatService) DeleteGroup(ctx context.Context, req request.DeleteChat) (err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	g, err := s.repo.FindById(ctx, tx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return services.ErrChatNotFound
@@ -106,7 +133,7 @@ func (s *SecretGroupChatService) DeleteGroup(ctx context.Context, req request.De
 		return err
 	}
 
-	if err := s.repo.Delete(ctx, g.ID); err != nil {
+	if err := s.repo.Delete(ctx, tx, g.ID); err != nil {
 		return err
 	}
 
@@ -119,8 +146,16 @@ func (s *SecretGroupChatService) DeleteGroup(ctx context.Context, req request.De
 
 	return nil
 }
-func (s *SecretGroupChatService) AddMember(ctx context.Context, req request.AddMember) (*dto.SecretGroupChatDTO, error) {
-	g, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *SecretGroupChatService) AddMember(
+	ctx context.Context, req request.AddMember,
+) (_ *dto.SecretGroupChatDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	g, err := s.repo.FindById(ctx, tx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -133,7 +168,7 @@ func (s *SecretGroupChatService) AddMember(ctx context.Context, req request.AddM
 		return nil, err
 	}
 
-	g, err = s.repo.Update(ctx, g)
+	g, err = s.repo.Update(ctx, tx, g)
 	if err != nil {
 		return nil, err
 	}
@@ -150,8 +185,16 @@ func (s *SecretGroupChatService) AddMember(ctx context.Context, req request.AddM
 	return &gDto, nil
 }
 
-func (s *SecretGroupChatService) DeleteMember(ctx context.Context, req request.DeleteMember) (*dto.SecretGroupChatDTO, error) {
-	g, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *SecretGroupChatService) DeleteMember(
+	ctx context.Context, req request.DeleteMember,
+) (_ *dto.SecretGroupChatDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	g, err := s.repo.FindById(ctx, tx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -164,7 +207,7 @@ func (s *SecretGroupChatService) DeleteMember(ctx context.Context, req request.D
 		return nil, err
 	}
 
-	g, err = s.repo.Update(ctx, g)
+	g, err = s.repo.Update(ctx, tx, g)
 	if err != nil {
 		return nil, err
 	}
@@ -182,8 +225,16 @@ func (s *SecretGroupChatService) DeleteMember(ctx context.Context, req request.D
 	return &gDto, nil
 }
 
-func (s *SecretGroupChatService) SetExpiration(ctx context.Context, req request.SetExpiration) (*dto.SecretGroupChatDTO, error) {
-	g, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *SecretGroupChatService) SetExpiration(
+	ctx context.Context, req request.SetExpiration,
+) (_ *dto.SecretGroupChatDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	g, err := s.repo.FindById(ctx, tx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -196,7 +247,7 @@ func (s *SecretGroupChatService) SetExpiration(ctx context.Context, req request.
 		return nil, err
 	}
 
-	g, err = s.repo.Update(ctx, g)
+	g, err = s.repo.Update(ctx, tx, g)
 	if err != nil {
 		return nil, err
 	}

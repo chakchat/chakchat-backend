@@ -10,6 +10,7 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish/events"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 )
@@ -28,24 +29,34 @@ var groupPhotoMimes = map[string]bool{
 }
 
 type GroupPhotoService struct {
-	repo  repository.GroupChatRepository
-	files external.FileStorage
-	pub   publish.Publisher
+	txProvider storage.TxProvider
+	repo       repository.GroupChatRepository
+	files      external.FileStorage
+	pub        publish.Publisher
 }
 
-func NewGroupPhotoService(repo repository.GroupChatRepository,
+func NewGroupPhotoService(
+	txProvider storage.TxProvider,
+	repo repository.GroupChatRepository,
 	files external.FileStorage,
 	pub publish.Publisher,
 ) *GroupPhotoService {
 	return &GroupPhotoService{
-		repo:  repo,
-		files: files,
-		pub:   pub,
+		repo:       repo,
+		files:      files,
+		pub:        pub,
+		txProvider: txProvider,
 	}
 }
 
-func (s *GroupPhotoService) UpdatePhoto(ctx context.Context, req request.UpdateGroupPhoto) (*dto.GroupChatDTO, error) {
-	g, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *GroupPhotoService) UpdatePhoto(ctx context.Context, req request.UpdateGroupPhoto) (_ *dto.GroupChatDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	g, err := s.repo.FindById(ctx, tx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -71,7 +82,7 @@ func (s *GroupPhotoService) UpdatePhoto(ctx context.Context, req request.UpdateG
 		return nil, err
 	}
 
-	g, err = s.repo.Update(ctx, g)
+	g, err = s.repo.Update(ctx, tx, g)
 	if err != nil {
 		return nil, err
 	}
@@ -103,8 +114,14 @@ func validatePhoto(photo *external.FileMeta) error {
 	return nil
 }
 
-func (s *GroupPhotoService) DeletePhoto(ctx context.Context, req request.DeleteGroupPhoto) (*dto.GroupChatDTO, error) {
-	g, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *GroupPhotoService) DeletePhoto(ctx context.Context, req request.DeleteGroupPhoto) (_ *dto.GroupChatDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	g, err := s.repo.FindById(ctx, tx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, external.ErrFileNotFound) {
 			return nil, services.ErrFileNotFound
@@ -118,7 +135,7 @@ func (s *GroupPhotoService) DeletePhoto(ctx context.Context, req request.DeleteG
 		return nil, err
 	}
 
-	g, err = s.repo.Update(ctx, g)
+	g, err = s.repo.Update(ctx, tx, g)
 	if err != nil {
 		return nil, err
 	}

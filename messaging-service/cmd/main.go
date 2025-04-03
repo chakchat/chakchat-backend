@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/configuration"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/extra/redisotel/v9"
 	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/otel"
@@ -55,11 +55,11 @@ func main() {
 		propagation.Baggage{},
 	))
 
-	db, err := pgx.Connect(context.Background(), config.DB.ConnString)
+	db, err := pgxpool.New(context.Background(), config.DB.ConnString)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close(context.Background())
+	defer db.Close()
 
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     config.Redis.Addr,

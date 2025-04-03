@@ -9,6 +9,7 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish/events"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain/secpersonal"
@@ -16,19 +17,32 @@ import (
 )
 
 type SecretPersonalChatService struct {
-	repo repository.SecretPersonalChatRepository
-	pub  publish.Publisher
+	txProvider storage.TxProvider
+	repo       repository.SecretPersonalChatRepository
+	pub        publish.Publisher
 }
 
-func NewSecretPersonalChatService(repo repository.SecretPersonalChatRepository,
+func NewSecretPersonalChatService(
+	txProvider storage.TxProvider,
+	repo repository.SecretPersonalChatRepository,
 	pub publish.Publisher,
 ) *SecretPersonalChatService {
 	return &SecretPersonalChatService{
-		repo: repo,
+		repo:       repo,
+		txProvider: txProvider,
+		pub:        pub,
 	}
 }
 
-func (s *SecretPersonalChatService) CreateChat(ctx context.Context, req request.CreateSecretPersonalChat) (*dto.SecretPersonalChatDTO, error) {
+func (s *SecretPersonalChatService) CreateChat(
+	ctx context.Context, req request.CreateSecretPersonalChat,
+) (_ *dto.SecretPersonalChatDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
 	domainMembers := [2]domain.UserID{domain.UserID(req.SenderID), domain.UserID(req.MemberID)}
 
 	if err := s.validateChatNotExists(ctx, domainMembers); err != nil {
@@ -41,7 +55,7 @@ func (s *SecretPersonalChatService) CreateChat(ctx context.Context, req request.
 		return nil, err
 	}
 
-	chat, err = s.repo.Create(ctx, chat)
+	chat, err = s.repo.Create(ctx, tx, chat)
 	if err != nil {
 		return nil, err
 	}
@@ -56,9 +70,16 @@ func (s *SecretPersonalChatService) CreateChat(ctx context.Context, req request.
 	return &chatDto, nil
 }
 
-func (s *SecretPersonalChatService) GetChatById(ctx context.Context, chatId uuid.UUID,
-) (*dto.SecretPersonalChatDTO, error) {
-	chat, err := s.repo.FindById(ctx, domain.ChatID(chatId))
+func (s *SecretPersonalChatService) GetChatById(
+	ctx context.Context, chatId uuid.UUID,
+) (_ *dto.SecretPersonalChatDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	chat, err := s.repo.FindById(ctx, tx, domain.ChatID(chatId))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -70,8 +91,16 @@ func (s *SecretPersonalChatService) GetChatById(ctx context.Context, chatId uuid
 	return &chatDto, nil
 }
 
-func (s *SecretPersonalChatService) SetExpiration(ctx context.Context, req request.SetExpiration) (*dto.SecretPersonalChatDTO, error) {
-	chat, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *SecretPersonalChatService) SetExpiration(
+	ctx context.Context, req request.SetExpiration,
+) (_ *dto.SecretPersonalChatDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	chat, err := s.repo.FindById(ctx, tx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -84,7 +113,7 @@ func (s *SecretPersonalChatService) SetExpiration(ctx context.Context, req reque
 		return nil, err
 	}
 
-	chat, err = s.repo.Update(ctx, chat)
+	chat, err = s.repo.Update(ctx, tx, chat)
 	if err != nil {
 		return nil, err
 	}
@@ -102,8 +131,14 @@ func (s *SecretPersonalChatService) SetExpiration(ctx context.Context, req reque
 	return &chatDto, nil
 }
 
-func (s *SecretPersonalChatService) DeleteChat(ctx context.Context, req request.DeleteChat) error {
-	chat, err := s.repo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *SecretPersonalChatService) DeleteChat(ctx context.Context, req request.DeleteChat) (err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	chat, err := s.repo.FindById(ctx, tx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return services.ErrChatNotFound
@@ -116,7 +151,7 @@ func (s *SecretPersonalChatService) DeleteChat(ctx context.Context, req request.
 		return err
 	}
 
-	if err := s.repo.Delete(ctx, chat.ID); err != nil {
+	if err := s.repo.Delete(ctx, tx, chat.ID); err != nil {
 		return err
 	}
 
@@ -130,8 +165,16 @@ func (s *SecretPersonalChatService) DeleteChat(ctx context.Context, req request.
 	return nil
 }
 
-func (s *SecretPersonalChatService) validateChatNotExists(ctx context.Context, members [2]domain.UserID) error {
-	_, err := s.repo.FindByMembers(ctx, members)
+func (s *SecretPersonalChatService) validateChatNotExists(
+	ctx context.Context, members [2]domain.UserID,
+) (err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	_, err = s.repo.FindByMembers(ctx, tx, members)
 
 	if err != nil && err != repository.ErrNotFound {
 		return err

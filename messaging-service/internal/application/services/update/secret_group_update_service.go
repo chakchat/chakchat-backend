@@ -16,16 +16,16 @@ import (
 )
 
 type SecretGroupUpdateService struct {
+	txProvider       storage.TxProvider
 	chatRepo         repository.SecretGroupChatRepository
 	secretUpdateRepo repository.SecretUpdateRepository
-	txProvider       storage.TxProvider
 	pub              publish.Publisher
 }
 
 func NewSecretGroupUpdateService(
+	txProvider storage.TxProvider,
 	chatRepo repository.SecretGroupChatRepository,
 	secretUpdateRepo repository.SecretUpdateRepository,
-	txProvider storage.TxProvider,
 	pub publish.Publisher,
 ) *SecretGroupUpdateService {
 	return &SecretGroupUpdateService{
@@ -36,8 +36,16 @@ func NewSecretGroupUpdateService(
 	}
 }
 
-func (s *SecretGroupUpdateService) SendSecretUpdate(ctx context.Context, req request.SendSecretUpdate) (*dto.SecretUpdateDTO, error) {
-	chat, err := s.chatRepo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *SecretGroupUpdateService) SendSecretUpdate(
+	ctx context.Context, req request.SendSecretUpdate,
+) (_ *dto.SecretUpdateDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	chat, err := s.chatRepo.FindById(ctx, tx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -54,7 +62,7 @@ func (s *SecretGroupUpdateService) SendSecretUpdate(ctx context.Context, req req
 		return nil, err
 	}
 
-	update, err = s.secretUpdateRepo.CreateSecretUpdate(ctx, update)
+	update, err = s.secretUpdateRepo.CreateSecretUpdate(ctx, tx, update)
 	if err != nil {
 		return nil, err
 	}
@@ -76,8 +84,16 @@ func (s *SecretGroupUpdateService) SendSecretUpdate(ctx context.Context, req req
 	return &updateDto, nil
 }
 
-func (s *SecretGroupUpdateService) DeleteSecretUpdate(ctx context.Context, req request.DeleteSecretUpdate) (*dto.UpdateDeletedDTO, error) {
-	chat, err := s.chatRepo.FindById(ctx, domain.ChatID(req.ChatID))
+func (s *SecretGroupUpdateService) DeleteSecretUpdate(
+	ctx context.Context, req request.DeleteSecretUpdate,
+) (_ *dto.UpdateDeletedDTO, err error) {
+	tx, err := s.txProvider.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer storage.FinishTx(ctx, tx, &err)
+
+	chat, err := s.chatRepo.FindById(ctx, tx, domain.ChatID(req.ChatID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrChatNotFound
@@ -85,7 +101,9 @@ func (s *SecretGroupUpdateService) DeleteSecretUpdate(ctx context.Context, req r
 		return nil, err
 	}
 
-	update, err := s.secretUpdateRepo.FindSecretUpdate(ctx, domain.ChatID(req.ChatID), domain.UpdateID(req.SecretUpdateID))
+	update, err := s.secretUpdateRepo.FindSecretUpdate(
+		ctx, tx, domain.ChatID(req.ChatID), domain.UpdateID(req.SecretUpdateID),
+	)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, services.ErrSecretUpdateNotFound
@@ -98,22 +116,18 @@ func (s *SecretGroupUpdateService) DeleteSecretUpdate(ctx context.Context, req r
 		return nil, err
 	}
 
-	err = storage.RunInTx(ctx, s.txProvider, func(ctx context.Context) error {
-		update.Deleted[len(update.Deleted)-1], err = s.secretUpdateRepo.CreateUpdateDeleted(ctx, update.Deleted[len(update.Deleted)-1])
-		if err != nil {
-			return err
-		}
-
-		if update.DeletedForAll() {
-			err = s.secretUpdateRepo.DeleteSecretUpdate(ctx, update.ChatID, update.UpdateID)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	})
+	update.Deleted[len(update.Deleted)-1], err = s.secretUpdateRepo.CreateUpdateDeleted(
+		ctx, tx, update.Deleted[len(update.Deleted)-1],
+	)
 	if err != nil {
 		return nil, err
+	}
+
+	if update.DeletedForAll() {
+		err = s.secretUpdateRepo.DeleteSecretUpdate(ctx, tx, update.ChatID, update.UpdateID)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	deleted := update.Deleted[len(update.Deleted)-1]
