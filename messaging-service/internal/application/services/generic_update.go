@@ -11,6 +11,7 @@ const (
 	UpdateTypeFileMessage       = "file_message"
 	UpdateTypeReaction          = "reaction"
 	UpdateTypeDeleted           = "update_deleted"
+	UpdateTypeSecret            = "secret_update"
 )
 
 type GenericUpdate struct {

@@ -76,6 +76,7 @@ func (r *tracingDB) Query(ctx context.Context, query string, args ...any) (pgx.R
 
 	return res, err
 }
+
 func (r *tracingDB) QueryRow(ctx context.Context, query string, args ...any) pgx.Row {
 	ctx, span := r.tracer.Start(ctx, getOpStmt(query), trace.WithAttributes(
 		attribute.String(spanAttrStatement, query),

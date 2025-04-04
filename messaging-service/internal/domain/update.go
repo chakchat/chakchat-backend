@@ -38,8 +38,8 @@ func NewDeleteMode(mode string) (DeleteMode, error) {
 }
 
 const (
-	DeleteModeForSender = "deleted_for_delition_sender"
-	DeleteModeForAll    = "deleted_for_all"
+	DeleteModeForSender = "for_delition_sender"
+	DeleteModeForAll    = "for_all"
 )
 
 // Caution: SenderID here is deletion update's sender but not a original update's sender
