@@ -1,0 +1,12 @@
+jwt:
+  signing_method: RS256
+  lifetime: 3m
+  issuer: identity_service
+  audience: 
+    - user_service
+  key_file_path: /app/keys/rsa.pub
+
+kafka:
+  brokers: "live-connection-service:9092"
+  consume_topic:  "update_topic"
+  produce_topic:  "dlq_topic"

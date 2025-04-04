@@ -15,6 +15,13 @@ type KafkaProcessor struct {
 	dlq *messages.Producer
 }
 
+func NewKafkaProcessor(hub *ws.Hub, dlq *messages.Producer) *KafkaProcessor {
+	return &KafkaProcessor{
+		hub: hub,
+		dlq: dlq,
+	}
+}
+
 func (p *KafkaProcessor) MessageHandler(ctx context.Context, msg kafka.Message) {
 	msgType, err := p.detectMessageType(msg.Value)
 	if err != nil {
