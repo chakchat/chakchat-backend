@@ -42,7 +42,7 @@ func NewGroupUpdateService(
 func (s *GroupUpdateService) SendTextMessage(
 	ctx context.Context, req request.SendTextMessage,
 ) (_ *dto.TextMessageDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +100,7 @@ func (s *GroupUpdateService) SendTextMessage(
 func (s *GroupUpdateService) EditTextMessage(
 	ctx context.Context, req request.EditTextMessage,
 ) (_ *dto.TextMessageDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +160,7 @@ func (s *GroupUpdateService) EditTextMessage(
 func (s *GroupUpdateService) DeleteMessage(
 	ctx context.Context, req request.DeleteMessage,
 ) (_ *dto.UpdateDeletedDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -232,7 +232,7 @@ func (s *GroupUpdateService) DeleteMessage(
 func (s *GroupUpdateService) SendReaction(
 	ctx context.Context, req request.SendReaction,
 ) (_ *dto.ReactionDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -282,7 +282,7 @@ func (s *GroupUpdateService) SendReaction(
 func (s *GroupUpdateService) DeleteReaction(
 	ctx context.Context, req request.DeleteReaction,
 ) (_ *dto.UpdateDeletedDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -346,7 +346,7 @@ func (s *GroupUpdateService) DeleteReaction(
 func (s *GroupUpdateService) ForwardTextMessage(
 	ctx context.Context, req request.ForwardMessage,
 ) (_ *dto.TextMessageDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -408,7 +408,7 @@ func (s *GroupUpdateService) ForwardTextMessage(
 func (s *GroupUpdateService) ForwardFileMessage(
 	ctx context.Context, req request.ForwardMessage,
 ) (_ *dto.FileMessageDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}

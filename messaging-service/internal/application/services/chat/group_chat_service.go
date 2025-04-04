@@ -33,7 +33,7 @@ func NewGroupChatService(
 }
 
 func (s *GroupChatService) CreateGroup(ctx context.Context, req request.CreateGroup) (_ *dto.GroupChatDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func (s *GroupChatService) CreateGroup(ctx context.Context, req request.CreateGr
 }
 
 func (s *GroupChatService) UpdateGroupInfo(ctx context.Context, req request.UpdateGroupInfo) (_ *dto.GroupChatDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (s *GroupChatService) UpdateGroupInfo(ctx context.Context, req request.Upda
 }
 
 func (s *GroupChatService) DeleteGroup(ctx context.Context, req request.DeleteChat) (err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return err
 	}
@@ -143,7 +143,7 @@ func (s *GroupChatService) DeleteGroup(ctx context.Context, req request.DeleteCh
 }
 
 func (s *GroupChatService) AddMember(ctx context.Context, req request.AddMember) (_ *dto.GroupChatDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func (s *GroupChatService) AddMember(ctx context.Context, req request.AddMember)
 }
 
 func (s *GroupChatService) DeleteMember(ctx context.Context, req request.DeleteMember) (_ *dto.GroupChatDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}

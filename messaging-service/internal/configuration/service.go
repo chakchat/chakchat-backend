@@ -14,12 +14,12 @@ type Services struct {
 
 func NewServices(db *DB, external *External) *Services {
 	return &Services{
-		PersonalChat:       chat.NewPersonalChatService(db.TxProvider, db.PersonalChat, external.Publisher),
-		GroupChat:          chat.NewGroupChatService(db.TxProvider, db.GroupChat, external.Publisher),
-		GroupPhoto:         chat.NewGroupPhotoService(db.TxProvider, db.GroupChat, external.FileStorage, external.Publisher),
-		SecretPersonalChat: chat.NewSecretPersonalChatService(db.TxProvider, db.SecretPersonalChat, external.Publisher),
-		SecretGroup:        chat.NewSecretGroupChatService(db.TxProvider, db.SecretGroupChat, external.Publisher),
-		SecretGroupPhoto:   chat.NewSecretGroupPhotoService(db.TxProvider, db.SecretGroupChat, external.FileStorage, external.Publisher),
-		GenericChat:        chat.NewGenericChatService(db.TxProvider, &db.GenericChat),
+		PersonalChat:       chat.NewPersonalChatService(db.SQLer, db.PersonalChat, external.Publisher),
+		GroupChat:          chat.NewGroupChatService(db.SQLer, db.GroupChat, external.Publisher),
+		GroupPhoto:         chat.NewGroupPhotoService(db.SQLer, db.GroupChat, external.FileStorage, external.Publisher),
+		SecretPersonalChat: chat.NewSecretPersonalChatService(db.SQLer, db.SecretPersonalChat, external.Publisher),
+		SecretGroup:        chat.NewSecretGroupChatService(db.SQLer, db.SecretGroupChat, external.Publisher),
+		SecretGroupPhoto:   chat.NewSecretGroupPhotoService(db.SQLer, db.SecretGroupChat, external.FileStorage, external.Publisher),
+		GenericChat:        chat.NewGenericChatService(db.SQLer, &db.GenericChat),
 	}
 }

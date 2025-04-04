@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/configuration"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/infrastructure/postgres/instrumentation"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/extra/redisotel/v9"
 	"github.com/redis/go-redis/v9"
@@ -19,23 +20,25 @@ import (
 )
 
 func main() {
+	ctx := context.Background()
+
 	config, err := configuration.LoadConfig("/app/config.yml")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	otlpExporter, err := otlptracegrpc.New(
-		context.Background(),
+		ctx,
 		otlptracegrpc.WithInsecure(),
 		otlptracegrpc.WithEndpoint(config.Otlp.GrpcAddr),
 	)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer otlpExporter.Shutdown(context.Background())
+	defer otlpExporter.Shutdown(ctx)
 
 	otlpRes, err := resource.New(
-		context.Background(),
+		ctx,
 		resource.WithAttributes(
 			semconv.ServiceNameKey.String("backend-services"),
 		),
@@ -55,18 +58,19 @@ func main() {
 		propagation.Baggage{},
 	))
 
-	db, err := pgxpool.New(context.Background(), config.DB.ConnString)
+	pgxDB, err := pgxpool.New(ctx, config.DB.ConnString)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
+	defer pgxDB.Close()
+	db := instrumentation.Tracing(pgxDB)
 
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     config.Redis.Addr,
 		Password: config.Redis.Password,
 		DB:       config.Redis.DB,
 	})
-	if err := rdb.Ping(context.Background()).Err(); err != nil {
+	if err := rdb.Ping(ctx).Err(); err != nil {
 		log.Fatalf("redis connection establishing failed: %s", err)
 	}
 	defer rdb.Close()

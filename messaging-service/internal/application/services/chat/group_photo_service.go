@@ -50,7 +50,7 @@ func NewGroupPhotoService(
 }
 
 func (s *GroupPhotoService) UpdatePhoto(ctx context.Context, req request.UpdateGroupPhoto) (_ *dto.GroupChatDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func validatePhoto(photo *external.FileMeta) error {
 }
 
 func (s *GroupPhotoService) DeletePhoto(ctx context.Context, req request.DeleteGroupPhoto) (_ *dto.GroupChatDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -39,7 +39,7 @@ func NewSecretGroupUpdateService(
 func (s *SecretGroupUpdateService) SendSecretUpdate(
 	ctx context.Context, req request.SendSecretUpdate,
 ) (_ *dto.SecretUpdateDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (s *SecretGroupUpdateService) SendSecretUpdate(
 func (s *SecretGroupUpdateService) DeleteSecretUpdate(
 	ctx context.Context, req request.DeleteSecretUpdate,
 ) (_ *dto.UpdateDeletedDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -37,7 +37,7 @@ func NewSecretPersonalChatService(
 func (s *SecretPersonalChatService) CreateChat(
 	ctx context.Context, req request.CreateSecretPersonalChat,
 ) (_ *dto.SecretPersonalChatDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func (s *SecretPersonalChatService) CreateChat(
 func (s *SecretPersonalChatService) GetChatById(
 	ctx context.Context, chatId uuid.UUID,
 ) (_ *dto.SecretPersonalChatDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func (s *SecretPersonalChatService) GetChatById(
 func (s *SecretPersonalChatService) SetExpiration(
 	ctx context.Context, req request.SetExpiration,
 ) (_ *dto.SecretPersonalChatDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,7 @@ func (s *SecretPersonalChatService) SetExpiration(
 }
 
 func (s *SecretPersonalChatService) DeleteChat(ctx context.Context, req request.DeleteChat) (err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return err
 	}
@@ -168,7 +168,7 @@ func (s *SecretPersonalChatService) DeleteChat(ctx context.Context, req request.
 func (s *SecretPersonalChatService) validateChatNotExists(
 	ctx context.Context, members [2]domain.UserID,
 ) (err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return err
 	}

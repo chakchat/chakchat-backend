@@ -42,7 +42,7 @@ func NewPersonalUpdateService(
 func (s *PersonalUpdateService) SendTextMessage(
 	ctx context.Context, req request.SendTextMessage,
 ) (_ *dto.TextMessageDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func (s *PersonalUpdateService) SendTextMessage(
 func (s *PersonalUpdateService) EditTextMessage(
 	ctx context.Context, req request.EditTextMessage,
 ) (_ *dto.TextMessageDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +169,7 @@ func (s *PersonalUpdateService) EditTextMessage(
 func (s *PersonalUpdateService) DeleteMessage(
 	ctx context.Context, req request.DeleteMessage,
 ) (_ *dto.UpdateDeletedDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -241,7 +241,7 @@ func (s *PersonalUpdateService) DeleteMessage(
 func (s *PersonalUpdateService) SendReaction(
 	ctx context.Context, req request.SendReaction,
 ) (_ *dto.ReactionDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -295,7 +295,7 @@ func (s *PersonalUpdateService) SendReaction(
 func (s *PersonalUpdateService) DeleteReaction(
 	ctx context.Context, req request.DeleteReaction,
 ) (_ *dto.UpdateDeletedDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -363,7 +363,7 @@ func (s *PersonalUpdateService) DeleteReaction(
 func (s *PersonalUpdateService) ForwardTextMessage(
 	ctx context.Context, req request.ForwardMessage,
 ) (_ *dto.TextMessageDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -425,7 +425,7 @@ func (s *PersonalUpdateService) ForwardTextMessage(
 func (s *PersonalUpdateService) ForwardFileMessage(
 	ctx context.Context, req request.ForwardMessage,
 ) (_ *dto.FileMessageDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}

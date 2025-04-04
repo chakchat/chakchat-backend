@@ -39,7 +39,7 @@ func NewSecretGroupPhotoService(
 func (s *SecretGroupPhotoService) UpdatePhoto(
 	ctx context.Context, req request.UpdateGroupPhoto,
 ) (_ *dto.SecretGroupChatDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func (s *SecretGroupPhotoService) UpdatePhoto(
 func (s *SecretGroupPhotoService) DeletePhoto(
 	ctx context.Context, req request.DeleteGroupPhoto,
 ) (_ *dto.SecretGroupChatDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
