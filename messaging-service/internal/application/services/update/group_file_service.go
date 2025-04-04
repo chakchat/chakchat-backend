@@ -43,7 +43,7 @@ func NewGroupFileService(
 func (s *GroupFileService) SendFileMessage(
 	ctx context.Context, req request.SendFileMessage,
 ) (_ *dto.FileMessageDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}

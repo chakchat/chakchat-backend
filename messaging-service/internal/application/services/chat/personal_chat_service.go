@@ -35,7 +35,7 @@ func NewPersonalChatService(
 func (s *PersonalChatService) BlockChat(
 	ctx context.Context, req request.BlockChat,
 ) (_ *dto.PersonalChatDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func (s *PersonalChatService) BlockChat(
 func (s *PersonalChatService) UnblockChat(
 	ctx context.Context, req request.UnblockChat,
 ) (_ *dto.PersonalChatDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func (s *PersonalChatService) UnblockChat(
 func (s *PersonalChatService) CreateChat(
 	ctx context.Context, req request.CreatePersonalChat,
 ) (_ *dto.PersonalChatDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +147,7 @@ func (s *PersonalChatService) CreateChat(
 func (s *PersonalChatService) GetChatById(
 	ctx context.Context, chatId uuid.UUID,
 ) (_ *dto.PersonalChatDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +166,7 @@ func (s *PersonalChatService) GetChatById(
 }
 
 func (s *PersonalChatService) DeleteChat(ctx context.Context, req request.DeleteChat) (err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return err
 	}
@@ -200,7 +200,7 @@ func (s *PersonalChatService) DeleteChat(ctx context.Context, req request.Delete
 }
 
 func (s *PersonalChatService) validateChatNotExists(ctx context.Context, members [2]domain.UserID) (err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return err
 	}

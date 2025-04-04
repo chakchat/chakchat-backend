@@ -35,7 +35,7 @@ func NewSecretGroupChatService(
 func (s *SecretGroupChatService) CreateGroup(
 	ctx context.Context, req request.CreateSecretGroup,
 ) (_ *dto.SecretGroupChatDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func (s *SecretGroupChatService) CreateGroup(
 func (s *SecretGroupChatService) UpdateGroupInfo(
 	ctx context.Context, req request.UpdateSecretGroupInfo,
 ) (_ *dto.SecretGroupChatDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +114,7 @@ func (s *SecretGroupChatService) UpdateGroupInfo(
 }
 
 func (s *SecretGroupChatService) DeleteGroup(ctx context.Context, req request.DeleteChat) (err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return err
 	}
@@ -149,7 +149,7 @@ func (s *SecretGroupChatService) DeleteGroup(ctx context.Context, req request.De
 func (s *SecretGroupChatService) AddMember(
 	ctx context.Context, req request.AddMember,
 ) (_ *dto.SecretGroupChatDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +188,7 @@ func (s *SecretGroupChatService) AddMember(
 func (s *SecretGroupChatService) DeleteMember(
 	ctx context.Context, req request.DeleteMember,
 ) (_ *dto.SecretGroupChatDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -228,7 +228,7 @@ func (s *SecretGroupChatService) DeleteMember(
 func (s *SecretGroupChatService) SetExpiration(
 	ctx context.Context, req request.SetExpiration,
 ) (_ *dto.SecretGroupChatDTO, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}

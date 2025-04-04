@@ -4,8 +4,6 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/infrastructure/postgres/chat"
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/infrastructure/postgres/tx"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -17,12 +15,12 @@ type DB struct {
 	Chatter            repository.ChatterRepository
 	GenericChat        chat.GenericChatRepository
 
-	TxProvider storage.TxProvider
+	SQLer storage.SQLer
 
 	Redis *redis.Client
 }
 
-func NewDB(db *pgxpool.Pool, redis *redis.Client) *DB {
+func NewDB(db storage.SQLer, redis *redis.Client) *DB {
 	return &DB{
 		PersonalChat:       chat.NewPersonalChatRepository(),
 		GroupChat:          chat.NewGroupChatRepository(),
@@ -30,7 +28,7 @@ func NewDB(db *pgxpool.Pool, redis *redis.Client) *DB {
 		SecretGroupChat:    chat.NewSecretGroupChatRepository(),
 		Chatter:            chat.NewChatterRepository(),
 		GenericChat:        *chat.NewGenericChatRepository(),
-		TxProvider:         tx.NewTxProvider(db),
+		SQLer:              db,
 		Redis:              redis,
 	}
 }

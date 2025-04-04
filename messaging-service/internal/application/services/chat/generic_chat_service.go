@@ -28,7 +28,7 @@ func NewGenericChatService(
 }
 
 func (s *GenericChatService) GetByMemberID(ctx context.Context, memberID uuid.UUID) (_ []services.GenericChat, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (s *GenericChatService) GetByMemberID(ctx context.Context, memberID uuid.UU
 }
 
 func (s *GenericChatService) GetByChatID(ctx context.Context, senderID, chatID uuid.UUID) (_ *services.GenericChat, err error) {
-	tx, err := s.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
