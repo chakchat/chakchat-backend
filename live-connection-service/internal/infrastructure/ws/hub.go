@@ -1,8 +1,11 @@
 package ws
 
 import (
+	"net/http"
 	"sync"
 
+	"github.com/chakchat/chakchat-backend/live-connection-service/restapi"
+	"github.com/chakchat/chakchat-backend/shared/go/auth"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
@@ -13,20 +16,26 @@ type BroadcastMessage struct {
 }
 
 type Hub struct {
-	clients   map[string]*websocket.Conn
-	mu        sync.RWMutex
-	broadcast chan BroadcastMessage
+	clients map[string]*websocket.Conn
+	mu      sync.RWMutex
 }
 
 func NewHub() *Hub {
 	return &Hub{
-		clients:   make(map[string]*websocket.Conn),
-		broadcast: make(chan BroadcastMessage, 100),
+		clients: make(map[string]*websocket.Conn),
 	}
 }
 
-func (h *Hub) WebSocketHandler(userId string, c *gin.Context) gin.HandlerFunc {
+func (h *Hub) WebSocketHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		claimId, ok := auth.GetClaims(c.Request.Context())[auth.ClaimId]
+		if !ok {
+			restapi.SendUnauthorizedError(c, nil)
+			return
+		}
+
+		userId := claimId.(string)
+
 		upgrade := websocket.Upgrader{
 			ReadBufferSize:  1024,
 			WriteBufferSize: 1024,
@@ -63,4 +72,13 @@ func (h *Hub) Send(userId string, message interface{}) bool {
 		return conn.WriteJSON(message) == nil
 	}
 	return false
+}
+
+func (h *Hub) HealthCheck() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "ok",
+			"clients": len(h.clients),
+		})
+	}
 }

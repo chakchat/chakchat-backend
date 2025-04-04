@@ -3,19 +3,18 @@ package messages
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/segmentio/kafka-go"
 )
 
 type ConsumerConf struct {
 	Brokers []string
 	Topic   string
-	GroupID uuid.UUID
+	GroupID string
 }
 
 type Consumer struct {
 	reader   *kafka.Reader
-	handler  func(msg kafka.Message)
+	handler  func(ctx context.Context, msg kafka.Message)
 	shutdown chan struct{}
 }
 
@@ -24,14 +23,14 @@ func NewConsumer(reader *ConsumerConf) *Consumer {
 		reader: kafka.NewReader(kafka.ReaderConfig{
 			Topic:       reader.Topic,
 			Brokers:     reader.Brokers,
-			GroupID:     reader.GroupID.String(),
+			GroupID:     reader.GroupID,
 			StartOffset: kafka.LastOffset,
 		}),
 		shutdown: make(chan struct{}),
 	}
 }
 
-func (c *Consumer) Start(ctx context.Context, handler func(kafka.Message)) {
+func (c *Consumer) Start(ctx context.Context, handler func(ctx context.Context, msg kafka.Message)) {
 	c.handler = handler
 	go func() {
 		for {
@@ -43,7 +42,7 @@ func (c *Consumer) Start(ctx context.Context, handler func(kafka.Message)) {
 				if err != nil {
 					continue
 				}
-				go c.handler(msg)
+				go c.handler(ctx, msg)
 			}
 		}
 	}()
