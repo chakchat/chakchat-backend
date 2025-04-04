@@ -2,20 +2,46 @@ package messages
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/segmentio/kafka-go"
 )
 
+type ProducerConfig struct {
+	Brokers []string
+	Topic   string
+}
 type Producer struct {
 	writer *kafka.Writer
 }
 
-func NewProducer(writer *kafka.Writer) *Producer {
+func NewProducer(cfg ProducerConfig) *Producer {
 	return &Producer{
-		writer: writer,
+		writer: &kafka.Writer{
+			Addr:     kafka.TCP(cfg.Brokers...),
+			Topic:    cfg.Topic,
+			Balancer: &kafka.Hash{},
+			Async:    true,
+		},
 	}
 }
 
-func (p *Producer) Send(ctx context.Context, msg []byte) error {
+func (p *Producer) Send(ctx context.Context, msg interface{}) error {
+	jsonMsg, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
 
+	err = p.writer.WriteMessages(ctx, kafka.Message{
+		Value: jsonMsg,
+	})
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *Producer) Close() error {
+	return p.writer.Close()
 }
