@@ -107,7 +107,7 @@ CREATE TABLE messaging.secret_update (
     chat_id UUID NOT NULL,
     update_id BIGINT NOT NULL,
     payload BYTEA NOT NULL,
-    key_hash VARCHAR(256) NOT NULL,
+    key_hash BYTEA NOT NULL,
     initialization_vector BYTEA NOT NULL,
 
     PRIMARY KEY (chat_id, update_id),

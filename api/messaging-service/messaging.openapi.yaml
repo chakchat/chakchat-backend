@@ -2344,13 +2344,13 @@ components:
             initialization_vector:
               type: string
               format: binary
-            key_id:
+            key_hash:
               type: string
-              format: uuid
+              format: binary
           required:
             - payload
             - initialization_vector
-            - key_id
+            - key_hash
       required:
         - update_id
         - chat_id
@@ -2366,13 +2366,13 @@ components:
         initialization_vector:
           type: string
           format: binary
-        key_id:
+        key_hash:
           type: string
-          format: uuid
+          format: binary
       required:
         - payload
         - initialization_vector
-        - key_id
+        - key_hash
     ForwardMessageRequest:
       type: object
       properties:

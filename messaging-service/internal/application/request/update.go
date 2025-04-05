@@ -61,7 +61,7 @@ type SendSecretUpdate struct {
 
 	Payload              []byte
 	InitializationVector []byte
-	KeyHash              string
+	KeyHash              []byte
 }
 
 type DeleteSecretUpdate struct {
