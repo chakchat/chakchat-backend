@@ -73,6 +73,23 @@ func Reaction(r *dto.ReactionDTO) JSONResponse {
 	})
 }
 
+func SecretUpdate(r *dto.SecretUpdateDTO) JSONResponse {
+	return GenericUpdate(&services.GenericUpdate{
+		UpdateID:   r.UpdateID,
+		ChatID:     r.ChatID,
+		SenderID:   r.SenderID,
+		UpdateType: services.UpdateTypeSecret,
+		CreatedAt:  r.CreatedAt,
+		Info: services.GenericUpdateInfo{
+			Secret: &services.SecretUpdateInfo{
+				Payload:              r.Payload,
+				InitializationVector: r.InitializationVector,
+				KeyHash:              r.KeyHash,
+			},
+		},
+	})
+}
+
 func GenericUpdate(update *services.GenericUpdate) JSONResponse {
 	const (
 		ChatIDField    = "chat_id"
@@ -102,6 +119,10 @@ func GenericUpdate(update *services.GenericUpdate) JSONResponse {
 		DeletedModeField = "deleted_mode"
 
 		ReactionField = "reaction"
+
+		SecretPayload              = "payload"
+		SecretInitializationVector = "initialization_vector"
+		SecretKeyHash              = "key_hash"
 	)
 
 	resp := JSONResponse{
@@ -144,6 +165,12 @@ func GenericUpdate(update *services.GenericUpdate) JSONResponse {
 	case services.UpdateTypeReaction:
 		resp[ContentField] = JSONResponse{
 			ReactionField: update.Info.Reaction.Reaction,
+		}
+	case services.UpdateTypeSecret:
+		resp[ContentField] = JSONResponse{
+			SecretKeyHash:              update.Info.Secret.KeyHash,
+			SecretInitializationVector: update.Info.Secret.InitializationVector,
+			SecretPayload:              update.Info.Secret.Payload,
 		}
 	}
 

@@ -12,7 +12,7 @@ type SecretUpdateDTO struct {
 
 	Payload              []byte
 	InitializationVector []byte
-	KeyHash              string
+	KeyHash              []byte
 
 	CreatedAt int64
 }
@@ -24,7 +24,7 @@ func NewSecretUpdateDTO(dom *domain.SecretUpdate) SecretUpdateDTO {
 		SenderID:             uuid.UUID(dom.SenderID),
 		Payload:              dom.Data.Payload,
 		InitializationVector: dom.Data.IV,
-		KeyHash:              string(dom.Data.KeyHash),
+		KeyHash:              dom.Data.KeyHash,
 		CreatedAt:            int64(dom.CreatedAt),
 	}
 }

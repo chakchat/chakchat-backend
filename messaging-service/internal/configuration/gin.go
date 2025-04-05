@@ -80,5 +80,29 @@ func GinEngine(handlers *Handlers, db *DB, conf *Config) (*gin.Engine, error) {
 	r.PUT("/v1.0/chat/group/secret/:chatId/photo", handlers.SecretGroupPhoto.UpdatePhoto)
 	r.DELETE("/v1.0/chat/group/secret/:chatId/photo", handlers.SecretGroupPhoto.DeletePhoto)
 
+	idemp.POST("/v1.0/chat/personal/:chatId/update/message/text", handlers.PersonalUpdate.SendTextMessage)
+	r.DELETE("/v1.0/chat/personal/:chatId/update/message/:updateId/:deleteMode", handlers.PersonalUpdate.DeleteMessage)
+	r.PUT("/v1.0/chat/personal/:chatId/update/message/text/:updateId", handlers.PersonalUpdate.DeleteMessage)
+	idemp.POST("/v1.0/chat/personal/:chatId/update/message/file", handlers.PersonalFile.SendFileMessage)
+	idemp.POST("/v1.0/chat/personal/:chatId/update/reaction", handlers.PersonalUpdate.SendReaction)
+	r.DELETE("/v1.0/chat/personal/:chatId/update/reaction/:updateId", handlers.PersonalUpdate.DeleteReaction)
+	idemp.POST("/v1.0/chat/personal/:chatId/update/text-message/forward", handlers.PersonalUpdate.ForwardTextMessage)
+	idemp.POST("/v1.0/chat/personal/:chatId/update/file-message/forward", handlers.PersonalUpdate.ForwardFileMessage)
+
+	idemp.POST("/v1.0/chat/group/:chatId/update/message/text", handlers.GroupUpdate.SendTextMessage)
+	r.DELETE("/v1.0/chat/group/:chatId/update/message/:updateId/:deleteMode", handlers.GroupUpdate.DeleteMessage)
+	r.PUT("/v1.0/chat/group/:chatId/update/message/text/:updateId", handlers.GroupUpdate.DeleteMessage)
+	idemp.POST("/v1.0/chat/group/:chatId/update/message/file", handlers.GroupFile.SendFileMessage)
+	idemp.POST("/v1.0/chat/group/:chatId/update/reaction", handlers.GroupUpdate.SendReaction)
+	r.DELETE("/v1.0/chat/group/:chatId/update/reaction/:updateId", handlers.GroupUpdate.DeleteReaction)
+	idemp.POST("/v1.0/chat/group/:chatId/update/text-message/forward", handlers.GroupUpdate.ForwardTextMessage)
+	idemp.POST("/v1.0/chat/group/:chatId/update/file-message/forward", handlers.GroupUpdate.ForwardFileMessage)
+
+	idemp.POST("/v1.0/chat/personal/secret/:chatId/update/secret", handlers.SecretPersonalUpdate.SendSecretUpdate)
+	r.DELETE("/v1.0/chat/personal/secret/:chatId/update/secret/:updateId", handlers.SecretPersonalUpdate.DeleteSecretUpdate)
+
+	idemp.POST("/v1.0/chat/group/secret/:chatId/update/secret", handlers.SecretGroupUpdate.SendSecretUpdate)
+	r.DELETE("/v1.0/chat/group/secret/:chatId/update/secret/:updateId", handlers.SecretGroupUpdate.DeleteSecretUpdate)
+
 	return r, nil
 }

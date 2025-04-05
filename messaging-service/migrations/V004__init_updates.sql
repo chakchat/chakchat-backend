@@ -29,7 +29,7 @@ CREATE TABLE messaging.text_message_update (
         ON DELETE CASCADE,
     FOREIGN KEY (chat_id, reply_to_id)
         REFERENCES messaging.update (chat_id, update_id) 
-        ON DELETE CASCADE
+        ON DELETE SET NULL
 );
 
 CREATE TABLE messaging.text_message_edited_update (
@@ -64,7 +64,7 @@ CREATE TABLE messaging.file_message_update (
         ON DELETE CASCADE,
     FOREIGN KEY (chat_id, reply_to_id)
         REFERENCES messaging.update (chat_id, update_id) 
-        ON DELETE CASCADE
+        ON DELETE SET NULL
 );
 
 CREATE TABLE messaging.reaction_update (
@@ -107,7 +107,7 @@ CREATE TABLE messaging.secret_update (
     chat_id UUID NOT NULL,
     update_id BIGINT NOT NULL,
     payload BYTEA NOT NULL,
-    key_hash VARCHAR(256) NOT NULL,
+    key_hash BYTEA NOT NULL,
     initialization_vector BYTEA NOT NULL,
 
     PRIMARY KEY (chat_id, update_id),

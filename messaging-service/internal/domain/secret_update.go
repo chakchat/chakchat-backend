@@ -9,7 +9,7 @@ var TimeFunc = func() time.Time {
 }
 
 type (
-	SecretKeyHash        string
+	SecretKeyHash        []byte
 	Encrypted            []byte
 	InitializationVector []byte
 )

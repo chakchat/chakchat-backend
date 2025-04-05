@@ -31,6 +31,7 @@ type GenericUpdateInfo struct {
 	FileMessage       *FileMessageInfo
 	Deleted           *DeletedInfo
 	Reaction          *ReactionInfo
+	Secret            *SecretUpdateInfo
 }
 
 type TextMessageInfo struct {
@@ -56,4 +57,10 @@ type DeletedInfo struct {
 
 type ReactionInfo struct {
 	Reaction string
+}
+
+type SecretUpdateInfo struct {
+	Payload              []byte
+	InitializationVector []byte
+	KeyHash              []byte
 }
