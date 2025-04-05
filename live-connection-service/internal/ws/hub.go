@@ -64,7 +64,7 @@ func (h *Hub) WebSocketHandler() gin.HandlerFunc {
 	}
 }
 
-func (h *Hub) Send(userId string, message interface{}) bool {
+func (h *Hub) Send(userId string, message any) bool {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
