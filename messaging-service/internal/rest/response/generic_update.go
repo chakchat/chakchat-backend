@@ -138,7 +138,9 @@ func GenericUpdate(update *services.GenericUpdate) JSONResponse {
 		resp[ContentField] = JSONResponse{
 			TextField:    update.Info.TextMessage.Text,
 			ReplyToField: update.Info.TextMessage.ReplyTo,
-			EditedField:  GenericUpdate(update.Info.TextMessage.Edited),
+		}
+		if update.Info.TextMessage.Edited != nil {
+			resp[EditedField] = GenericUpdate(update.Info.TextMessage.Edited)
 		}
 	case services.UpdateTypeTextMessageEdited:
 		resp[ContentField] = JSONResponse{
