@@ -7,7 +7,7 @@ access_token:
   key_file_path: /app/keys/sym
 refresh_token:
   signing_method: HS512
-  lifetime: 30m # Just for demo
+  lifetime: 720h 
   issuer: identity_service
   audience: 
     - client
