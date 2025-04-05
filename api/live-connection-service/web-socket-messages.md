@@ -4,7 +4,6 @@ All messages have such structure:
 
 ```json
 {
-  "receivers": [],
   "type": "",
   "data": {} // It will hold specific data
 }
@@ -35,7 +34,6 @@ All update messages have structure:
 
 ```json
 {
-  "receivers": [],
   "type": "update",
   "data": {
     "chat_id": "1342ffe5-26da-4289-b942-9a3219355b7e",
@@ -52,7 +50,6 @@ For text messages structure is:
 
 ```json
 {
-  "receivers": ["57a85f64-5717-4562-b3fc-2c54636a123"],
   "type": "update",
   "data": {
     "chat_id": "b4c3f591-ef52-4b85-a04e-cf61ee243449",
@@ -107,7 +104,6 @@ All file messages have such structure:
 
 ```json
 {
-  "receivers": ["57a85f64-5717-4562-b3fc-2c54636a123"],
   "type": "update",
   "data": {
     "chat_id": "b4c3f591-ef52-4b85-a04e-cf61ee243449",
@@ -131,7 +127,6 @@ All reactions have such structure:
 ```json
 {
   
-  "receivers": ["57a85f64-5717-4562-b3fc-2c54636a123"],
   "type": "update",
   "data": {
     "chat_id": "b4c3f591-ef52-4b85-a04e-cf61ee243449",
@@ -150,7 +145,6 @@ All reactions have such structure:
 All deleting message have such structure:
 ```json
 {
-  "receivers": ["57a85f64-5717-4562-b3fc-2c54636a123"],
   "type": "update",
   "data": {
     "chat_id": "b4c3f591-ef52-4b85-a04e-cf61ee243449",
@@ -178,7 +172,6 @@ All update chat messages have the same structure as update messages(previous).
 ```json
 {
 
-  "receivers": [ "57a85f64-5717-4562-b3fc-2c54636a123"],
   "type": "chat_created",
   "data":{
     "sender_id": "32f8c01b-673c-4b3b-a42a-b84fbaf10bff",
@@ -201,7 +194,6 @@ All update chat messages have the same structure as update messages(previous).
 ## Delete/Block/Unblock chat
 ```json
 {
-  "receivers": ["57a85f64-5717-4562-b3fc-2c54636a123"],
   "type": "chat_deleted/chat_blocked/chat_unblocked",
   "data": {
     "sender_id": "9994d052-3fc3-42de-be9c-0d692b6a0e39",
@@ -213,7 +205,6 @@ All update chat messages have the same structure as update messages(previous).
 
 ```json
 {
-  "receivers": ["57a85f64-5717-4562-b3fc-2c54636a123"],
   "type": "chat_expiration_set",
   "data": {
     "sender_id": "9994d052-3fc3-42de-be9c-0d692b6a0e39",
@@ -234,7 +225,6 @@ If any of fields name/description/group-photo was removed then value is empty st
 
 ```json
 {
-  "receivers": ["57a85f64-5717-4562-b3fc-2c54636a123"],
   "type": "group_info_updated",
   "data": {
     "sender_id": "9994d052-3fc3-42de-be9c-0d692b6a0e39",
@@ -251,7 +241,6 @@ If any of fields name/description/group-photo was removed then value is empty st
 
 ```json
 {
-  "receivers": ["57a85f64-5717-4562-b3fc-2c54636a123"],
   "type": "group_members_added/group_members_removed",
   "data": {
     "sender_id": "9994d052-3fc3-42de-be9c-0d692b6a0e39",
