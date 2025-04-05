@@ -31,11 +31,11 @@ func NewHandlers(services *Services) *Handlers {
 		SecretGroup:          chat.NewSecretGroupHandler(services.SecretGroup),
 		SecretGroupPhoto:     chat.NewSecretGroupPhotoHandler(services.SecretGroupPhoto),
 		GenericChat:          chat.NewGenericChatHandler(services.GenericChat),
-		PersonalUpdate:       update.NewPersonalUpdateHandler(services.GroupUpdate),
-		PersonalFile:         update.NewFileHandler(services.GroupFile),
+		PersonalUpdate:       update.NewPersonalUpdateHandler(services.PersonalUpdate),
+		PersonalFile:         update.NewFileHandler(services.PersonalFile),
 		GroupUpdate:          update.NewGroupUpdateHandler(services.GroupUpdate),
 		GroupFile:            update.NewGroupFileHandler(services.GroupFile),
-		SecretPersonalUpdate: update.NewSecretPersonalUpdateHandler(services.SecretGroupUpdate),
+		SecretPersonalUpdate: update.NewSecretPersonalUpdateHandler(services.SecretPersonalUpdate),
 		SecretGroupUpdate:    update.NewSecretGroupUpdateHandler(services.SecretGroupUpdate),
 	}
 }
