@@ -87,9 +87,9 @@ func (h *SecretPersonalUpdateHandler) DeleteSecretUpdate(c *gin.Context) {
 		return
 	}
 	userID := getUserID(c.Request.Context())
-	updateID, err := strconv.ParseInt(c.Param(paramChatID), 10, 64)
+	updateID, err := strconv.ParseInt(c.Param(paramUpdateID), 10, 64)
 	if err != nil {
-		restapi.SendInvalidChatID(c)
+		restapi.SendInvalidUpdateID(c)
 		return
 	}
 
