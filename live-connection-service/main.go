@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/chakchat/chakchat-backend/live-connection-service/internal/messages"
+	"github.com/chakchat/chakchat-backend/live-connection-service/internal/mq"
 	"github.com/chakchat/chakchat-backend/live-connection-service/internal/restapi"
 	"github.com/chakchat/chakchat-backend/live-connection-service/internal/services"
 	"github.com/chakchat/chakchat-backend/live-connection-service/internal/ws"
@@ -64,13 +64,13 @@ func main() {
 
 	hub := ws.NewHub()
 
-	kafkaProducer := messages.NewProducer(messages.ProducerConfig{
+	kafkaProducer := mq.NewProducer(mq.ProducerConfig{
 		Brokers: conf.Kafka.Brokers,
 		Topic:   conf.Kafka.ProduceTopic,
 	})
 	defer kafkaProducer.Close()
 
-	kafkaConsumer := messages.NewConsumer(&messages.ConsumerConf{
+	kafkaConsumer := mq.NewConsumer(&mq.ConsumerConf{
 		Brokers: conf.Kafka.Brokers,
 		Topic:   conf.Kafka.ConsumeTopic,
 		GroupID: "live-connection-group",

@@ -6,27 +6,27 @@ import (
 
 	"github.com/segmentio/kafka-go"
 
-	"github.com/chakchat/chakchat-backend/live-connection-service/internal/messages"
 	"github.com/chakchat/chakchat-backend/live-connection-service/internal/models"
+	"github.com/chakchat/chakchat-backend/live-connection-service/internal/mq"
 	"github.com/chakchat/chakchat-backend/live-connection-service/internal/ws"
 )
 
 type KafkaProcessor struct {
-	hub *ws.Hub
-	dlq *messages.Producer
+	hub    *ws.Hub
+	notifq *mq.Producer //queue to send message in notification service
 }
 
-func NewKafkaProcessor(hub *ws.Hub, dlq *messages.Producer) *KafkaProcessor {
+func NewKafkaProcessor(hub *ws.Hub, dlq *mq.Producer) *KafkaProcessor {
 	return &KafkaProcessor{
-		hub: hub,
-		dlq: dlq,
+		hub:    hub,
+		notifq: dlq,
 	}
 }
 
 func (p *KafkaProcessor) MessageHandler(ctx context.Context, msg kafka.Message) {
 	msgType, err := p.detectMessageType(msg.Value)
 	if err != nil {
-		p.dlq.Send(ctx, msg.Value)
+		p.notifq.Send(ctx, msg.Value)
 	}
 
 	if msgType == "update" {
@@ -62,7 +62,7 @@ func (p *KafkaProcessor) processUpdateMessage(ctx context.Context, data []byte) 
 	}
 	for _, userId := range update.Receivers {
 		if !p.hub.Send(userId, response) {
-			p.dlq.Send(ctx, data)
+			p.notifq.Send(ctx, data)
 		}
 	}
 
@@ -80,7 +80,7 @@ func (p *KafkaProcessor) processChatMessage(ctx context.Context, data []byte) {
 	}
 	for _, userId := range update.Receivers {
 		if !p.hub.Send(userId, response) {
-			p.dlq.Send(ctx, data)
+			p.notifq.Send(ctx, data)
 		}
 	}
 
