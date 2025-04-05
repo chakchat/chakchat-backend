@@ -70,9 +70,9 @@ func (h *GroupUpdateHandler) EditTextMessage(c *gin.Context) {
 		restapi.SendInvalidChatID(c)
 		return
 	}
-	updateID, err := strconv.ParseInt(c.Param(paramChatID), 10, 64)
+	updateID, err := strconv.ParseInt(c.Param(paramUpdateID), 10, 64)
 	if err != nil {
-		restapi.SendInvalidChatID(c)
+		restapi.SendInvalidUpdateID(c)
 		return
 	}
 	userID := getUserID(c.Request.Context())
@@ -104,9 +104,9 @@ func (h *GroupUpdateHandler) DeleteMessage(c *gin.Context) {
 		restapi.SendInvalidChatID(c)
 		return
 	}
-	updateID, err := strconv.ParseInt(c.Param(paramChatID), 10, 64)
+	updateID, err := strconv.ParseInt(c.Param(paramUpdateID), 10, 64)
 	if err != nil {
-		restapi.SendInvalidChatID(c)
+		restapi.SendInvalidUpdateID(c)
 		return
 	}
 	userID := getUserID(c.Request.Context())
@@ -162,9 +162,9 @@ func (h *GroupUpdateHandler) DeleteReaction(c *gin.Context) {
 		restapi.SendInvalidChatID(c)
 		return
 	}
-	updateID, err := strconv.ParseInt(c.Param(paramChatID), 10, 64)
+	updateID, err := strconv.ParseInt(c.Param(paramUpdateID), 10, 64)
 	if err != nil {
-		restapi.SendInvalidChatID(c)
+		restapi.SendInvalidUpdateID(c)
 		return
 	}
 	userID := getUserID(c.Request.Context())
