@@ -1,4 +1,4 @@
-package messages
+package mq
 
 import (
 	"context"
@@ -26,7 +26,7 @@ func NewProducer(cfg ProducerConfig) *Producer {
 	}
 }
 
-func (p *Producer) Send(ctx context.Context, msg interface{}) error {
+func (p *Producer) Send(ctx context.Context, msg any) error {
 	jsonMsg, err := json.Marshal(msg)
 	if err != nil {
 		return err

@@ -1,4 +1,4 @@
-package messages
+package mq
 
 import (
 	"context"
@@ -36,6 +36,8 @@ func (c *Consumer) Start(ctx context.Context, handler func(ctx context.Context, 
 		for {
 			select {
 			case <-c.shutdown:
+				return
+			case <-ctx.Done():
 				return
 			default:
 				msg, err := c.reader.ReadMessage(ctx)
