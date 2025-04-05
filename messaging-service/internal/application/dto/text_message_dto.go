@@ -26,7 +26,7 @@ func NewTextMessageDTO(m *domain.TextMessage) TextMessageDTO {
 
 	var replyTo *int64
 	if m.ReplyTo != nil {
-		cp := int64(m.ReplyTo.UpdateID)
+		cp := int64(*m.ReplyTo)
 		replyTo = &cp
 	}
 

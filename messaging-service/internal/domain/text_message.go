@@ -37,13 +37,18 @@ func NewTextMessage(chat Chatter, sender UserID, text string, replyTo *Message) 
 		return nil, err
 	}
 
+	var replyToID *UpdateID
+	if replyTo != nil {
+		replyToID = &replyTo.UpdateID
+	}
+
 	return &TextMessage{
 		Message: Message{
 			Update: Update{
 				ChatID:   chat.ChatID(),
 				SenderID: sender,
 			},
-			ReplyTo: replyTo,
+			ReplyTo: replyToID,
 		},
 		Text: text,
 	}, nil

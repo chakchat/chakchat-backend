@@ -3,7 +3,7 @@ package domain
 type Message struct {
 	Update
 
-	ReplyTo   *Message
+	ReplyTo   *UpdateID
 	Forwarded bool
 }
 

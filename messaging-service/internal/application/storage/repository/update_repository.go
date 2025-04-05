@@ -9,7 +9,7 @@ import (
 
 type UpdateRepository interface {
 	FindGenericMessage(context.Context, storage.ExecQuerier, domain.ChatID, domain.UpdateID) (*domain.Message, error)
-	DeleteMessage(context.Context, storage.ExecQuerier, domain.ChatID, domain.UpdateID) error
+	DeleteUpdate(context.Context, storage.ExecQuerier, domain.ChatID, domain.UpdateID) error
 	CreateUpdateDeleted(context.Context, storage.ExecQuerier, *domain.UpdateDeleted) (*domain.UpdateDeleted, error)
 
 	CreateTextMessage(context.Context, storage.ExecQuerier, *domain.TextMessage) (*domain.TextMessage, error)
@@ -19,7 +19,6 @@ type UpdateRepository interface {
 
 	CreateReaction(context.Context, storage.ExecQuerier, *domain.Reaction) (*domain.Reaction, error)
 	FindReaction(context.Context, storage.ExecQuerier, domain.ChatID, domain.UpdateID) (*domain.Reaction, error)
-	DeleteReaction(context.Context, storage.ExecQuerier, domain.ChatID, domain.UpdateID) error
 
 	FindFileMessage(context.Context, storage.ExecQuerier, domain.ChatID, domain.UpdateID) (*domain.FileMessage, error)
 	CreateFileMessage(context.Context, storage.ExecQuerier, *domain.FileMessage) (*domain.FileMessage, error)

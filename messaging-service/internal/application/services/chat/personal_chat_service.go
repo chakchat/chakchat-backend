@@ -119,7 +119,7 @@ func (s *PersonalChatService) CreateChat(
 
 	domainMembers := [2]domain.UserID{domain.UserID(req.SenderID), domain.UserID(req.MemberID)}
 
-	if err := s.validateChatNotExists(ctx, domainMembers); err != nil {
+	if err := s.validateChatNotExists(ctx, tx, domainMembers); err != nil {
 		return nil, err
 	}
 
@@ -199,13 +199,7 @@ func (s *PersonalChatService) DeleteChat(ctx context.Context, req request.Delete
 	return nil
 }
 
-func (s *PersonalChatService) validateChatNotExists(ctx context.Context, members [2]domain.UserID) (err error) {
-	tx, err := s.txProvider.Begin(ctx)
-	if err != nil {
-		return err
-	}
-	defer storage.FinishTx(ctx, tx, &err)
-
+func (s *PersonalChatService) validateChatNotExists(ctx context.Context, tx storage.ExecQuerier, members [2]domain.UserID) (err error) {
 	_, err = s.repo.FindByMembers(ctx, tx, members)
 
 	if err != nil && err != repository.ErrNotFound {
