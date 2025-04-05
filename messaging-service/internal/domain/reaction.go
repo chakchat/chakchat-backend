@@ -5,7 +5,8 @@ type ReactionType string
 type Reaction struct {
 	Update
 
-	Type ReactionType
+	Type      ReactionType
+	MessageID UpdateID
 }
 
 func NewReaction(
@@ -31,7 +32,8 @@ func NewReaction(
 			ChatID:   chat.ChatID(),
 			SenderID: sender,
 		},
-		Type: reaction,
+		Type:      reaction,
+		MessageID: m.UpdateID,
 	}, nil
 }
 

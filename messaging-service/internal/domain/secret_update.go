@@ -2,8 +2,6 @@ package domain
 
 import (
 	"time"
-
-	"github.com/google/uuid"
 )
 
 var TimeFunc = func() time.Time {
@@ -11,13 +9,13 @@ var TimeFunc = func() time.Time {
 }
 
 type (
-	SecretKeyID          uuid.UUID
+	SecretKeyHash        string
 	Encrypted            []byte
 	InitializationVector []byte
 )
 
 type SecretData struct {
-	KeyID   SecretKeyID
+	KeyHash SecretKeyHash
 	Payload Encrypted
 	IV      InitializationVector
 }

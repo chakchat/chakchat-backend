@@ -39,7 +39,7 @@ type FileMessageDTO struct {
 func NewFileMessageDTO(m *domain.FileMessage) FileMessageDTO {
 	var replyTo *int64
 	if m.ReplyTo != nil {
-		cp := int64(m.ReplyTo.UpdateID)
+		cp := int64(*m.ReplyTo)
 		replyTo = &cp
 	}
 

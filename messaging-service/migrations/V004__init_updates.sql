@@ -24,7 +24,7 @@ CREATE TABLE messaging.text_message_update (
     reply_to_id BIGINT,
 
     PRIMARY KEY (chat_id, update_id),
-    FOREIGN KEY (chat_id, update_id) 
+    FOREIGN KEY (chat_id, update_id)
         REFERENCES messaging.update (chat_id, update_id) 
         ON DELETE CASCADE,
     FOREIGN KEY (chat_id, reply_to_id)
@@ -52,10 +52,10 @@ CREATE TABLE messaging.file_message_update (
     update_id BIGINT NOT NULL,
     file_id UUID NOT NULL,
     file_name VARCHAR(255) NOT NULL,
-    mime_type VARCHAR(255) NOT NULL,
+    file_mime_type VARCHAR(255) NOT NULL,
     file_size BIGINT NOT NULL,
     file_url TEXT NOT NULL,
-    file_created_at TIMESTAMPTZ NOT NULL,
+    file_created_at BIGINT NOT NULL,
     reply_to_id BIGINT,
 
     PRIMARY KEY (chat_id, update_id),
@@ -90,7 +90,6 @@ CREATE TYPE messaging.delete_mode AS ENUM (
 CREATE TABLE messaging.update_deleted_update (
     chat_id UUID NOT NULL,
     update_id BIGINT NOT NULL,
-    reaction VARCHAR(255) NOT NULL,
     deleted_update_id BIGINT NOT NULL,
     mode messaging.delete_mode NOT NULL,
 

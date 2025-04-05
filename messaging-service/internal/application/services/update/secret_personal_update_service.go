@@ -54,7 +54,7 @@ func (s *SecretPersonalUpdateService) SendSecretUpdate(
 	}
 
 	update, err := domain.NewSecretUpdate(chat, domain.UserID(req.SenderID), domain.SecretData{
-		KeyID:   domain.SecretKeyID(req.KeyID),
+		KeyHash: domain.SecretKeyHash(req.KeyHash),
 		Payload: req.Payload,
 		IV:      req.InitializationVector,
 	})
@@ -75,7 +75,7 @@ func (s *SecretPersonalUpdateService) SendSecretUpdate(
 			SenderID:             uuid.UUID(update.SenderID),
 			Payload:              update.Data.Payload,
 			InitializationVector: update.Data.Payload,
-			KeyID:                uuid.UUID(update.Data.KeyID),
+			KeyHash:              string(update.Data.KeyHash),
 			CreatedAt:            int64(update.CreatedAt),
 		},
 	)

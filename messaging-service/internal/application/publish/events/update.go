@@ -66,9 +66,9 @@ type SecretUpdateSent struct {
 	UpdateID int64     `json:"update_id"`
 	SenderID uuid.UUID `json:"sender_id"`
 
-	Payload              []byte    `json:"payload"`
-	InitializationVector []byte    `json:"initialization_vector"`
-	KeyID                uuid.UUID `json:"key_id"`
+	Payload              []byte `json:"payload"`
+	InitializationVector []byte `json:"initialization_vector"`
+	KeyHash              string `json:"key_hash"`
 
 	CreatedAt int64 `json:"created_at"`
 }

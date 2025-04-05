@@ -37,13 +37,18 @@ func NewFileMessage(chat Chatter, sender UserID, file *FileMeta, replyTo *Messag
 		}
 	}
 
+	var replyToID *UpdateID
+	if replyTo != nil {
+		replyToID = &replyTo.UpdateID
+	}
+
 	return &FileMessage{
 		Message: Message{
 			Update: Update{
 				ChatID:   chat.ChatID(),
 				SenderID: sender,
 			},
-			ReplyTo: replyTo,
+			ReplyTo: replyToID,
 		},
 		File: *file,
 	}, nil
