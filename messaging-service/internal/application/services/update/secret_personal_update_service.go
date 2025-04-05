@@ -130,10 +130,6 @@ func (s *SecretPersonalUpdateService) DeleteSecretUpdate(
 		}
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
 	deleted := update.Deleted[len(update.Deleted)-1]
 	s.pub.PublishForUsers(
 		services.GetReceivingUpdateMembers(chat.Members[:], domain.UserID(req.SenderID), &update.Update),

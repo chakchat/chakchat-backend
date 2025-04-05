@@ -192,13 +192,6 @@ func (s *GroupUpdateService) DeleteMessage(
 	if err != nil {
 		return nil, err
 	}
-
-	if msg.DeletedForAll() {
-		err := s.updateRepo.DeleteUpdate(ctx, tx, msg.ChatID, msg.UpdateID)
-		if err != nil {
-			return nil, err
-		}
-	}
 	msg.Deleted[len(msg.Deleted)-1], err = s.updateRepo.CreateUpdateDeleted(
 		ctx, tx, msg.Deleted[len(msg.Deleted)-1],
 	)
@@ -206,8 +199,11 @@ func (s *GroupUpdateService) DeleteMessage(
 		return nil, err
 	}
 
-	if err != nil {
-		return nil, err
+	if msg.DeletedForAll() {
+		err := s.updateRepo.DeleteUpdate(ctx, tx, msg.ChatID, msg.UpdateID)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	deleted := msg.Deleted[len(msg.Deleted)-1]
@@ -318,10 +314,6 @@ func (s *GroupUpdateService) DeleteReaction(
 
 	// For now reaction is always deleted for all users. And no `if reaction.DeletedForAll() {...}` check is performed.
 	err = s.updateRepo.DeleteUpdate(ctx, tx, reaction.ChatID, reaction.UpdateID)
-	if err != nil {
-		return nil, err
-	}
-
 	if err != nil {
 		return nil, err
 	}
