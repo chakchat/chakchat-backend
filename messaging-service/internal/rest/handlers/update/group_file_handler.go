@@ -12,21 +12,21 @@ import (
 	"github.com/google/uuid"
 )
 
-type FileService interface {
+type GroupFileService interface {
 	SendFileMessage(ctx context.Context, req request.SendFileMessage) (*dto.FileMessageDTO, error)
 }
 
-type FileHandler struct {
-	service FileService
+type GroupFileHandler struct {
+	service GroupFileService
 }
 
-func NewFileHandler(service FileService) *FileHandler {
-	return &FileHandler{
+func NewGroupFileHandler(service GroupFileService) *GroupFileHandler {
+	return &GroupFileHandler{
 		service: service,
 	}
 }
 
-func (h *FileHandler) SendFileMessage(c *gin.Context) {
+func (h *GroupFileHandler) SendFileMessage(c *gin.Context) {
 	chatID, err := uuid.Parse(c.Param(paramChatID))
 	if err != nil {
 		restapi.SendInvalidChatID(c)

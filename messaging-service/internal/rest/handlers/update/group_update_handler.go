@@ -2,6 +2,7 @@ package update
 
 import (
 	"context"
+	"net/http"
 	"strconv"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
@@ -13,7 +14,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type UpdateService interface {
+type GroupUpdateService interface {
 	SendTextMessage(ctx context.Context, req request.SendTextMessage) (*dto.TextMessageDTO, error)
 	EditTextMessage(ctx context.Context, req request.EditTextMessage) (*dto.TextMessageDTO, error)
 	DeleteMessage(ctx context.Context, req request.DeleteMessage) (*dto.UpdateDeletedDTO, error)
@@ -23,23 +24,17 @@ type UpdateService interface {
 	ForwardFileMessage(ctx context.Context, req request.ForwardMessage) (*dto.FileMessageDTO, error)
 }
 
-const (
-	paramChatID     = "chatId"
-	paramUpdateID   = "updateId"
-	paramDeleteMode = "deleteMode"
-)
-
-type UpdateHandler struct {
-	service UpdateService
+type GroupUpdateHandler struct {
+	service GroupUpdateService
 }
 
-func NewUpdateHandler(service UpdateService) *UpdateHandler {
-	return &UpdateHandler{
+func NewGroupUpdateHandler(service GroupUpdateService) *GroupUpdateHandler {
+	return &GroupUpdateHandler{
 		service: service,
 	}
 }
 
-func (h *UpdateHandler) SendTextMessage(c *gin.Context) {
+func (h *GroupUpdateHandler) SendTextMessage(c *gin.Context) {
 	chatID, err := uuid.Parse(c.Param(paramChatID))
 	if err != nil {
 		restapi.SendInvalidChatID(c)
@@ -69,7 +64,7 @@ func (h *UpdateHandler) SendTextMessage(c *gin.Context) {
 	restapi.SendSuccess(c, response.TextMessage(msg))
 }
 
-func (h *UpdateHandler) EditTextMessage(c *gin.Context) {
+func (h *GroupUpdateHandler) EditTextMessage(c *gin.Context) {
 	chatID, err := uuid.Parse(c.Param(paramChatID))
 	if err != nil {
 		restapi.SendInvalidChatID(c)
@@ -103,7 +98,7 @@ func (h *UpdateHandler) EditTextMessage(c *gin.Context) {
 	restapi.SendSuccess(c, response.TextMessage(msg))
 }
 
-func (h *UpdateHandler) DeleteMessage(c *gin.Context) {
+func (h *GroupUpdateHandler) DeleteMessage(c *gin.Context) {
 	chatID, err := uuid.Parse(c.Param(paramChatID))
 	if err != nil {
 		restapi.SendInvalidChatID(c)
@@ -130,7 +125,7 @@ func (h *UpdateHandler) DeleteMessage(c *gin.Context) {
 	restapi.SendSuccess(c, response.UpdateDeleted(deleted))
 }
 
-func (h *UpdateHandler) SendReaction(c *gin.Context) {
+func (h *GroupUpdateHandler) SendReaction(c *gin.Context) {
 	chatID, err := uuid.Parse(c.Param(paramChatID))
 	if err != nil {
 		restapi.SendInvalidChatID(c)
@@ -161,7 +156,7 @@ func (h *UpdateHandler) SendReaction(c *gin.Context) {
 	restapi.SendSuccess(c, response.Reaction(reaction))
 }
 
-func (h *UpdateHandler) DeleteReaction(c *gin.Context) {
+func (h *GroupUpdateHandler) DeleteReaction(c *gin.Context) {
 	chatID, err := uuid.Parse(c.Param(paramChatID))
 	if err != nil {
 		restapi.SendInvalidChatID(c)
@@ -187,4 +182,62 @@ func (h *UpdateHandler) DeleteReaction(c *gin.Context) {
 	restapi.SendSuccess(c, response.UpdateDeleted(deleted))
 }
 
-// TODO: I don't know how to implement message forwarding
+func (h *GroupUpdateHandler) ForwardTextMessage(c *gin.Context) {
+	chatID, err := uuid.Parse(c.Param(paramChatID))
+	if err != nil {
+		restapi.SendInvalidChatID(c)
+		return
+	}
+	userID := getUserID(c.Request.Context())
+	req := struct {
+		Message    int64     `json:"message"`
+		FromChatID uuid.UUID `json:"from_chat_id"`
+	}{}
+	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
+		restapi.SendUnprocessableJSON(c)
+		return
+	}
+
+	msg, err := h.service.ForwardTextMessage(c.Request.Context(), request.ForwardMessage{
+		ToChatID:   chatID,
+		SenderID:   userID,
+		MessageID:  req.Message,
+		FromChatID: req.FromChatID,
+	})
+	if err != nil {
+		errmap.Respond(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, response.TextMessage(msg))
+}
+
+func (h *GroupUpdateHandler) ForwardFileMessage(c *gin.Context) {
+	chatID, err := uuid.Parse(c.Param(paramChatID))
+	if err != nil {
+		restapi.SendInvalidChatID(c)
+		return
+	}
+	userID := getUserID(c.Request.Context())
+	req := struct {
+		Message    int64     `json:"message"`
+		FromChatID uuid.UUID `json:"from_chat_id"`
+	}{}
+	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
+		restapi.SendUnprocessableJSON(c)
+		return
+	}
+
+	msg, err := h.service.ForwardFileMessage(c.Request.Context(), request.ForwardMessage{
+		ToChatID:   chatID,
+		SenderID:   userID,
+		MessageID:  req.Message,
+		FromChatID: req.FromChatID,
+	})
+	if err != nil {
+		errmap.Respond(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, response.FileMessage(msg))
+}
