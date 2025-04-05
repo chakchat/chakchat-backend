@@ -1232,7 +1232,10 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/EmptySuccessResponse"
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/GenericUpdate"
         '401':
           description: Unauthorized
           content:
@@ -1431,7 +1434,10 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/EmptySuccessResponse"
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/GenericUpdate"
         '400':
           description: Bad Request
           content:
@@ -1776,7 +1782,10 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/EmptySuccessResponse"
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/GenericUpdate"
         '401':
           description: Unauthorized
           content:
@@ -1975,7 +1984,10 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/EmptySuccessResponse"
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/GenericUpdate"
         '400':
           description: Bad Request
           content:
@@ -2187,7 +2199,10 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/EmptySuccessResponse"
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/GenericUpdate"
         '401':
           description: Unauthorized
           content:
@@ -2281,7 +2296,10 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/EmptySuccessResponse"
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/GenericUpdate"
         '401':
           description: Unauthorized
           content:
