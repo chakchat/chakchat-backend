@@ -82,7 +82,7 @@ func GinEngine(handlers *Handlers, db *DB, conf *Config) (*gin.Engine, error) {
 
 	idemp.POST("/v1.0/chat/personal/:chatId/update/message/text", handlers.PersonalUpdate.SendTextMessage)
 	r.DELETE("/v1.0/chat/personal/:chatId/update/message/:updateId/:deleteMode", handlers.PersonalUpdate.DeleteMessage)
-	r.PUT("/v1.0/chat/personal/:chatId/update/message/text/:updateId", handlers.PersonalUpdate.DeleteMessage)
+	r.PUT("/v1.0/chat/personal/:chatId/update/message/text/:updateId", handlers.PersonalUpdate.EditTextMessage)
 	idemp.POST("/v1.0/chat/personal/:chatId/update/message/file", handlers.PersonalFile.SendFileMessage)
 	idemp.POST("/v1.0/chat/personal/:chatId/update/reaction", handlers.PersonalUpdate.SendReaction)
 	r.DELETE("/v1.0/chat/personal/:chatId/update/reaction/:updateId", handlers.PersonalUpdate.DeleteReaction)
@@ -91,7 +91,7 @@ func GinEngine(handlers *Handlers, db *DB, conf *Config) (*gin.Engine, error) {
 
 	idemp.POST("/v1.0/chat/group/:chatId/update/message/text", handlers.GroupUpdate.SendTextMessage)
 	r.DELETE("/v1.0/chat/group/:chatId/update/message/:updateId/:deleteMode", handlers.GroupUpdate.DeleteMessage)
-	r.PUT("/v1.0/chat/group/:chatId/update/message/text/:updateId", handlers.GroupUpdate.DeleteMessage)
+	r.PUT("/v1.0/chat/group/:chatId/update/message/text/:updateId", handlers.GroupUpdate.EditTextMessage)
 	idemp.POST("/v1.0/chat/group/:chatId/update/message/file", handlers.GroupFile.SendFileMessage)
 	idemp.POST("/v1.0/chat/group/:chatId/update/reaction", handlers.GroupUpdate.SendReaction)
 	r.DELETE("/v1.0/chat/group/:chatId/update/reaction/:updateId", handlers.GroupUpdate.DeleteReaction)
