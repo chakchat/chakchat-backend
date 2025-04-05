@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/chakchat/chakchat-backend/live-connection-service/restapi"
+	"github.com/chakchat/chakchat-backend/live-connection-service/internal/restapi"
 	"github.com/chakchat/chakchat-backend/shared/go/auth"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"

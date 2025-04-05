@@ -3,11 +3,12 @@ package services
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/segmentio/kafka-go"
 
-	"github.com/chakchat/chakchat-backend/live-connection-service/internal/domain/models"
-	"github.com/chakchat/chakchat-backend/live-connection-service/internal/infrastructure/messages"
-	"github.com/chakchat/chakchat-backend/live-connection-service/internal/infrastructure/ws"
+	"github.com/chakchat/chakchat-backend/live-connection-service/internal/messages"
+	"github.com/chakchat/chakchat-backend/live-connection-service/internal/models"
+	"github.com/chakchat/chakchat-backend/live-connection-service/internal/ws"
 )
 
 type KafkaProcessor struct {
