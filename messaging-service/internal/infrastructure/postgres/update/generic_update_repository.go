@@ -212,7 +212,7 @@ func (r *GenericUpdateRepository) fillTextMessages(
 		AND tm.update_id IN %s
 	`, sqlArgsArr(2, len(ids)))
 
-	rows, err := db.Query(ctx, q, append([]any{chatID}, idsToAny(ids)...))
+	rows, err := db.Query(ctx, q, append([]any{chatID}, idsToAny(ids)...)...)
 	if err != nil {
 		return err
 	}
@@ -360,7 +360,7 @@ func (r *GenericUpdateRepository) fillTextMessageEdited(
 		AND tme.update_id IN %s
 	`, sqlArgsArr(2, len(ids)))
 
-	rows, err := db.Query(ctx, q, append([]any{chatID}, idsToAny(ids)...))
+	rows, err := db.Query(ctx, q, append([]any{chatID}, idsToAny(ids)...)...)
 	if err != nil {
 		return err
 	}
@@ -427,7 +427,7 @@ func (r *GenericUpdateRepository) fillFileMessages(
 		AND fm.update_id IN %s
 	`, sqlArgsArr(2, len(ids)))
 
-	rows, err := db.Query(ctx, q, append([]any{chatID}, idsToAny(ids)...))
+	rows, err := db.Query(ctx, q, append([]any{chatID}, idsToAny(ids)...)...)
 	if err != nil {
 		return err
 	}
@@ -510,7 +510,7 @@ func (r *GenericUpdateRepository) fillReactions(
 		AND r.update_id IN %s
 	`, sqlArgsArr(2, len(ids)))
 
-	rows, err := db.Query(ctx, q, append([]any{chatID}, idsToAny(ids)...))
+	rows, err := db.Query(ctx, q, append([]any{chatID}, idsToAny(ids)...)...)
 	if err != nil {
 		return err
 	}
@@ -571,7 +571,7 @@ func (r *GenericUpdateRepository) fillUpdateDeleted(
 		AND ud.update_id IN %s
 	`, sqlArgsArr(2, len(ids)))
 
-	rows, err := db.Query(ctx, q, append([]any{chatID}, idsToAny(ids)...))
+	rows, err := db.Query(ctx, q, append([]any{chatID}, idsToAny(ids)...)...)
 	if err != nil {
 		return err
 	}
@@ -634,7 +634,7 @@ func (r *GenericUpdateRepository) fillSecretUpdates(
 		AND su.update_id IN %s
 	`, sqlArgsArr(2, len(ids)))
 
-	rows, err := db.Query(ctx, q, append([]any{chatID}, idsToAny(ids)...))
+	rows, err := db.Query(ctx, q, append([]any{chatID}, idsToAny(ids)...)...)
 	if err != nil {
 		return err
 	}
