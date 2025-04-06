@@ -30,7 +30,7 @@ func (r *SecretPersonalChatRepository) FindById(
 		p.expiration_seconds,
 		(SELECT ARRAY_AGG(m.user_id) FROM messaging.membership m WHERE m.chat_id = c.chat_id)
 	FROM messaging.chat c
-		JOIN messaging.personal_chat p ON p.chat_id = c.chat_id
+		JOIN messaging.secret_personal_chat p ON p.chat_id = c.chat_id
 	WHERE c.chat_id = $1`
 
 	row := db.QueryRow(ctx, q, id)
@@ -157,7 +157,7 @@ func (r *SecretPersonalChatRepository) Create(
 			cp := int(chat.Exp.Seconds())
 			exp = &cp
 		}
-		q := `INSERT INTO messaging.personal_chat (chat_id, expiration_seconds) VALUES ($1, $2)`
+		q := `INSERT INTO messaging.secret_personal_chat (chat_id, expiration_seconds) VALUES ($1, $2)`
 		_, err := db.Exec(ctx, q, chat.ID, exp)
 		if err != nil {
 			return nil, err
