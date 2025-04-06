@@ -85,7 +85,13 @@ func (r *tracingDB) QueryRow(ctx context.Context, query string, args ...any) pgx
 	defer span.End()
 
 	res := r.db.QueryRow(ctx, query, args...)
-	// Here is a pitfall because the error is not recorded.
+
+	type errorer interface{ Err() error }
+	if errorer, ok := res.(errorer); ok {
+		if err := errorer.Err(); err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			span.RecordError(err)
+		}
+	}
 
 	return res
 }
@@ -225,7 +231,12 @@ func (t *tracingTx) QueryRow(ctx context.Context, query string, args ...any) pgx
 	defer span.End()
 
 	res := t.tx.QueryRow(ctx, query, args...)
-	// Here is a pitfall because the error is not recorded.
+	type errorer interface{ Err() error }
+	if errorer, ok := res.(errorer); ok {
+		if err := errorer.Err(); err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			span.RecordError(err)
+		}
+	}
 
 	return res
 }
