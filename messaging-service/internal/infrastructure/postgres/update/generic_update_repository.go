@@ -290,7 +290,7 @@ func (r *GenericUpdateRepository) getTextEdits(
 	ORDER BY u.created_at DESC
 	`, sqlArgsArr(2, len(messageIDs)))
 
-	rows, err := db.Query(ctx, q, append([]any{chatID}, idsToAny(messageIDs)...))
+	rows, err := db.Query(ctx, q, append([]any{chatID}, idsToAny(messageIDs)...)...)
 	if err != nil {
 		return nil, err
 	}
