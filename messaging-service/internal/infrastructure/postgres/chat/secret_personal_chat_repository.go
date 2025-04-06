@@ -125,7 +125,13 @@ func (r *SecretPersonalChatRepository) Update(
 	SET expiration_seconds = $2
 	WHERE chat_id = $1`
 
-	_, err := db.Exec(ctx, q, chat.ID, int(chat.Expiration().Seconds()))
+	var exp *int
+	if chat.Exp != nil {
+		cp := int(chat.Exp.Seconds())
+		exp = &cp
+	}
+
+	_, err := db.Exec(ctx, q, chat.ID, exp)
 	return chat, err
 }
 
@@ -146,8 +152,13 @@ func (r *SecretPersonalChatRepository) Create(
 		chat.CreatedAt = domain.Timestamp(now.Unix())
 	}
 	{
+		var exp *int
+		if chat.Exp != nil {
+			cp := int(chat.Exp.Seconds())
+			exp = &cp
+		}
 		q := `INSERT INTO messaging.personal_chat (chat_id, expiration_seconds) VALUES ($1, $2)`
-		_, err := db.Exec(ctx, q, chat.ID, int(chat.Exp.Seconds()))
+		_, err := db.Exec(ctx, q, chat.ID, exp)
 		if err != nil {
 			return nil, err
 		}

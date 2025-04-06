@@ -96,7 +96,13 @@ func (r *SecretGroupChatRepository) Update(
 		expiration_seconds = $6
 	WHERE chat_id = $1`
 
-	_, err = db.Exec(ctx, q, g.ID, g.Admin, g.Name, g.GroupPhoto, g.Description, int(g.Exp.Seconds()))
+	var exp *int
+	if g.Exp != nil {
+		cp := int(g.Exp.Seconds())
+		exp = &cp
+	}
+
+	_, err = db.Exec(ctx, q, g.ID, g.Admin, g.Name, g.GroupPhoto, g.Description, exp)
 	if err != nil {
 		return nil, fmt.Errorf("updating group chat failed: %s", err)
 	}
@@ -121,11 +127,16 @@ func (r *SecretGroupChatRepository) Create(
 		g.CreatedAt = domain.Timestamp(now.Unix())
 	}
 	{
+		var exp *int
+		if g.Exp != nil {
+			cp := int(g.Exp.Seconds())
+			exp = &cp
+		}
 		q := `
 		INSERT INTO messaging.group_chat
 		(chat_id, admin_id, group_name, group_photo, group_description, expiration_seconds)
 		VALUES ($1, $2, $3, $4, $5)`
-		_, err := db.Exec(ctx, q, g.ID, g.Admin, g.GroupPhoto, g.Description, int(g.Exp.Seconds()))
+		_, err := db.Exec(ctx, q, g.ID, g.Admin, g.GroupPhoto, g.Description, exp)
 		if err != nil {
 			return nil, err
 		}
