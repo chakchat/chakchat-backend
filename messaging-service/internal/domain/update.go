@@ -38,7 +38,7 @@ func NewDeleteMode(mode string) (DeleteMode, error) {
 }
 
 const (
-	DeleteModeForSender = "for_delition_sender"
+	DeleteModeForSender = "for_deletion_sender"
 	DeleteModeForAll    = "for_all"
 )
 
