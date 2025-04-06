@@ -80,6 +80,8 @@ func GinEngine(handlers *Handlers, db *DB, conf *Config) (*gin.Engine, error) {
 	r.PUT("/v1.0/chat/group/secret/:chatId/photo", handlers.SecretGroupPhoto.UpdatePhoto)
 	r.DELETE("/v1.0/chat/group/secret/:chatId/photo", handlers.SecretGroupPhoto.DeletePhoto)
 
+	r.GET("/v1.0/chat/:chatId/update", handlers.GenericUpdate.GetUpdatesRange)
+
 	idemp.POST("/v1.0/chat/personal/:chatId/update/message/text", handlers.PersonalUpdate.SendTextMessage)
 	r.DELETE("/v1.0/chat/personal/:chatId/update/message/:updateId/:deleteMode", handlers.PersonalUpdate.DeleteMessage)
 	r.PUT("/v1.0/chat/personal/:chatId/update/message/text/:updateId", handlers.PersonalUpdate.EditTextMessage)

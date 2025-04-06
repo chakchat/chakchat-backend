@@ -20,6 +20,7 @@ type Services struct {
 	GroupFile            *update.GroupFileService
 	SecretPersonalUpdate *update.SecretPersonalUpdateService
 	SecretGroupUpdate    *update.SecretGroupUpdateService
+	GenericUpdate        *update.GenericUpdateService
 }
 
 func NewServices(db *DB, external *External) *Services {
@@ -46,22 +47,25 @@ func NewServices(db *DB, external *External) *Services {
 			db.SQLer, db.GenericChat,
 		),
 		PersonalUpdate: update.NewPersonalUpdateService(
-			db.SQLer, db.PersonalChat, db.UpdateRepository, db.Chatter, external.Publisher,
+			db.SQLer, db.PersonalChat, db.Update, db.Chatter, external.Publisher,
 		),
 		PersonalFile: update.NewPersonalFileService(
-			db.SQLer, db.PersonalChat, db.UpdateRepository, external.FileStorage, external.Publisher,
+			db.SQLer, db.PersonalChat, db.Update, external.FileStorage, external.Publisher,
 		),
 		GroupUpdate: update.NewGroupUpdateService(
-			db.SQLer, db.GroupChat, db.UpdateRepository, db.Chatter, external.Publisher,
+			db.SQLer, db.GroupChat, db.Update, db.Chatter, external.Publisher,
 		),
 		GroupFile: update.NewGroupFileService(
-			db.SQLer, db.GroupChat, db.UpdateRepository, external.FileStorage, external.Publisher,
+			db.SQLer, db.GroupChat, db.Update, external.FileStorage, external.Publisher,
 		),
 		SecretPersonalUpdate: update.NewSecretPersonalUpdateService(
-			db.SQLer, db.SecretPersonalChat, db.SecretUpdateRepository, external.Publisher,
+			db.SQLer, db.SecretPersonalChat, db.SecretUpdate, external.Publisher,
 		),
 		SecretGroupUpdate: update.NewSecretGroupUpdateService(
-			db.SQLer, db.SecretGroupChat, db.SecretUpdateRepository, external.Publisher,
+			db.SQLer, db.SecretGroupChat, db.SecretUpdate, external.Publisher,
+		),
+		GenericUpdate: update.NewGenericUpdateService(
+			db.SQLer, db.Chatter, db.GenericUpdate,
 		),
 	}
 }

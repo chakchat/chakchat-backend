@@ -16,8 +16,9 @@ type DB struct {
 	Chatter            repository.ChatterRepository
 	GenericChat        repository.GenericChatRepository
 
-	UpdateRepository       repository.UpdateRepository
-	SecretUpdateRepository repository.SecretUpdateRepository
+	Update        repository.UpdateRepository
+	SecretUpdate  repository.SecretUpdateRepository
+	GenericUpdate repository.GenericUpdateRepository
 
 	SQLer storage.SQLer
 
@@ -26,15 +27,16 @@ type DB struct {
 
 func NewDB(db storage.SQLer, redis *redis.Client) *DB {
 	return &DB{
-		PersonalChat:           chat.NewPersonalChatRepository(),
-		GroupChat:              chat.NewGroupChatRepository(),
-		SecretPersonalChat:     chat.NewSecretPersonalChatRepository(),
-		SecretGroupChat:        chat.NewSecretGroupChatRepository(),
-		Chatter:                chat.NewChatterRepository(),
-		GenericChat:            chat.NewGenericChatRepository(),
-		UpdateRepository:       update.NewUpdateRepository(),
-		SecretUpdateRepository: update.NewSecretUpdateRepository(),
-		SQLer:                  db,
-		Redis:                  redis,
+		PersonalChat:       chat.NewPersonalChatRepository(),
+		GroupChat:          chat.NewGroupChatRepository(),
+		SecretPersonalChat: chat.NewSecretPersonalChatRepository(),
+		SecretGroupChat:    chat.NewSecretGroupChatRepository(),
+		Chatter:            chat.NewChatterRepository(),
+		GenericChat:        chat.NewGenericChatRepository(),
+		Update:             update.NewUpdateRepository(),
+		SecretUpdate:       update.NewSecretUpdateRepository(),
+		GenericUpdate:      update.NewGenericUpdateRepository(),
+		SQLer:              db,
+		Redis:              redis,
 	}
 }

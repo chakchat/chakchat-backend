@@ -1020,9 +1020,9 @@ paths:
                 "$ref": "#/components/schemas/ErrorResponse"
 
 # Updates
-  /chat/personal/{chatId}/update:
+  /chat/{chatId}/update:
     get:
-      tags: ["personal update"]
+      tags: ["update"]
       summary: Get updates in range
       description: Get updates in range
       security:
@@ -1056,9 +1056,12 @@ paths:
                 type: object
                 properties:
                   data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/GenericUpdate'
+                    type: object
+                    properties:
+                      updates:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/GenericUpdate'
         '400':
           description: Bad Request
           content:
@@ -1569,64 +1572,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponseWithDetails'
 
-# Updates
-  /chat/group/{chatId}/update:
-    get:
-      tags: ["group update"]
-      summary: Get updates in range
-      description: Get updates in range
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: chatId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: from
-          in: query
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: to
-          in: query
-          description: Inclusive bound.
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/GenericUpdate'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponseWithDetails'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /chat/group/{chatId}/update/message/search:
     get:
       summary: Search for messages

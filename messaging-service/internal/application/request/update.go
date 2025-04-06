@@ -70,3 +70,17 @@ type DeleteSecretUpdate struct {
 
 	SecretUpdateID int64
 }
+
+type GetUpdatesRange struct {
+	ChatID   uuid.UUID
+	SenderID uuid.UUID
+
+	From, To int64
+}
+
+type GetUpdate struct {
+	ChatID   uuid.UUID
+	SenderID uuid.UUID
+
+	UpdateID int64
+}
