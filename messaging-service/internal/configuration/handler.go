@@ -20,6 +20,7 @@ type Handlers struct {
 	GroupFile            *update.GroupFileHandler
 	SecretPersonalUpdate *update.SecretPersonalUpdateHandler
 	SecretGroupUpdate    *update.SecretGroupUpdateHandler
+	GenericUpdate        *update.GenericUpdateHandler
 }
 
 func NewHandlers(services *Services) *Handlers {
@@ -37,5 +38,6 @@ func NewHandlers(services *Services) *Handlers {
 		GroupFile:            update.NewGroupFileHandler(services.GroupFile),
 		SecretPersonalUpdate: update.NewSecretPersonalUpdateHandler(services.SecretPersonalUpdate),
 		SecretGroupUpdate:    update.NewSecretGroupUpdateHandler(services.SecretGroupUpdate),
+		GenericUpdate:        update.NewGenericUpdateHandler(services.GenericUpdate),
 	}
 }
