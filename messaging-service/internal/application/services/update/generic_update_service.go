@@ -28,8 +28,8 @@ func NewGenericUpdateService(
 	}
 }
 
-func (s *GenericUpdateService) GetUpdatesInRange(
-	ctx context.Context, req request.GetUpdatesInRange,
+func (s *GenericUpdateService) GetUpdatesRange(
+	ctx context.Context, req request.GetUpdatesRange,
 ) ([]services.GenericUpdate, error) {
 	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
@@ -46,7 +46,7 @@ func (s *GenericUpdateService) GetUpdatesInRange(
 		return nil, domain.ErrUserNotMember
 	}
 
-	updates, err := s.updateRepo.GetInRange(
+	updates, err := s.updateRepo.GetRange(
 		ctx, tx,
 		domain.UserID(req.SenderID),
 		domain.ChatID(req.ChatID),

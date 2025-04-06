@@ -71,7 +71,7 @@ type DeleteSecretUpdate struct {
 	SecretUpdateID int64
 }
 
-type GetUpdatesInRange struct {
+type GetUpdatesRange struct {
 	ChatID   uuid.UUID
 	SenderID uuid.UUID
 

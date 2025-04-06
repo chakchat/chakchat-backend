@@ -9,7 +9,7 @@ import (
 )
 
 type GenericUpdateRepository interface {
-	GetInRange(
+	GetRange(
 		ctx context.Context,
 		db storage.ExecQuerier,
 		visibleTo domain.UserID,
