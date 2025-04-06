@@ -1,1 +1,0 @@
-ALTER TABLE messaging.update_deleted_update 
