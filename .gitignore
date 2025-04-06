@@ -84,3 +84,5 @@ fastlane/test_output
 
 # Ignore Gradle build output directory
 build
+
+.tmp/
