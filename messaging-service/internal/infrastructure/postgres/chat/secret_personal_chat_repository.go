@@ -142,7 +142,7 @@ func (r *SecretPersonalChatRepository) Create(
 		q := `
 		INSERT INTO messaging.chat
 		(chat_id, chat_type, created_at)
-		VALUES ($1, 'personal', $2)`
+		VALUES ($1, 'secret_personal', $2)`
 
 		now := time.Now()
 		_, err := db.Exec(ctx, q, chat.ID, now)
