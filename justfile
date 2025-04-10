@@ -1,5 +1,5 @@
 build:
-    @scripts/build.sh
+    @./build.sh
 
 run: build
     echo "Installing local Helm chart..."
