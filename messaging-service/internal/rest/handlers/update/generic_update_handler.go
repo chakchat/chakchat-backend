@@ -2,7 +2,6 @@ package update
 
 import (
 	"context"
-	"net/http"
 	"strconv"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
@@ -71,7 +70,5 @@ func (h *GenericUpdateHandler) GetUpdatesRange(c *gin.Context) {
 	for i, up := range updates {
 		resp[i] = response.GenericUpdate(&up)
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"updates": resp,
-	})
+	restapi.SendSuccess(c, gin.H{"updates": resp})
 }

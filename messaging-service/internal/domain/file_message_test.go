@@ -66,7 +66,7 @@ type FakeChat struct {
 }
 
 func (c *FakeChat) ChatID() ChatID {
-	return c.Chat.ID
+	return c.ID
 }
 
 func (c *FakeChat) ValidateCanSend(user UserID) error {

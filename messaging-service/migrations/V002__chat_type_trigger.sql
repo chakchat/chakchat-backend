@@ -14,7 +14,7 @@ BEGIN
         RAISE EXCEPTION 'Unknown chat relation %', TG_TABLE_NAME;
     END IF;
 
-    IF (SELECT chat_type != must_chat_type FROM messaging.chat WHERE chat_id = NEW.chat_id) THEN
+    IF (SELECT chat_type IS DISTINCT FROM must_chat_type FROM messaging.chat WHERE chat_id = NEW.chat_id) THEN
         RAISE EXCEPTION 'The created chat must be of type %', must_chat_type;
     END IF;
 
