@@ -1,0 +1,5 @@
+CREATE TABLE user_online_status (
+    user_id VARCHAR(255) PRIMARY KEY,
+    last_ping TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
