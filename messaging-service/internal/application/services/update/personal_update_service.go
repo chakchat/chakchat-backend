@@ -212,12 +212,8 @@ func (s *PersonalUpdateService) DeleteMessage(
 		return nil, err
 	}
 
-	if msg.DeletedForAll() {
-		err := s.updateRepo.DeleteUpdate(ctx, tx, msg.ChatID, msg.UpdateID)
-		if err != nil {
-			return nil, err
-		}
-	}
+	// I do not delete updates because it may cause incosistency.
+	// Add triggers and change on delete behavior on foreighn keys before deleting physically
 
 	deleted := msg.Deleted[len(msg.Deleted)-1]
 	if msg.DeletedForAll() {
@@ -333,11 +329,8 @@ func (s *PersonalUpdateService) DeleteReaction(
 		return nil, err
 	}
 
-	// For now reaction is always deleted for all users. And no `if reaction.DeletedForAll() {...}` check is performed.
-	err = s.updateRepo.DeleteUpdate(ctx, tx, reaction.ChatID, reaction.UpdateID)
-	if err != nil {
-		return nil, err
-	}
+	// I do not delete updates because it may cause incosistency.
+	// Add triggers and change on delete behavior on foreighn keys before deleting physically
 
 	deleted := reaction.Deleted[len(reaction.Deleted)-1]
 	s.pub.PublishForUsers(
