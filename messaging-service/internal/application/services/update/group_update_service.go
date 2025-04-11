@@ -199,12 +199,8 @@ func (s *GroupUpdateService) DeleteMessage(
 		return nil, err
 	}
 
-	if msg.DeletedForAll() {
-		err := s.updateRepo.DeleteUpdate(ctx, tx, msg.ChatID, msg.UpdateID)
-		if err != nil {
-			return nil, err
-		}
-	}
+	// I do not delete updates because it may cause incosistency.
+	// Add triggers and change on delete behavior on foreighn keys before deleting physically
 
 	deleted := msg.Deleted[len(msg.Deleted)-1]
 	if msg.DeletedForAll() {

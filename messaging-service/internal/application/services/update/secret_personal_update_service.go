@@ -123,12 +123,8 @@ func (s *SecretPersonalUpdateService) DeleteSecretUpdate(
 		return nil, err
 	}
 
-	if update.DeletedForAll() {
-		err = s.secretUpdateRepo.DeleteSecretUpdate(ctx, tx, update.ChatID, update.UpdateID)
-		if err != nil {
-			return nil, err
-		}
-	}
+	// I do not delete updates because it may cause incosistency.
+	// Add triggers and change on delete behavior on foreighn keys before deleting physically
 
 	deleted := update.Deleted[len(update.Deleted)-1]
 	s.pub.PublishForUsers(

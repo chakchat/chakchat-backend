@@ -258,6 +258,8 @@ func (r *GenericUpdateRepository) fillTextMessages(
 				}
 
 				updates[i].Info.TextMessage = &info
+			} else {
+				panic("database is inconsistent!!!")
 			}
 		}
 	}
@@ -394,6 +396,8 @@ func (r *GenericUpdateRepository) fillTextMessageEdited(
 		if update.UpdateType == services.UpdateTypeTextMessageEdited {
 			if info, ok := edits[update.UpdateID]; ok {
 				updates[i].Info.TextMessageEdited = &info
+			} else {
+				panic("database is inconsistent!!!")
 			}
 		}
 	}
@@ -482,6 +486,8 @@ func (r *GenericUpdateRepository) fillFileMessages(
 		if update.UpdateType == services.UpdateTypeFileMessage {
 			if info, ok := fileMsgs[update.UpdateID]; ok {
 				updates[i].Info.FileMessage = &info
+			} else {
+				panic("database is inconsistent!!!")
 			}
 		}
 	}
@@ -543,6 +549,8 @@ func (r *GenericUpdateRepository) fillReactions(
 		if update.UpdateType == services.UpdateTypeReaction {
 			if info, ok := reactions[update.UpdateID]; ok {
 				updates[i].Info.Reaction = &info
+			} else {
+				panic("database is inconsistent!!!")
 			}
 		}
 	}
@@ -605,6 +613,8 @@ func (r *GenericUpdateRepository) fillUpdateDeleted(
 		if update.UpdateType == services.UpdateTypeDeleted {
 			if info, ok := deletedUpdates[update.UpdateID]; ok {
 				updates[i].Info.Deleted = &info
+			} else {
+				panic("database is inconsistent!!!")
 			}
 		}
 	}
@@ -670,6 +680,8 @@ func (r *GenericUpdateRepository) fillSecretUpdates(
 		if update.UpdateType == services.UpdateTypeSecret {
 			if info, ok := secretUpdates[update.UpdateID]; ok {
 				updates[i].Info.Secret = &info
+			} else {
+				panic("database is inconsistent!!!")
 			}
 		}
 	}
