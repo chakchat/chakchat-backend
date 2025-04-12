@@ -6,6 +6,7 @@ metadata:
   namespace: {{ $.Release.Namespace }}
   labels:
     app.kubernetes.io/name: {{ $key }}
+    name: {{$key }}
     app: {{ $key }}
   {{- with $value.annotations }}
   annotations:
@@ -28,6 +29,8 @@ spec:
       namespace: {{ $.Release.Namespace }}
       labels:
         app: {{ $key }}
+        app.kubernetes.io/name: {{ $key }}
+        name: {{$key }}
       {{- with $value.template }}
       {{- with .annotations }}
       annotations:
@@ -73,12 +76,15 @@ spec:
         volumeMounts:
         {{- range $volumePath, $volumeVal := . }}
         - mountPath: {{ $volumePath }}
-          readOnly: {{ $volumeVal.readOnly | default true }}
+          readOnly: {{ $volumeVal.readOnly }}
           {{- if $volumeVal.configMap }}
           name: {{ $volumeVal.configMap }}
-          {{- end }}
-          {{- if $volumeVal.secret }}
+          {{- else if $volumeVal.secret }}
           name: {{ $volumeVal.secret }}
+          {{- else if $volumeVal.persistentVolumeClaim }}
+          name: {{ $volumeVal.persistentVolumeClaim }}
+          {{- else }}
+          name: single-empty-dir-name
           {{- end }}
         {{- end }}
         {{- end }}
@@ -93,11 +99,17 @@ spec:
       - name: {{ $volumeVal.configMap }}
         configMap:
           name: {{ $volumeVal.configMap }}
-      {{- end }}
-      {{- if $volumeVal.secret }}
+      {{- else if $volumeVal.secret }}
       - name: {{ $volumeVal.secret }}
         secret:
           secretName: {{ $volumeVal.secret }}
+      {{- else if $volumeVal.persistentVolumeClaim }}
+      - name: {{ $volumeVal.persistentVolumeClaim }}
+        persistentVolumeClaim:
+          claimName: {{ $volumeVal.persistentVolumeClaim }}
+      {{- else }}
+      - name: single-empty-dir-name
+        emptyDir:
       {{- end }}
       {{- end }}
       {{- end }}

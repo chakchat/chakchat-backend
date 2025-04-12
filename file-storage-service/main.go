@@ -36,7 +36,7 @@ import (
 	"gorm.io/plugin/opentelemetry/tracing"
 )
 
-var conf *Config = loadConfig("/app/config.yml")
+var conf *Config = loadConfig("/etc/file-storage/config.yml")
 
 func main() {
 	jwtConf := loadJWTConfig()

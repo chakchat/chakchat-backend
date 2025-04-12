@@ -44,7 +44,7 @@ type Config struct {
 	Jwt JWTConfig `mapstructure:"jwt"`
 
 	DB struct {
-		DSN string `mapstructure:"dsn"`
+		ConnString string `mapstructure:"conn_string"`
 	} `mapstructure:"db"`
 
 	Server struct {
@@ -63,7 +63,7 @@ type Config struct {
 func loadConfig(file string) *Config {
 	viper.AutomaticEnv()
 
-	viper.MustBindEnv("db.dsn", "DB_DSN")
+	viper.MustBindEnv("db.conn_string", "PG_CONNECTION_STRING")
 	viper.BindEnv("server.port", "SERVER_PORT")
 
 	viper.SetConfigFile(file)
@@ -83,17 +83,21 @@ func loadConfig(file string) *Config {
 	return config
 }
 
-var conf *Config = loadConfig("/app/config.yml")
+var conf *Config = loadConfig("/etc/user/config.yml")
 
 func main() {
+	ctx := context.Background()
 	jwtConf := loadJWTConfig()
 
-	db, err := pgxpool.New(context.Background(), conf.DB.DSN)
+	db, err := pgxpool.New(ctx, conf.DB.ConnString)
 	if err != nil {
 		log.Fatalf("failed to connect DB: %v", err)
 	}
-
 	defer db.Close()
+
+	if err := db.Ping(ctx); err != nil {
+		log.Fatalf("failed to connect DB: %v", err)
+	}
 	log.Println("connected to DB")
 
 	fileClient, close := createFileClient()

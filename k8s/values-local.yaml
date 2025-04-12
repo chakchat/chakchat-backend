@@ -22,6 +22,13 @@ deployments:
       /app/keys:
         secret: public-rsa-key-sec
     envSecret: file-storage-sec-env
+  minio:
+    image: quay.io/minio/minio:latest
+    args: ["server", "/data", "--console-address", ":9001"]
+    envSecret: minio-sec-env
+    volumeMounts:
+      /data:
+        readOnly: false
   user:
     image: user:local
     volumeMounts:
@@ -32,6 +39,15 @@ deployments:
     envSecret: user-sec-env
   sms-service-stub:
     image: sms-service-stub:local
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    args: ["--config=/etc/otel-collector/config.yaml"]
+    volumeMounts:
+      /etc/otel-collector:
+        configMap: otel-collector-conf
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    envSecret: jaeger-sec-env
   nginx:
     image: nginx
     volumeMounts:
@@ -41,7 +57,7 @@ deployments:
 services:
   messaging:
     selector:
-      name: messaging
+      app: messaging
     ports:
       - name: http
         port: 8080
@@ -49,7 +65,7 @@ services:
         protocol: TCP
   identity:
     selector:
-      name: identity
+      app: identity
     ports:
       - name: http
         port: 5000
@@ -57,7 +73,7 @@ services:
         protocol: TCP
   file-storage:
     selector:
-      name: file-storage
+      app: file-storage
     ports:
       - name: http
         port: 5004
@@ -67,9 +83,20 @@ services:
         port: 9090
         targetPort: 9090
         protocol: TCP
+  minio:
+    selector:
+      app: minio
+    ports:
+      - name: api
+        port: 9000
+        targetPort: 9000
+      - name: console
+        port: 9001
+        targetPort: 9001
+    type: LoadBalancer
   user:
     selector:
-      name: user
+      app: user
     ports:
       - name: http
         port: 5004
@@ -77,15 +104,35 @@ services:
         protocol: TCP
   sms-service-stub:
     selector:
-      name: sms-service-stub
+      app: sms-service-stub
     ports:
       - name: http
         port: 5023
         targetPort: 5023
         protocol: TCP
+  otel-collector:
+    selector:
+      app: otel-collector
+    ports:
+      - name: grpc
+        port: 4317
+        targetPort: 4317
+        protocol: TCP
+  jaeger:
+    selector:
+      app: jaeger
+    ports:
+      - name: grpc
+        port: 4317
+        targetPort: 4317
+        protocol: TCP
+      - name: ui
+        port: 16686
+        targetPort: 16686
+        protocol: TCP
   nginx:
     selector:
-      name: nginx
+      app: nginx
     ports:
       - name: http
         port: 80
@@ -115,7 +162,7 @@ jobs:
         initContainers:
           - name: wait-pg
             image: postgres:latest
-            command:
+            command: &wait-pg-command
               - sh
               - -c
               - |
@@ -136,6 +183,42 @@ jobs:
               - secretRef:
                   name: messaging-wait-pg-sec-env
         restartPolicy: Never
+  user-pg-migrate:
+    template:
+      spec:
+        containers:
+          - name: migrate
+            image: user-pg-migrate:local
+            command: ["flyway", "migrate"]
+            envFrom:
+              - secretRef:
+                  name: user-migrate-sec-env
+        initContainers:
+          - name: wait-pg
+            image: postgres:latest
+            command: *wait-pg-command
+            envFrom:
+              - secretRef:
+                  name: user-wait-pg-sec-env
+        restartPolicy: Never
+  minio-init:
+    template:
+      spec:
+        containers:
+          - name: init
+            image: minio/mc
+            command:
+              - bash
+              - -c
+              - |
+                mc alias set myminio http://minio:9000 $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD
+                mc mb myminio/files
+                mc anonymous set download myminio/files
+                mc admin accesskey create myminio --access-key $ACCESS_KEY_ID --secret-key $SECRET_ACCESS_KEY
+            envFrom:
+              - secretRef:
+                  name: minio-init-sec-env
+        restartPolicy: Never
 
 pg:
   messaging-pg:
@@ -143,11 +226,16 @@ pg:
     database: messaging
     owner: messaging
     secret: messaging-pg-sec
+  user-pg:
+    instances: 1
+    database: userdb
+    owner: user
+    secret: user-pg-sec
   file-storage-pg:
     instances: 1
     database: filemetadata
     owner: filestorage
-    secret: file-storage-pg-sec-env
+    secret: file-storage-pg-sec
 
 configMaps:
   messaging-conf:
@@ -252,6 +340,25 @@ configMaps:
           key_file_path: /app/keys/rsa.pub
         otlp:
           grpc_addr: otel-collector:4317
+  otel-collector-conf:
+    data:
+      config.yaml: |
+        receivers:
+          otlp:
+            protocols:
+              grpc:
+                endpoint: 0.0.0.0:4317
+        exporters:
+          otlp:
+            endpoint: jaeger:4317
+            tls:
+              insecure: true
+        service:
+          pipelines:
+            traces:
+              receivers: [otlp]
+              processors: []
+              exporters: [otlp]
   nginx-conf:
     data:
       nginx.conf: |
@@ -268,6 +375,19 @@ configMaps:
 
                 location / {
                     return 200 "Hello World!";
+                }
+
+                location /dev/jaeger/ {
+                    proxy_pass http://jaeger:16686/; 
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                    
+                    sub_filter_once off;
+                    sub_filter_types *;
+                    sub_filter 'href="/' 'href="/dev/jaeger/';
+                    sub_filter 'src="/' 'src="/dev/jaeger/';
+                    sub_filter 'url(/' 'url(/dev/jaeger/';
                 }
 
                 location /api/identity/ {
@@ -389,20 +509,54 @@ localSecrets:
   # File storage service
   file-storage-sec-env:
     stringData:
-      FILE_STORAGE_AWS_ACCESS_KEY_ID: dummy
-      FILE_STORAGE_AWS_REGION: dummy
-      FILE_STORAGE_AWS_ENDPOINT_URL: dummy
-      FILE_STORAGE_AWS_SECRET_ACCESS_KEY: dummy
-      FILE_STORAGE_S3_BUCKET: dummy
-      FILE_STORAGE_S3_URL_PREFIX: dummy
-      FILE_STORAGE_DB_DSN: host=file-storage-postgres port=5432 user=postgres password=secret dbname=file_metadata sslmode=disable
+      FILE_STORAGE_AWS_ACCESS_KEY_ID: &minio-access-key-id file-storage
+      FILE_STORAGE_AWS_SECRET_ACCESS_KEY: &minio-secret-access-key file-storage-access-secret
+      FILE_STORAGE_AWS_REGION: moscow
+      FILE_STORAGE_AWS_ENDPOINT_URL: http://minio:9000
+      FILE_STORAGE_S3_BUCKET: files
+      FILE_STORAGE_S3_URL_PREFIX: http://0.0.0.0:9000/files/
+      FILE_STORAGE_DB_DSN: host=file-storage-pg-rw port=5432 user=filestorage password=secret dbname=filemetadata sslmode=disable
+  file-storage-pg-sec:
+    stringData:
+      username: filestorage
+      password: secret
   file-storage-redis-sec-env:
     stringData:
       REDIS_PASSWORD: secret
+  minio-sec-env:
+    stringData:
+      MINIO_ROOT_USER: &minio-root-user admin
+      MINIO_ROOT_PASSWORD: &minio-root-password admin123
+  minio-init-sec-env:
+    stringData:
+      MINIO_ROOT_USER: *minio-root-user
+      MINIO_ROOT_PASSWORD: *minio-root-password
+      ACCESS_KEY_ID: *minio-access-key-id
+      SECRET_ACCESS_KEY: *minio-secret-access-key
+  jaeger-sec-env:
+    stringData:
+      COLLECTOR_OTLP_ENABLED: "true"
+      QUERY_BASE_PATH: /dev/jaeger
+      SERVER_STATIC_FILES: /dev/jaeger
   # User service
   user-sec-env:
     stringData:
-
+      PG_CONNECTION_STRING: postgres://user:secret@user-pg-rw:5432/userdb?sslmode=disable
+  user-pg-sec:
+    stringData:
+      username: user
+      password: secret
+  user-migrate-sec-env:
+    stringData:
+      FLYWAY_URL: jdbc:postgresql://user-pg-rw:5432/userdb
+      FLYWAY_USER: user
+      FLYWAY_PASSWORD: secret
+      FLYWAY_LOCATIONS: filesystem:/app/migrations
+      FLYWAY_VALIDATE_MIGRATION_NAMING: "true"
+      FLYWAY_BASELINE_ON_MIGRATE: "true"
+  user-wait-pg-sec-env:
+    stringData:
+      PG_CONNECTION_STRING: postgres://user:secret@user-pg-rw:5432/userdb?sslmode=disable
   # JWT signing keys
   public-rsa-key-sec:
     stringData:

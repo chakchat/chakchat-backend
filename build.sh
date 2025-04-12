@@ -12,7 +12,8 @@ images=(
     "file-storage" 
     "messaging" 
     "messaging-pg-migrate" 
-    "user" 
+    "user"
+    "user-pg-migrate"
     "sms-service-stub"
 )
 paths=(
@@ -20,7 +21,8 @@ paths=(
     "file-storage-service/" 
     "messaging-service/" 
     "messaging-service/" 
-    "user-service/" 
+    "user-service/"
+    "user-service/"
     "stubs/sms-service-stub/"
 )
 dockerfiles=(
@@ -29,6 +31,7 @@ dockerfiles=(
     "Dockerfile"
     "migrate.Dockerfile"
     "Dockerfile"
+    "migrate.Dockerfile"
     "Dockerfile"
 )
 tag=local
