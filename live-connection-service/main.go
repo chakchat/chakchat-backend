@@ -7,15 +7,25 @@ import (
 	"os"
 	"time"
 
+	"github.com/chakchat/chakchat-backend/live-connection-service/internal/handler"
 	"github.com/chakchat/chakchat-backend/live-connection-service/internal/mq"
 	"github.com/chakchat/chakchat-backend/live-connection-service/internal/restapi"
 	"github.com/chakchat/chakchat-backend/live-connection-service/internal/services"
+	"github.com/chakchat/chakchat-backend/live-connection-service/internal/storage"
 	"github.com/chakchat/chakchat-backend/live-connection-service/internal/ws"
 	"github.com/chakchat/chakchat-backend/shared/go/auth"
 	"github.com/chakchat/chakchat-backend/shared/go/jwt"
+	"github.com/chakchat/chakchat-backend/shared/go/postgres"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 )
 
 type JWTConfig struct {
@@ -34,10 +44,16 @@ type Config struct {
 	} `mapstructure:"kafka"`
 
 	Jwt JWTConfig `mapstructure:"jwt"`
+
+	DB struct {
+		DSN string `mapstructure:"dsn"`
+	} `mapstructure:"db"`
 }
 
 func loadConfig(file string) *Config {
 	viper.AutomaticEnv()
+
+	viper.MustBindEnv("db.dsn", "DB_DSN")
 
 	viper.SetConfigFile(file)
 	if err := viper.ReadInConfig(); err != nil {
@@ -62,6 +78,29 @@ func main() {
 
 	jwtConf := loadJWTConfig()
 
+	pgxDb, err := pgxpool.New(context.Background(), conf.DB.DSN)
+	if err != nil {
+		log.Fatalf("failed to connect DB: %v", err)
+	}
+	defer pgxDb.Close()
+	db := postgres.Tracing(pgxDb)
+	log.Println("connected to DB")
+
+	tp, err := initTracer()
+	if err != nil {
+		log.Fatalf("Failed to initialize tracer: %s", err)
+	}
+	defer func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			log.Printf("Failed to shutdown tracer provider: %s", err)
+		}
+	}()
+	defer func() {
+		if err := tp.ForceFlush(context.Background()); err != nil {
+			log.Fatalf("ForceFlush failed: %s", err)
+		}
+	}()
+
 	hub := ws.NewHub()
 
 	kafkaProducer := mq.NewProducer(mq.ProducerConfig{
@@ -79,6 +118,9 @@ func main() {
 	defer kafkaConsumer.Stop()
 
 	messageProcessor := services.NewKafkaProcessor(hub, kafkaProducer)
+	statusStorage := storage.NewOnlineStorage(db)
+	statusService := services.NewStatusService(statusStorage, hub)
+	statusHandler := handler.NewOnlineStatusServer(statusService)
 
 	go kafkaConsumer.Start(context.Background(), messageProcessor.MessageHandler)
 
@@ -100,9 +142,10 @@ func main() {
 	r.Group("/").
 		Use(authMiddleware).
 		GET("/ws", hub.WebSocketHandler()).
-		GET("/health", hub.HealthCheck())
+		GET("/health", hub.HealthCheck()).
+		GET("/v1.0/status/:users", statusHandler.GetStatus())
 
-	err := r.Run(":5004")
+	err = r.Run(":5004")
 	if err != nil {
 		log.Fatalf("Failed to run gin: %s", err)
 	}
@@ -128,4 +171,38 @@ func readKey(path string) []byte {
 		log.Fatal(err)
 	}
 	return key
+}
+
+func initTracer() (*sdktrace.TracerProvider, error) {
+	exporter, err := otlptracegrpc.New(
+		context.Background(),
+		otlptracegrpc.WithInsecure(),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := resource.New(
+		context.Background(),
+		resource.WithAttributes(
+			semconv.ServiceNameKey.String("backend-services"),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(exporter),
+		sdktrace.WithResource(res),
+	)
+
+	otel.SetTracerProvider(tp)
+
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(
+		propagation.TraceContext{},
+		propagation.Baggage{},
+	))
+
+	return tp, nil
 }
