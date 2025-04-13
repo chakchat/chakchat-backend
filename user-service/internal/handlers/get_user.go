@@ -154,6 +154,27 @@ func (s *GetUserHandler) GetUserByUsername() gin.HandlerFunc {
 
 func (s *GetUserHandler) GetUsersByCriteria() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		claims := auth.GetClaims(c.Request.Context())
+		if claims == nil {
+			restapi.SendUnauthorizedError(c, nil)
+			return
+		}
+		userOwner, ok := claims[auth.ClaimId].(string)
+		if !ok {
+			restapi.SendUnauthorizedError(c, nil)
+			return
+		}
+
+		ownerId, err := uuid.Parse(userOwner)
+		if err != nil {
+			restapi.SendValidationError(c, []restapi.ErrorDetail{
+				{
+					Field:   "UserId",
+					Message: "Invalid user id parametr",
+				},
+			})
+			return
+		}
 		name := c.Request.URL.Query().Get("name")
 		username := c.Request.URL.Query().Get("username")
 		offset := c.Request.URL.Query().Get("offset")
@@ -215,16 +236,19 @@ func (s *GetUserHandler) GetUsersByCriteria() gin.HandlerFunc {
 			})
 		}
 		var users []User
+
 		for _, user := range response.Users {
-			users = append(users, User{
-				ID:          user.ID,
-				Username:    user.Username,
-				Name:        user.Name,
-				Phone:       toStrPtr(user.Phone),
-				DateOfBirth: toFormatDate(user.DateOfBirth),
-				PhotoURL:    toStrPtr(user.PhotoURL),
-				CreatedAt:   user.CreatedAt,
-			})
+			if user.ID != ownerId {
+				users = append(users, User{
+					ID:          user.ID,
+					Username:    user.Username,
+					Name:        user.Name,
+					Phone:       toStrPtr(user.Phone),
+					DateOfBirth: toFormatDate(user.DateOfBirth),
+					PhotoURL:    toStrPtr(user.PhotoURL),
+					CreatedAt:   user.CreatedAt,
+				})
+			}
 		}
 		restapi.SendSuccess(c, SearchUsersResponse{
 			Users:  users,
