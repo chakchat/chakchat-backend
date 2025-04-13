@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/chakchat/chakchat-backend/shared/go/postgres"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lib/pq"
 )
 
@@ -18,10 +18,10 @@ type OnlineResponse struct {
 }
 
 type OnlineStorage struct {
-	db *pgxpool.Pool
+	db postgres.SQLer
 }
 
-func NewOnlineStorage(db *pgxpool.Pool) *OnlineStorage {
+func NewOnlineStorage(db postgres.SQLer) *OnlineStorage {
 	return &OnlineStorage{db: db}
 }
 

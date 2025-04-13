@@ -15,6 +15,7 @@ import (
 	"github.com/chakchat/chakchat-backend/live-connection-service/internal/ws"
 	"github.com/chakchat/chakchat-backend/shared/go/auth"
 	"github.com/chakchat/chakchat-backend/shared/go/jwt"
+	"github.com/chakchat/chakchat-backend/shared/go/postgres"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spf13/viper"
@@ -77,11 +78,12 @@ func main() {
 
 	jwtConf := loadJWTConfig()
 
-	db, err := pgxpool.New(context.Background(), conf.DB.DSN)
+	pgxDb, err := pgxpool.New(context.Background(), conf.DB.DSN)
 	if err != nil {
 		log.Fatalf("failed to connect DB: %v", err)
 	}
-	defer db.Close()
+	defer pgxDb.Close()
+	db := postgres.Tracing(pgxDb)
 	log.Println("connected to DB")
 
 	tp, err := initTracer()

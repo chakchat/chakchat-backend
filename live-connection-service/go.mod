@@ -61,8 +61,8 @@ require (
 )
 
 require (
-	github.com/chakchat/chakchat-backend/messaging-service v0.0.0-20250331142732-afcf278c034b
-	github.com/chakchat/chakchat-backend/shared/go v0.0.0-20250331142732-afcf278c034b
+	github.com/chakchat/chakchat-backend/messaging-service v0.0.0-20250411135810-1420eed573e9
+	github.com/chakchat/chakchat-backend/shared/go v0.0.0-20250411135810-1420eed573e9
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3

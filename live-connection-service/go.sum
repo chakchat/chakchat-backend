@@ -9,8 +9,12 @@ github.com/cenkalti/backoff/v4 v4.3.0 h1:MyRJ/UdXutAwSAT+s3wNd7MfTIcy71VQueUuFK3
 github.com/cenkalti/backoff/v4 v4.3.0/go.mod h1:Y3VNntkOUPxTVeUxJ/G5vcM//AlwfmyYozVcomhLiZE=
 github.com/chakchat/chakchat-backend/messaging-service v0.0.0-20250331142732-afcf278c034b h1:UVsv5cAm05wfIvNk6Ke9bH8yOAY4rI8RZDqKjxpvqmo=
 github.com/chakchat/chakchat-backend/messaging-service v0.0.0-20250331142732-afcf278c034b/go.mod h1:Xl5hMZZ8KKTTPf2KqdiZ5Q+HoDCp+/ubiiLana7e+uQ=
+github.com/chakchat/chakchat-backend/messaging-service v0.0.0-20250411135810-1420eed573e9 h1:Pcl/7HkJCzovaxion5bf9xiN6JJ5MjolbC1POjyc6RQ=
+github.com/chakchat/chakchat-backend/messaging-service v0.0.0-20250411135810-1420eed573e9/go.mod h1:7eJSAQN2qUKCtNCtbOVA19L+JVDSbmYEnAOjupgKP1w=
 github.com/chakchat/chakchat-backend/shared/go v0.0.0-20250331142732-afcf278c034b h1:ISF4y/QD0D+nS9L+jg8iuYBTT15jhjrOc39gwmIXquE=
 github.com/chakchat/chakchat-backend/shared/go v0.0.0-20250331142732-afcf278c034b/go.mod h1:muKqfMzJnRx4TsEPh+hLbE3nUOtPSVI2h7ygbvh+QVY=
+github.com/chakchat/chakchat-backend/shared/go v0.0.0-20250411135810-1420eed573e9 h1:+qZiJOmC/tbBU/OOUD1gt2m5oYgju4jZ0ZQXWU95gYU=
+github.com/chakchat/chakchat-backend/shared/go v0.0.0-20250411135810-1420eed573e9/go.mod h1:+yO3NoJxQdHHpXNhMCh0PpLB/Id7k6LXmvxXbG5kUKE=
 github.com/cloudwego/base64x v0.1.4 h1:jwCgWpFanWmN8xoIUHa2rtzmkd5J2plF/dnLS6Xd/0Y=
 github.com/cloudwego/base64x v0.1.4/go.mod h1:0zlkT4Wn5C6NdauXdJRhSKRlJvmclQ1hhJgA0rcu/8w=
 github.com/cloudwego/base64x v0.1.5 h1:XPciSp1xaq2VCSt6lF0phncD4koWyULpl5bUxbfCyP4=
