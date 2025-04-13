@@ -225,6 +225,27 @@ paths:
             application/json:
               schema:
                 "$ref": '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Delete user
+      description: Delete user
+      tags:
+        - me
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successfully verified phone number.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/EmptySuccessResponse"
+        '401':
+          description: Authorization error. Couldn't find user. 
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponseWithDetails'
+
   /me/profile-photo:
     put:
       summary: Update profile photo
