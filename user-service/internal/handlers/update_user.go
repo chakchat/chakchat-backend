@@ -23,6 +23,7 @@ type updateUserRequest struct {
 
 type UpdateUserServer interface {
 	UpdateUser(ctx context.Context, user *models.User, req *storage.UpdateUserRequest) (*models.User, error)
+	DeleteUser(ctx context.Context, id uuid.UUID) error
 }
 
 func UpdateUser(service UpdateUserServer, getter GetUserServer) gin.HandlerFunc {
@@ -104,5 +105,33 @@ func UpdateUser(service UpdateUserServer, getter GetUserServer) gin.HandlerFunc 
 			DateOfBirth: toFormatDate(updatedUser.DateOfBirth),
 			PhotoURL:    toStrPtr(updatedUser.PhotoURL),
 		})
+	}
+}
+
+func DeleteMe(service UpdateUserServer) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		claimId, ok := auth.GetClaims(c.Request.Context())[auth.ClaimId]
+		if !ok {
+			restapi.SendUnauthorizedError(c, nil)
+			return
+		}
+
+		userOwner := claimId.(string)
+
+		ownerId, err := uuid.Parse(userOwner)
+		if err != nil {
+			restapi.SendUnauthorizedError(c, nil)
+			return
+		}
+
+		err = service.DeleteUser(c.Request.Context(), ownerId)
+		if err != nil {
+			if errors.Is(err, services.ErrNotFound) {
+				restapi.SendUnauthorizedError(c, nil)
+			}
+			restapi.SendInternalError(c)
+		}
+
+		restapi.SendSuccess(c, struct{}{})
 	}
 }
