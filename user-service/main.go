@@ -167,7 +167,8 @@ func main() {
 		PUT("v1.0/me", handlers.UpdateUser(updateUserService, getUserService)).
 		PUT("v1.0/me/restrictions", handlers.UpdateRestrictions(updateRestrictions)).
 		PUT("v1.0/me/profile-photo", handlers.UpdatePhoto(processPhotoService)).
-		DELETE("v1.0/me/profile-photo", handlers.DeletePhoto(processPhotoService))
+		DELETE("v1.0/me/profile-photo", handlers.DeletePhoto(processPhotoService)).
+		DELETE("v1.0/me", handlers.DeleteMe(updateUserService))
 	r.Group("/").
 		GET("/v1.0/are-you-a-real-teapot", handlers.AmITeapot()).
 		GET("/v1.0/username/:username", handlers.CheckUserByUsername(getUserService))

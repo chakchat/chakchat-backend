@@ -6,12 +6,14 @@ import (
 
 	"github.com/chakchat/chakchat-backend/user-service/internal/models"
 	"github.com/chakchat/chakchat-backend/user-service/internal/storage"
+	"github.com/google/uuid"
 )
 
 var ErrValidationError = errors.New("invalid input")
 
 type UpdateUserRepository interface {
 	UpdateUser(ctx context.Context, user *models.User, req *storage.UpdateUserRequest) (*models.User, error)
+	DeleteUser(ctx context.Context, id uuid.UUID) error
 }
 
 type UpdateUserService struct {
@@ -36,4 +38,15 @@ func (u *UpdateUserService) UpdateUser(ctx context.Context, user *models.User, r
 		return nil, err
 	}
 	return updatedUser, nil
+}
+
+func (u *UpdateUserService) DeleteUser(ctx context.Context, id uuid.UUID) error {
+	err := u.DeleteUser(ctx, id)
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return ErrNotFound
+		}
+		return err
+	}
+	return nil
 }
