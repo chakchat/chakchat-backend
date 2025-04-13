@@ -299,66 +299,6 @@ paths:
             application/json:
               schema:
                 "$ref": '#/components/schemas/ErrorResponseWithDetails'
-  /me/deletion/request-code:
-    post:
-      summary: Request for phone number verification code.
-      description: Request phone number verification code
-      tags:
-        - deleteAccount
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: Idempotency-Key
-          in: header
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/SendCodeRequest"
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                "$ref": '#/components/schemas/EmptySuccessResponse'
-        '400':
-          description: Bad Request. Maybe phone number is already used.
-          content:
-            application/json:
-              schema:
-                "$ref": '#/components/schemas/ErrorResponse'
-  /me/deletion/confirm/{confirmationCode}:
-    delete:
-      summary: Delete user account with phone number verification code.
-      description: Delete user account with phone number verification code
-      tags:
-        - deleteAccount
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: confirmationCode
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successfully verified phone number.
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/EmptySuccessResponse"
-        '400':
-          description: Bad Request. Maybe phone number is already used or code is invalid. 
-          content:
-            application/json:
-              schema:
-                "$ref": '#/components/schemas/ErrorResponseWithDetails'
 components:
   schemas:
     RefreshTokenRequest:
