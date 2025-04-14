@@ -2,6 +2,7 @@
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
+  namespace: {{ $.Release.Namespace }}
   name: {{ $key }}
   labels:
     app.kubernetes.io/name: {{ $key }}

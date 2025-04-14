@@ -2,6 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
+  namespace: {{ $.Release.Namespace }}
   name: {{ $key }}
 spec:
 {{- toYaml $value | nindent 2 }}

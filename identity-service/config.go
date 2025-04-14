@@ -65,6 +65,7 @@ type JWTConfig struct {
 
 func loadConfig(file string) *Config {
 	// viper.SetConfigFile("/app/config.yml")
+	viper.MustBindEnv("redis.password", "REDIS_PASSWORD")
 	viper.SetConfigFile(file)
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatalf("viper reading config failed: %s", err)

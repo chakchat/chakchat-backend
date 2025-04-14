@@ -7,7 +7,6 @@ jwt:
 
 redis:
   addr: messaging-redis:6379
-  password: secret
   db: 0
 
 file_storage:

@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/spf13/viper"
@@ -65,14 +67,18 @@ type JWTConfig struct {
 func loadConfig(file string) *Config {
 	viper.AutomaticEnv()
 
-	viper.BindEnv("s3.bucket", "FILE_STORAGE_S3_BUCKET")
-	viper.BindEnv("s3.url_prefix", "FILE_STORAGE_S3_URL_PREFIX")
+	viper.MustBindEnv("s3.bucket", "FILE_STORAGE_S3_BUCKET")
+	viper.MustBindEnv("s3.url_prefix", "FILE_STORAGE_S3_URL_PREFIX")
 
-	viper.BindEnv("aws.access_key_id", "FILE_STORAGE_AWS_ACCESS_KEY_ID")
-	viper.BindEnv("aws.secret_access_key", "FILE_STORAGE_AWS_SECRET_ACCESS_KEY")
-	viper.BindEnv("aws.region", "FILE_STORAGE_AWS_REGION")
-	viper.BindEnv("aws.endpoint_url", "FILE_STORAGE_AWS_ENDPOINT_URL")
-	viper.BindEnv("db.dsn", "FILE_STORAGE_DB_DSN")
+	viper.MustBindEnv("aws.access_key_id", "FILE_STORAGE_AWS_ACCESS_KEY_ID")
+	viper.MustBindEnv("aws.secret_access_key", "FILE_STORAGE_AWS_SECRET_ACCESS_KEY")
+	viper.MustBindEnv("aws.region", "FILE_STORAGE_AWS_REGION")
+	viper.MustBindEnv("aws.endpoint_url", "FILE_STORAGE_AWS_ENDPOINT_URL")
+	viper.MustBindEnv("db.dsn", "FILE_STORAGE_DB_DSN")
+
+	for k, v := range os.Environ() {
+		fmt.Println(k, v)
+	}
 
 	viper.SetConfigFile(file)
 
@@ -84,6 +90,8 @@ func loadConfig(file string) *Config {
 	if err := viper.UnmarshalExact(&conf); err != nil {
 		log.Fatalf("viper config unmarshalling failed: %s", err)
 	}
+
+	fmt.Printf("%#v\n", conf)
 
 	return conf
 }
