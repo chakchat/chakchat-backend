@@ -1,0 +1,79 @@
+/* style.css */
+@font-face {
+    font-family: 'rammetto';
+    src: url('fonts/RammettoOne-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'jost';
+    src: url('fonts/Jost-VariableFont_wght.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+body {
+    font-family: 'rammetto', Arial;
+    font-size: 60px;
+    text-align: center;
+    background: radial-gradient(circle, #FFBF00, #FF6200);
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+    position: relative;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+h1 {
+    margin-top: 10px;
+    margin-bottom: -60px;
+}
+
+.links-row {
+    display: flex;
+    justify-content: center;
+    gap: 80px; /* Расстояние между ссылками */
+    margin-top: 250px;
+    flex-wrap: wrap;
+}
+
+.link-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: #333;
+    transition: transform 0.3s;
+}
+
+.link-item:hover {
+    transform: scale(1.05);
+}
+
+.link-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 15px;
+    object-fit: cover;
+    margin-bottom: 10px;
+}
+
+.link-name {
+    font-family: 'jost', Arial;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#myButton {
+    background: blue;
+    color: white;
+    margin-top: 20px;
+}
