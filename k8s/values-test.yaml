@@ -1,3 +1,10 @@
+# TODO:
+# 1. Add static to nginx
+# 2. Persist traces
+# 3. argocd
+# 4. Build CI/CD
+# 5. https
+
 deployments:
   messaging:
     image: cr.yandex/crppdu233q7oqs81a1ta/messaging:test-0f50733
