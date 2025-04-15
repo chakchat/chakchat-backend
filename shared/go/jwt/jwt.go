@@ -55,8 +55,11 @@ func (c *Config) RSAPublicOnlyKey(key []byte) error {
 func (c *Config) RSAKeys(privateKey []byte) error {
 	var err error
 	c.privateKey, err = jwt.ParseRSAPrivateKeyFromPEM(privateKey)
+	if err != nil {
+		return err
+	}
 	c.publicKey = &c.privateKey.PublicKey
-	return err
+	return nil
 }
 
 type Claims map[string]any

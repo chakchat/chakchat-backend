@@ -36,7 +36,8 @@ type Config struct {
 func LoadConfig(file string) (*Config, error) {
 	viper.AutomaticEnv()
 
-	viper.MustBindEnv("db.conn_string", "DB_CONN_STRING")
+	viper.MustBindEnv("db.conn_string", "PG_CONN_STRING")
+	viper.MustBindEnv("redis.password", "REDIS_PASSWORD")
 
 	viper.SetConfigFile(file)
 

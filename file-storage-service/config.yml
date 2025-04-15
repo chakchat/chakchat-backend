@@ -16,9 +16,6 @@ upload:
 multipart_upload:
   min_file_size: 524288000 # 10MB
   max_part_size: 1048576 # 100MB
-s3:
-  bucket: demo-chakchat-yandex-storage
-  url_prefix: https://storage.yandexcloud.net/demo-chakchat-yandex-storage/
 otlp:
   grpc_addr: otel-collector:4317
 grpc_service:

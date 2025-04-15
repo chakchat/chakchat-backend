@@ -22,7 +22,7 @@ import (
 func main() {
 	ctx := context.Background()
 
-	config, err := configuration.LoadConfig("/app/config.yml")
+	config, err := configuration.LoadConfig("/etc/messaging/config.yml")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -60,7 +60,7 @@ func main() {
 
 	pgxDB, err := pgxpool.New(ctx, config.DB.ConnString)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Connect to pg failed: %s\n", err)
 	}
 	defer pgxDB.Close()
 	db := instrumentation.Tracing(pgxDB)
@@ -100,7 +100,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := ginEngine.Run(":5000"); err != nil {
+	if err := ginEngine.Run(":8080"); err != nil {
 		log.Fatalf("Gin engine running failed: %s", err)
 	}
 }

@@ -30,7 +30,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 )
 
-var conf *Config = loadConfig("/app/config.yml")
+var conf *Config = loadConfig("/etc/identity/config.yml")
 
 func main() {
 	tp, err := initTracer()
