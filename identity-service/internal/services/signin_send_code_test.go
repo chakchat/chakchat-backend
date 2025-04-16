@@ -7,6 +7,7 @@ import (
 
 	"github.com/chakchat/chakchat-backend/identity-service/internal/userservice"
 	"github.com/google/uuid"
+	smsaero_golang "github.com/smsaero/smsaero_golang/smsaero"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 )
@@ -134,6 +135,6 @@ func (s *metaStorageFake) Store(_ context.Context, meta *SignInMeta) error {
 
 type smsStub struct{}
 
-func (s smsStub) SendSms(_ context.Context, _ string, _ string) error {
-	return nil
+func (s smsStub) SendSms(_ context.Context, _ string, _ string) (*smsaero_golang.SendSms, error) {
+	return nil, nil
 }
