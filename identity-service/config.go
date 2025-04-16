@@ -43,7 +43,9 @@ type Config struct {
 	} `mapstructure:"phone_code"`
 
 	Sms struct {
-		Type string `mapstructure:"type"`
+		Type   string `mapstructure:"type"`
+		Email  string `mapstructure:"email"`
+		ApiKey string `mapstructure:"api_key"`
 
 		Stub struct {
 			Addr string `mapstructure:"addr"`
@@ -65,6 +67,11 @@ type JWTConfig struct {
 
 func loadConfig(file string) *Config {
 	// viper.SetConfigFile("/app/config.yml")
+
+	viper.AutomaticEnv()
+	viper.BindEnv("sms.email", "SMSAERO_EMAIL")
+	viper.BindEnv("sms.api_key", "SMSAERO_APIKEY")
+
 	viper.SetConfigFile(file)
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatalf("viper reading config failed: %s", err)
