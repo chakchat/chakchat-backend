@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/chakchat/chakchat-backend/identity-service/internal/sms"
 	"github.com/chakchat/chakchat-backend/identity-service/internal/userservice"
 	"github.com/google/uuid"
 )
@@ -30,12 +31,12 @@ type SignUpMetaFindStorer interface {
 type SignUpSendCodeService struct {
 	config *CodeConfig
 
-	sms     SmsSender
+	sms     sms.SmsSender
 	storage SignUpMetaFindStorer
 	users   userservice.UserServiceClient
 }
 
-func NewSignUpSendCodeService(config *CodeConfig, sms SmsSender,
+func NewSignUpSendCodeService(config *CodeConfig, sms sms.SmsSender,
 	storage SignUpMetaFindStorer, users userservice.UserServiceClient) *SignUpSendCodeService {
 	return &SignUpSendCodeService{
 		config:  config,
@@ -63,7 +64,8 @@ func (s *SignUpSendCodeService) SendCode(ctx context.Context, phone string) (sig
 	}
 
 	sms := renderCodeSMS(meta.Code)
-	if err := s.sms.SendSms(ctx, phone, sms); err != nil {
+
+	if _, err := s.sms.SendSms(ctx, phone, sms); err != nil {
 		return uuid.Nil, fmt.Errorf("send SMS error: %s", err)
 	}
 

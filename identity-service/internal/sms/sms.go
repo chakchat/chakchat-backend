@@ -1,45 +1,37 @@
 package sms
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
+	"strconv"
+
+	smsaero_golang "github.com/smsaero/smsaero_golang/smsaero"
 )
 
-type SmsServerStubSender struct {
-	addr string
+type Client struct {
+	email  string
+	apiKey string
+}
+type SmsSender interface {
+	SendSms(context.Context, string, string) (*smsaero_golang.SendSms, error)
 }
 
-func NewSmsServerStubSender(addr string) *SmsServerStubSender {
-	return &SmsServerStubSender{
-		addr: addr,
+func NewSmsSender(email string, apiKey string) *Client {
+	return &Client{
+		email:  email,
+		apiKey: apiKey,
 	}
 }
 
-func (s *SmsServerStubSender) SendSms(ctx context.Context, phone string, message string) error {
-	type Req struct {
-		Phone   string `json:"phone"`
-		Message string `json:"message"`
-	}
-	req, _ := json.Marshal(Req{
-		Phone:   phone,
-		Message: message,
-	})
-	resp, err := http.Post(s.addr, "application/json", bytes.NewReader(req))
+func (c *Client) SendSms(ctx context.Context, phone string, sms string) (*smsaero_golang.SendSms, error) {
+	client := smsaero_golang.NewSmsAeroClient(c.email, c.apiKey, smsaero_golang.WithContext(ctx))
+	phoneInt, err := strconv.Atoi(phone)
 	if err != nil {
-		return fmt.Errorf("sending sms to stub server failed: %s", err)
+		return nil, fmt.Errorf("error converting phone number to integer: %v", err)
 	}
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("sending sms request failed with status code: %s", resp.Status)
+	message, err := client.SendSms(phoneInt, sms)
+	if err != nil {
+		return nil, err
 	}
-	return nil
-}
-
-type SmsSenderFake struct{}
-
-func (s *SmsSenderFake) SendSms(ctx context.Context, phone string, message string) error {
-	fmt.Printf("Sent sms to %s. Sms message: \"%s\"", phone, message)
-	return nil
+	return &message, nil
 }

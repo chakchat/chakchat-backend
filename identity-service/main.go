@@ -104,7 +104,7 @@ func main() {
 	r.Run(":5000")
 }
 
-func createSignUpSendCodeService(sms services.SmsSender, storage *storage.SignUpMetaStorage,
+func createSignUpSendCodeService(sms sms.SmsSender, storage *storage.SignUpMetaStorage,
 	users userservice.UserServiceClient) *services.SignUpSendCodeService {
 	config := &services.CodeConfig{
 		SendFrequency: conf.PhoneCode.SendFrequency,
@@ -119,11 +119,11 @@ func createSignUpMetaStorage(redisClient *redis.Client) *storage.SignUpMetaStora
 	return storage.NewSignUpMetaStorage(stConf, redisClient)
 }
 
-func createSmsSender() services.SmsSender {
+func createSmsSender() sms.SmsSender {
 	if conf.Sms.Type == "stub" {
 		return sms.NewSmsServerStubSender(conf.Sms.Stub.Addr)
 	}
-	return &sms.SmsSenderFake{}
+	return sms.NewSmsSender(conf.Sms.Email, conf.Sms.ApiKey)
 }
 
 func createInvalidatedTokenStorage(redisClient *redis.Client) *storage.InvalidatedTokenStorage {
@@ -204,7 +204,7 @@ func createIdempotencyStorage(redisClient *redis.Client) idempotency.Idempotency
 	return idempotency.NewStorage(redisClient, idempotencyConf)
 }
 
-func createSignInSendCodeService(sms services.SmsSender, storage services.SignInMetaFindStorer,
+func createSignInSendCodeService(sms sms.SmsSender, storage services.SignInMetaFindStorer,
 	users userservice.UserServiceClient) *services.SignInSendCodeService {
 	config := &services.CodeConfig{
 		SendFrequency: conf.PhoneCode.SendFrequency,
