@@ -18,8 +18,8 @@ services:
       - ./identity-service/config.yml:/app/config.yml:ro
       - ./keys:/app/keys:ro
     environment:
-      - ${SMSAERO_EMAIL}
-      - ${SMSAERO_APIKEY}
+      SMSAERO_EMAIL: ${SMSAERO_EMAIL}
+      SMSAERO_APIKEY: ${SMSAERO_APIKEY}
     depends_on:
       - identity-redis
     restart: on-failure
