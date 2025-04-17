@@ -32,11 +32,15 @@ type SearchUsersResponse struct {
 	Offset int    `json:"offset"`
 	Count  int    `json:"count"`
 }
+type GetUsersResponse struct {
+	Users []User `json:"users"`
+}
 
 type GetUserServer interface {
 	GetUserByID(ctx context.Context, ownerId uuid.UUID, targetId uuid.UUID) (*models.User, error)
 	GetUserByUsername(ctx context.Context, ownerId uuid.UUID, username string) (*models.User, error)
 	GetUsersByCriteria(ctx context.Context, req storage.SearchUsersRequest) (*storage.SearchUsersResponse, error)
+	GetUsers(ctx context.Context, userIds []uuid.UUID) ([]models.User, error)
 }
 
 type GetUserHandler struct {
@@ -254,6 +258,52 @@ func (s *GetUserHandler) GetUsersByCriteria() gin.HandlerFunc {
 			Users:  users,
 			Offset: response.Offset,
 			Count:  response.Count,
+		})
+	}
+}
+
+func (s *GetUserHandler) GetUsers() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userIds := c.QueryArray("users")
+		if len(userIds) == 0 {
+			c.JSON(http.StatusBadRequest, restapi.ErrTypeBadRequest)
+			return
+		}
+
+		var ids []uuid.UUID
+		for _, id := range userIds {
+			userId, err := uuid.Parse(id)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, restapi.ErrTypeBadRequest)
+				return
+			}
+			ids = append(ids, userId)
+		}
+
+		resp, err := s.service.GetUsers(context.Background(), ids)
+		if err != nil {
+			if errors.Is(err, services.ErrNotFound) {
+				c.JSON(http.StatusNotFound, restapi.ErrTypeNotFound)
+				return
+			}
+			restapi.SendInternalError(c)
+		}
+
+		var users []User
+
+		for _, user := range resp {
+			users = append(users, User{
+				ID:          user.ID,
+				Username:    user.Username,
+				Name:        user.Name,
+				Phone:       toStrPtr(user.Phone),
+				DateOfBirth: toFormatDate(user.DateOfBirth),
+				PhotoURL:    toStrPtr(user.PhotoURL),
+				CreatedAt:   user.CreatedAt,
+			})
+		}
+		restapi.SendSuccess(c, GetUsersResponse{
+			Users: users,
 		})
 	}
 }

@@ -162,6 +162,7 @@ func main() {
 		GET("/v1.0/user/:userId", getUserServer.GetUserByID()).
 		GET("/v1.0/user/username/:username", getUserServer.GetUserByUsername()).
 		GET("/v1.0/users", getUserServer.GetUsersByCriteria()).
+		GET("/v1.0/users/:users", getUserServer.GetUsers()).
 		GET("/v1.0/me", getUserServer.GetMe()).
 		GET("/v1.0/me/restrictions", handlers.GetRestrictions(getRestrictionService, getUserService)).
 		PUT("v1.0/me", handlers.UpdateUser(updateUserService, getUserService)).
