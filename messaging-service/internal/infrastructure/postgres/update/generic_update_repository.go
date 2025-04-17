@@ -447,7 +447,7 @@ func (r *GenericUpdateRepository) fillFileMessages(
 			fileMimeType  string
 			fileSize      int64
 			fileURL       string
-			fileCreatedAt time.Time
+			fileCreatedAt int64
 			replyToID     *int64
 		)
 
@@ -471,7 +471,7 @@ func (r *GenericUpdateRepository) fillFileMessages(
 				MimeType:  fileMimeType,
 				FileSize:  fileSize,
 				FileURL:   fileURL,
-				CreatedAt: fileCreatedAt.Unix(),
+				CreatedAt: fileCreatedAt,
 			},
 			ReplyTo: replyToID,
 		}
