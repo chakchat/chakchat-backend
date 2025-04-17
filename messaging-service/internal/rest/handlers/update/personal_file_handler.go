@@ -35,7 +35,7 @@ func (h *PersonalFileHandler) SendFileMessage(c *gin.Context) {
 	userID := getUserID(c.Request.Context())
 
 	req := struct {
-		FileID  uuid.UUID `json:"text"`
+		FileID  uuid.UUID `json:"file_id"`
 		ReplyTo *int64    `json:"reply_to"`
 	}{}
 	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
