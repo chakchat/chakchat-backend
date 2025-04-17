@@ -319,7 +319,7 @@ func (s *UserStorage) DeletePhoto(ctx context.Context, id uuid.UUID) (*models.Us
 }
 
 func (s *UserStorage) DeleteUser(ctx context.Context, id uuid.UUID) error {
-	deleteQuery := "DELETE users.user WHERE id = $1"
+	deleteQuery := "DELETE FROM users.user WHERE id = $1"
 	_, err := s.db.Exec(ctx, deleteQuery, id)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
