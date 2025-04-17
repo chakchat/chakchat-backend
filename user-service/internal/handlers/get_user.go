@@ -40,7 +40,7 @@ type GetUserServer interface {
 	GetUserByID(ctx context.Context, ownerId uuid.UUID, targetId uuid.UUID) (*models.User, error)
 	GetUserByUsername(ctx context.Context, ownerId uuid.UUID, username string) (*models.User, error)
 	GetUsersByCriteria(ctx context.Context, req storage.SearchUsersRequest) (*storage.SearchUsersResponse, error)
-	GetUsers(ctx context.Context, userIds []string) ([]models.User, error)
+	GetUsers(ctx context.Context, userIds []uuid.UUID) ([]models.User, error)
 }
 
 type GetUserHandler struct {
@@ -270,14 +270,20 @@ func (s *GetUserHandler) GetUsers() gin.HandlerFunc {
 			return
 		}
 
-		resp, err := s.service.GetUsers(context.Background(), userIds)
+		var ids []uuid.UUID
+		for _, id := range userIds {
+			userId, err := uuid.Parse(id)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, restapi.ErrTypeBadRequest)
+				return
+			}
+			ids = append(ids, userId)
+		}
+
+		resp, err := s.service.GetUsers(context.Background(), ids)
 		if err != nil {
 			if errors.Is(err, services.ErrNotFound) {
 				c.JSON(http.StatusNotFound, restapi.ErrTypeNotFound)
-				return
-			}
-			if errors.Is(err, services.ErrWrongFormatId) {
-				c.JSON(http.StatusBadRequest, restapi.ErrTypeBadRequest)
 				return
 			}
 			restapi.SendInternalError(c)
