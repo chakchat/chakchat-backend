@@ -41,7 +41,7 @@ func (u *UpdateUserService) UpdateUser(ctx context.Context, user *models.User, r
 }
 
 func (u *UpdateUserService) DeleteUser(ctx context.Context, id uuid.UUID) error {
-	err := u.DeleteUser(ctx, id)
+	err := u.updateRepo.DeleteUser(ctx, id)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return ErrNotFound
