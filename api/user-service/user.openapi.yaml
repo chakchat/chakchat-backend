@@ -167,6 +167,43 @@ paths:
             application/json:
               schema:
                 "$ref": '#/components/schemas/ErrorResponseWithDetails'
+  /users/{users}:  
+    get:
+      summary: Get status of user's status onpine
+      description: Gets status online and last time user was online.
+      tags:
+        - others
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: users
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  data:
+                    $ref: '#/components/schemas/GetUsersResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found users by id.
+          content:
+            application/json:
+              schema:
+                "$ref": '#/components/schemas/ErrorResponse'
   /me:
     get:
       summary: Get user info about requesting user
@@ -582,3 +619,12 @@ components:
         user_exists:
           type: boolean
           nullable: false
+    GetUsersResponse:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            "$ref": "#/components/schemas/UserProfile"
+      required:
+        - users
