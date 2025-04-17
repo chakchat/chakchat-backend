@@ -10,6 +10,7 @@ import (
 )
 
 var ErrNoCriteriaCpecified = errors.New("invalid input")
+var ErrWrongFormatId = errors.New("invalid id")
 
 type GetUserRepository interface {
 	GetUserById(ctx context.Context, id uuid.UUID) (*models.User, error)
@@ -145,6 +146,25 @@ func (g *GetUserService) GetUsersByCriteria(ctx context.Context, req storage.Sea
 		return nil, err
 	}
 	return resp, nil
+}
+
+func (g *GetUserService) GetUsers(ctx context.Context, userIds []string) ([]models.User, error) {
+	var users []models.User
+	for _, id := range userIds {
+		userId, err := uuid.Parse(id)
+		if err != nil {
+			return nil, ErrWrongFormatId
+		}
+		user, err := g.getUserRepo.GetUserById(ctx, userId)
+		if err != nil {
+			if errors.Is(err, storage.ErrNotFound) {
+				return nil, ErrNotFound
+			}
+			return nil, err
+		}
+		users = append(users, *user)
+	}
+	return users, nil
 }
 
 func (g *GetUserService) CheckUserByUsername(ctx context.Context, username string) (*bool, error) {
