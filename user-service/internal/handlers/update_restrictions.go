@@ -57,7 +57,7 @@ func UpdateRestrictions(restr UpdateRestrictionsServer) gin.HandlerFunc {
 			if updateRestrReq.Phone.SpecifiedUsers == nil {
 				c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
 					ErrorType:    restapi.ErrTypeBadRequest,
-					ErrorMessage: "Specified users for phone restrictions were not found",
+					ErrorMessage: "Specified users for phone restrictions were not specified",
 				})
 				return
 			}
@@ -93,7 +93,7 @@ func UpdateRestrictions(restr UpdateRestrictionsServer) gin.HandlerFunc {
 			if updateRestrReq.DateOfBirth.SpecifiedUsers == nil {
 				c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
 					ErrorType:    restapi.ErrTypeBadRequest,
-					ErrorMessage: "Specified users for dateOfBirth restrictions were not found",
+					ErrorMessage: "Specified users for dateOfBirth restrictions were not specified",
 				})
 				return
 			}
