@@ -54,6 +54,13 @@ func UpdateRestrictions(restr UpdateRestrictionsServer) gin.HandlerFunc {
 				SpecifiedUsers: nil,
 			}
 		} else {
+			if updateRestrReq.Phone.SpecifiedUsers == nil {
+				c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
+					ErrorType:    restapi.ErrTypeBadRequest,
+					ErrorMessage: "Specified users for phone restrictions were not specified",
+				})
+				return
+			}
 			phone := storage.FieldRestrictions{
 				Field:          phoneField,
 				OpenTo:         models.RestrictionSpecified,
@@ -83,6 +90,13 @@ func UpdateRestrictions(restr UpdateRestrictionsServer) gin.HandlerFunc {
 				SpecifiedUsers: nil,
 			}
 		} else {
+			if updateRestrReq.DateOfBirth.SpecifiedUsers == nil {
+				c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
+					ErrorType:    restapi.ErrTypeBadRequest,
+					ErrorMessage: "Specified users for dateOfBirth restrictions were not specified",
+				})
+				return
+			}
 			date := storage.FieldRestrictions{
 				Field:          dateField,
 				OpenTo:         models.RestrictionSpecified,
