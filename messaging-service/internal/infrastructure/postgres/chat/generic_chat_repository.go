@@ -58,6 +58,7 @@ func (r *GenericChatRepository) GetByMemberID(
 	if err != nil {
 		return nil, fmt.Errorf("getting chats by memberID failed: %s", err)
 	}
+	defer rows.Close()
 
 	res := make([]services.GenericChat, 0)
 	for rows.Next() {

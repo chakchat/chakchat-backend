@@ -205,6 +205,7 @@ func (r *PersonalChatRepository) getBlockings(
 	if err != nil {
 		return nil, fmt.Errorf("get blockings query failed: %s", err)
 	}
+	defer rows.Close()
 
 	res := make([]domain.UserID, 0)
 	for rows.Next() {

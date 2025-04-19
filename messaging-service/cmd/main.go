@@ -59,6 +59,7 @@ func main() {
 	))
 
 	pgxDB, err := pgxpool.New(ctx, config.DB.ConnString)
+
 	if err != nil {
 		log.Fatal(err)
 	}
