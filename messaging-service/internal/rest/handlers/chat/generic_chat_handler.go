@@ -61,7 +61,7 @@ func (h *GenericChatHandler) GetAllChats(c *gin.Context) {
 	}
 
 	if previewCountStr := c.Query(queryParamPreviewCount); previewCountStr != "" {
-		if previewCount, err := strconv.Atoi(previewCountStr); err != nil {
+		if previewCount, err := strconv.Atoi(previewCountStr); err == nil {
 			opts = append(opts, request.WithChatPreview(previewCount))
 		} else {
 			c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
@@ -122,7 +122,7 @@ func (h *GenericChatHandler) GetChat(c *gin.Context) {
 	}
 
 	if previewCountStr := c.Query(queryParamPreviewCount); previewCountStr != "" {
-		if previewCount, err := strconv.Atoi(previewCountStr); err != nil {
+		if previewCount, err := strconv.Atoi(previewCountStr); err == nil {
 			opts = append(opts, request.WithChatPreview(previewCount))
 		} else {
 			c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
