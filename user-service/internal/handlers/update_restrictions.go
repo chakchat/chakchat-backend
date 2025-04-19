@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	phoneField string = "Phone"
-	dateField  string = "DateOfBirth"
+	phoneField string = "phone"
+	dateField  string = "date_of_birth"
 )
 
 type UpdateRestrictionsServer interface {
