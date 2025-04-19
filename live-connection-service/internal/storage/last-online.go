@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/chakchat/chakchat-backend/shared/go/postgres"
-	"github.com/jackc/pgx/v5"
 	"github.com/lib/pq"
 )
 
@@ -45,9 +44,6 @@ func (s *OnlineStorage) GetOnlineStatus(ctx context.Context, userIds []string) (
 
 	rows, err := s.db.Query(ctx, query, pq.Array(userIds))
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrNotFound
-		}
 		return nil, err
 	}
 	defer rows.Close()

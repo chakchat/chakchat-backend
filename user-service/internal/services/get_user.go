@@ -51,7 +51,7 @@ func (g *GetUserService) GetUserByID(ctx context.Context, ownerId uuid.UUID, tar
 	}
 
 	if user.PhoneVisibility == models.RestrictionSpecified {
-		restr, err := g.getRestrictionRepo.GetRestrictions(ctx, targetId, "Phone")
+		restr, err := g.getRestrictionRepo.GetRestrictions(ctx, targetId, "phone")
 		if err != nil {
 			if errors.Is(err, storage.ErrNotFound) {
 				return nil, ErrNotFound
@@ -68,7 +68,7 @@ func (g *GetUserService) GetUserByID(ctx context.Context, ownerId uuid.UUID, tar
 	}
 
 	if user.DateOfBirthVisibility == models.RestrictionSpecified {
-		restr, err := g.getRestrictionRepo.GetRestrictions(ctx, targetId, "DateOfBirth")
+		restr, err := g.getRestrictionRepo.GetRestrictions(ctx, targetId, "date_of_birth")
 		if err != nil {
 			if errors.Is(err, storage.ErrNotFound) {
 				return nil, ErrNotFound

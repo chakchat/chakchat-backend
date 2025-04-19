@@ -34,7 +34,7 @@ func (s *RestrictionStorage) GetRestrictions(ctx context.Context, id uuid.UUID, 
     	AND field_name = $2 
     	AND permitted_user_id = $3`
 
-	row := s.db.QueryRow(ctx, q, id, field)
+	row := s.db.QueryRow(ctx, q, field, id)
 
 	var specifiedUsers []uuid.UUID
 	err := row.Scan(&fieldRestriction.Field, &specifiedUsers)
@@ -58,7 +58,7 @@ func (s *RestrictionStorage) UpdateRestrictions(ctx context.Context, id uuid.UUI
 	defer tx.Rollback(ctx)
 
 	var updateQuery string
-	if restrictions.Field == "Phone" {
+	if restrictions.Field == "phone" {
 		updateQuery = `UPDATE users.user SET phone_visibility = $1 WHERE id = $2`
 	} else {
 		updateQuery = `UPDATE users.user SET date_of_birth_visibility = $1 WHERE id = $2`
@@ -69,44 +69,46 @@ func (s *RestrictionStorage) UpdateRestrictions(ctx context.Context, id uuid.UUI
 		return nil, err
 	}
 
-	var currentSpecifiedUsers []uuid.UUID
-	q := `SELECT permitted_user_id FROM users.field_restrictions WHERE owner_user_id = $1 AND field_name = $2::users.user_field`
-	rows, err := tx.Query(ctx, q, id, restrictions.Field)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var userID uuid.UUID
-		if err := rows.Scan(&userID); err != nil {
-			return nil, err
-		}
-		currentSpecifiedUsers = append(currentSpecifiedUsers, userID)
-	}
-
-	if rows.Err() != nil {
-		return nil, errors.New(rows.Err().Error())
-	}
-
-	add := recordMisses(currentSpecifiedUsers, restrictions.SpecifiedUsers)
-	del := recordMisses(restrictions.SpecifiedUsers, currentSpecifiedUsers)
-
-	if len(del) > 0 {
-		q := `DELETE FROM users.field_restrictions WHERE owner_user_id = $1 AND field_name = $2::users.user_field AND permitted_user_id = ANY($3::uuid[])`
-		_, err = tx.Exec(ctx, q, id, restrictions.Field, del)
+	if restrictions.OpenTo == models.RestrictionSpecified {
+		var currentSpecifiedUsers []uuid.UUID
+		q := `SELECT permitted_user_id FROM users.field_restrictions WHERE owner_user_id = $1 AND field_name = $2::users.user_field`
+		rows, err := tx.Query(ctx, q, id, restrictions.Field)
 		if err != nil {
 			return nil, err
 		}
-	}
+		defer rows.Close()
 
-	if len(add) > 0 {
-		q := `INSERT INTO users.field_restrictions (owner_user_id, field_name, permitted_user_id) VALUES ($1, $2::users.user_field, $3)`
+		for rows.Next() {
+			var userID uuid.UUID
+			if err := rows.Scan(&userID); err != nil {
+				return nil, err
+			}
+			currentSpecifiedUsers = append(currentSpecifiedUsers, userID)
+		}
 
-		for _, userID := range add {
-			_, err = tx.Exec(ctx, q, id, restrictions.Field, userID)
+		if rows.Err() != nil {
+			return nil, errors.New(rows.Err().Error())
+		}
+
+		add := recordMisses(currentSpecifiedUsers, restrictions.SpecifiedUsers)
+		del := recordMisses(restrictions.SpecifiedUsers, currentSpecifiedUsers)
+
+		if len(del) > 0 {
+			q := `DELETE FROM users.field_restrictions WHERE owner_user_id = $1 AND field_name = $2::users.user_field AND permitted_user_id = ANY($3::uuid[])`
+			_, err = tx.Exec(ctx, q, id, restrictions.Field, del)
 			if err != nil {
 				return nil, err
+			}
+		}
+
+		if len(add) > 0 {
+			q := `INSERT INTO users.field_restrictions (owner_user_id, field_name, permitted_user_id) VALUES ($1, $2::users.user_field, $3)`
+
+			for _, userID := range add {
+				_, err = tx.Exec(ctx, q, id, restrictions.Field, userID)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 	}
