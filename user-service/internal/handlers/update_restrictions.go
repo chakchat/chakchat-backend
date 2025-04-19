@@ -47,11 +47,18 @@ func UpdateRestrictions(restr UpdateRestrictionsServer) gin.HandlerFunc {
 
 		var phoneRestriction FieldRestriction
 		var dateRestriction FieldRestriction
+		var phone storage.FieldRestrictions
+		var date storage.FieldRestrictions
 
 		if updateRestrReq.Phone.OpenTo != models.RestrictionSpecified {
 			phoneRestriction = FieldRestriction{
 				OpenTo:         updateRestrReq.Phone.OpenTo,
 				SpecifiedUsers: nil,
+			}
+			phone = storage.FieldRestrictions{
+				Field:          phoneField,
+				OpenTo:         models.Restriction(updateRestrReq.Phone.OpenTo),
+				SpecifiedUsers: updateRestrReq.Phone.SpecifiedUsers,
 			}
 		} else {
 			if updateRestrReq.Phone.SpecifiedUsers == nil {
@@ -61,7 +68,7 @@ func UpdateRestrictions(restr UpdateRestrictionsServer) gin.HandlerFunc {
 				})
 				return
 			}
-			phone := storage.FieldRestrictions{
+			phone = storage.FieldRestrictions{
 				Field:          phoneField,
 				OpenTo:         models.RestrictionSpecified,
 				SpecifiedUsers: updateRestrReq.Phone.SpecifiedUsers,
@@ -70,25 +77,31 @@ func UpdateRestrictions(restr UpdateRestrictionsServer) gin.HandlerFunc {
 				OpenTo:         updateRestrReq.Phone.OpenTo,
 				SpecifiedUsers: phone.SpecifiedUsers,
 			}
-			_, err := restr.UpdateRestrictions(c.Request.Context(), ownerId, phone)
-			if err != nil {
-				if errors.Is(err, services.ErrValidationError) {
-					c.JSON(http.StatusNotFound, restapi.ErrorResponse{
-						ErrorType:    restapi.ErrTypeNotFound,
-						ErrorMessage: "Phone restrictions was not found",
-					})
-					return
-				}
-				c.Error(err)
-				restapi.SendInternalError(c)
+
+		}
+		_, err = restr.UpdateRestrictions(c.Request.Context(), ownerId, phone)
+		if err != nil {
+			if errors.Is(err, services.ErrValidationError) {
+				c.JSON(http.StatusNotFound, restapi.ErrorResponse{
+					ErrorType:    restapi.ErrTypeNotFound,
+					ErrorMessage: "Phone restrictions was not found",
+				})
 				return
 			}
+			c.Error(err)
+			restapi.SendInternalError(c)
+			return
 		}
 
 		if updateRestrReq.DateOfBirth.OpenTo != models.RestrictionSpecified {
 			dateRestriction = FieldRestriction{
 				OpenTo:         updateRestrReq.DateOfBirth.OpenTo,
 				SpecifiedUsers: nil,
+			}
+			date = storage.FieldRestrictions{
+				Field:          dateField,
+				OpenTo:         models.Restriction(updateRestrReq.DateOfBirth.OpenTo),
+				SpecifiedUsers: updateRestrReq.DateOfBirth.SpecifiedUsers,
 			}
 		} else {
 			if updateRestrReq.DateOfBirth.SpecifiedUsers == nil {
@@ -98,7 +111,7 @@ func UpdateRestrictions(restr UpdateRestrictionsServer) gin.HandlerFunc {
 				})
 				return
 			}
-			date := storage.FieldRestrictions{
+			date = storage.FieldRestrictions{
 				Field:          dateField,
 				OpenTo:         models.RestrictionSpecified,
 				SpecifiedUsers: updateRestrReq.DateOfBirth.SpecifiedUsers,
@@ -109,19 +122,19 @@ func UpdateRestrictions(restr UpdateRestrictionsServer) gin.HandlerFunc {
 				SpecifiedUsers: date.SpecifiedUsers,
 			}
 
-			_, err := restr.UpdateRestrictions(c.Request.Context(), ownerId, date)
-			if err != nil {
-				if errors.Is(err, services.ErrValidationError) {
-					c.JSON(http.StatusNotFound, restapi.ErrorResponse{
-						ErrorType:    restapi.ErrTypeNotFound,
-						ErrorMessage: "Date of birth restrictions was not found",
-					})
-					return
-				}
-				c.Error(err)
-				restapi.SendInternalError(c)
+		}
+		_, err = restr.UpdateRestrictions(c.Request.Context(), ownerId, date)
+		if err != nil {
+			if errors.Is(err, services.ErrValidationError) {
+				c.JSON(http.StatusNotFound, restapi.ErrorResponse{
+					ErrorType:    restapi.ErrTypeNotFound,
+					ErrorMessage: "Date of birth restrictions was not found",
+				})
 				return
 			}
+			c.Error(err)
+			restapi.SendInternalError(c)
+			return
 		}
 
 		restapi.SendSuccess(c, &UserRestrictions{
