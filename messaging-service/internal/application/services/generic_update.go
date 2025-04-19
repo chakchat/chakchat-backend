@@ -38,6 +38,7 @@ type TextMessageInfo struct {
 	Text    string
 	Edited  *GenericUpdate
 	ReplyTo *int64
+	Reactions []GenericUpdate
 }
 
 type TextMessageEditedInfo struct {
@@ -48,6 +49,7 @@ type TextMessageEditedInfo struct {
 type FileMessageInfo struct {
 	File    dto.FileMetaDTO
 	ReplyTo *int64
+	Reactions []GenericUpdate
 }
 
 type DeletedInfo struct {

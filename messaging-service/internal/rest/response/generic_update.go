@@ -107,6 +107,8 @@ func GenericUpdate(update *services.GenericUpdate) JSONResponse {
 		NewTextField   = "new_text"
 		MessageIDField = "message_id"
 
+		ReactionsField = "reactions"
+
 		FileField = "file"
 
 		FileIDField       = "file_id"
@@ -138,6 +140,7 @@ func GenericUpdate(update *services.GenericUpdate) JSONResponse {
 		resp[ContentField] = JSONResponse{
 			TextField:    update.Info.TextMessage.Text,
 			ReplyToField: update.Info.TextMessage.ReplyTo,
+			ReactionsField: GenericUpdates(update.Info.TextMessage.Reactions),
 		}
 		if update.Info.TextMessage.Edited != nil {
 			resp[EditedField] = GenericUpdate(update.Info.TextMessage.Edited)
@@ -158,6 +161,7 @@ func GenericUpdate(update *services.GenericUpdate) JSONResponse {
 				CreatedAtField:    update.Info.FileMessage.File.CreatedAt,
 			},
 			ReplyToField: update.Info.FileMessage.ReplyTo,
+			ReactionsField: GenericUpdates(update.Info.FileMessage.Reactions),
 		}
 	case services.UpdateTypeDeleted:
 		resp[ContentField] = JSONResponse{
@@ -177,6 +181,14 @@ func GenericUpdate(update *services.GenericUpdate) JSONResponse {
 	}
 
 	return resp
+}
+
+func GenericUpdates(updates []services.GenericUpdate) []JSONResponse {
+	res := make([]JSONResponse, len(updates))
+	for i, up := range updates {
+		res[i] = GenericUpdate(&up)
+	}
+	return res
 }
 
 func convertEdited(edited *dto.TextMessageEditedDTO) *services.GenericUpdate {

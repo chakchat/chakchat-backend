@@ -345,9 +345,15 @@ func (r *GenericUpdateRepository) fillTextMessages(
 			return err
 		}
 
+		reactions, err := r.getMessageReactions(ctx, db, chatID, domain.UpdateID(updateID))
+		if err != nil {
+			return err
+		}
+
 		textMsgs[updateID] = services.TextMessageInfo{
 			Text:    text,
 			ReplyTo: replyToID,
+			Reactions: reactions,
 		}
 	}
 
@@ -577,6 +583,11 @@ func (r *GenericUpdateRepository) fillFileMessages(
 			return err
 		}
 
+		reactions, err := r.getMessageReactions(ctx, db, chatID, domain.UpdateID(updateID))
+		if err != nil {
+			return err
+		}
+
 		fileMsgs[updateID] = services.FileMessageInfo{
 			File: dto.FileMetaDTO{
 				FileId:    fileID,
@@ -587,6 +598,7 @@ func (r *GenericUpdateRepository) fillFileMessages(
 				CreatedAt: fileCreatedAt,
 			},
 			ReplyTo: replyToID,
+			Reactions: reactions,
 		}
 	}
 
@@ -606,6 +618,61 @@ func (r *GenericUpdateRepository) fillFileMessages(
 	}
 
 	return nil
+}
+
+func (r *GenericUpdateRepository) getMessageReactions(
+	ctx context.Context,
+	db storage.ExecQuerier,
+	chatID domain.ChatID,
+	messageID domain.UpdateID,
+) ([]services.GenericUpdate, error) {
+	q := `
+	SELECT 
+		u.update_id,
+		u.created_at,
+		u.sender_id
+		r.reaction,
+	FROM messaging.update u
+		JOIN messaging.reaction_update r ON r.chat_id = u.chat_id AND r.update_id = u.update_id
+	WHERE u.chat_id = $1 AND r.message_id = $2`
+
+	rows, err := db.Query(ctx, q, chatID, messageID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	res := make([]services.GenericUpdate, 0)
+	for rows.Next() {
+		var (
+			updateID int64
+			createdAt time.Time
+			senderID uuid.UUID
+			reactionType string
+		)
+		if err := rows.Scan(&updateID, &createdAt, &senderID, &reactionType); err != nil {
+			return nil, err
+		}
+
+		res = append(res, services.GenericUpdate{
+			UpdateID:   updateID,
+			ChatID:     uuid.UUID(chatID),
+			SenderID:   senderID,
+			UpdateType: "reaction",
+			CreatedAt:  createdAt.Unix(),
+			Info:       services.GenericUpdateInfo{
+				Reaction:          &services.ReactionInfo{
+					Reaction: reactionType,
+				},
+			},
+		})
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
 
 func (r *GenericUpdateRepository) fillReactions(
