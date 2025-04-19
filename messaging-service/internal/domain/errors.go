@@ -33,4 +33,5 @@ var (
 	ErrSenderNotAdmin      = Error{"sender is not admin"}
 	ErrUserNotMember       = Error{"user is not member of a chat"}
 	ErrInvalidDeleteMode   = Error{"invalid delete mode"}
+	ErrInvalidReactionType = Error{"invalid reaction type"}
 )

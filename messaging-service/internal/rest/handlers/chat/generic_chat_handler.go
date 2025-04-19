@@ -56,6 +56,7 @@ func (h *GenericChatHandler) GetAllChats(c *gin.Context) {
 					Message: "Must be true or false",
 				}},
 			})
+			return
 		}
 	}
 
@@ -71,6 +72,7 @@ func (h *GenericChatHandler) GetAllChats(c *gin.Context) {
 					Message: "Must be integer value",
 				}},
 			})
+			return
 		}
 	}
 

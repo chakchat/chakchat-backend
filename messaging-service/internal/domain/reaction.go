@@ -1,5 +1,15 @@
 package domain
 
+// If you want to add reaction to this list it says that it should be made more flexible
+var allowedReactionTypes = map[ReactionType]struct{}{
+	"heart":   {},
+	"like":    {},
+	"thunder": {},
+	"cry":     {},
+	"dislike": {},
+	"bzZZ":    {},
+}
+
 type ReactionType string
 
 type Reaction struct {
@@ -25,6 +35,10 @@ func NewReaction(
 
 	if m.DeletedFor(sender) {
 		return nil, ErrUpdateDeleted
+	}
+
+	if err := validateReactionType(reaction); err != nil {
+		return nil, err
 	}
 
 	return &Reaction{
@@ -56,4 +70,11 @@ func (r *Reaction) Delete(chat Chatter, sender UserID) error {
 
 	r.AddDeletion(sender, DeleteModeForAll)
 	return nil
+}
+
+func validateReactionType(r ReactionType) error {
+	if _, ok := allowedReactionTypes[r]; ok {
+		return nil
+	}
+	return ErrInvalidReactionType
 }
