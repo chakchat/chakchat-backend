@@ -27,10 +27,10 @@ func TestReaction(t *testing.T) {
 		},
 	}
 
-	_, err := NewReaction(chat, user3, &txtMsg.Message, "some_reaction_idk")
+	_, err := NewReaction(chat, user3, &txtMsg.Message, "heart")
 	require.ErrorIs(t, err, ErrUserNotMember)
 
-	reaction, err := NewReaction(chat, user1, &txtMsg.Message, "some_reaction_idk")
+	reaction, err := NewReaction(chat, user1, &txtMsg.Message, "heart")
 	require.NoError(t, err)
 	require.Equal(t, chat.ID, reaction.ChatID)
 	require.Equal(t, user1, reaction.SenderID)
