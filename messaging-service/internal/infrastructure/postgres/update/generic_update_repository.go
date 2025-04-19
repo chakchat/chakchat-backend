@@ -77,7 +77,7 @@ func (r *GenericUpdateRepository) GetRange(
 	}
 	defer rows.Close()
 
-	updates := make([]services.GenericUpdate, 0, to-from+1)
+	updates := make([]services.GenericUpdate, 0, max(0, to-from+1))
 
 	for rows.Next() {
 		var (
