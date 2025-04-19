@@ -639,8 +639,8 @@ func (r *GenericUpdateRepository) getMessageReactions(
 	SELECT 
 		u.update_id,
 		u.created_at,
-		u.sender_id
-		r.reaction,
+		u.sender_id,
+		r.reaction
 	FROM messaging.update u
 		JOIN messaging.reaction_update r ON r.chat_id = u.chat_id AND r.update_id = u.update_id
 	WHERE u.chat_id = $1 AND r.message_id = $2`
