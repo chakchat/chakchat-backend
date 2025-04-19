@@ -66,11 +66,7 @@ func (h *GenericUpdateHandler) GetUpdatesRange(c *gin.Context) {
 		return
 	}
 
-	resp := make([]response.JSONResponse, len(updates))
-	for i, up := range updates {
-		resp[i] = response.GenericUpdate(&up)
-	}
 	restapi.SendSuccess(c, gin.H{
-		"updates": resp,
+		"updates": response.GenericUpdates(updates),
 	})
 }
