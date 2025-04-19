@@ -10,6 +10,7 @@ import (
 
 	"github.com/chakchat/chakchat-backend/shared/go/auth"
 	"github.com/chakchat/chakchat-backend/shared/go/jwt"
+	"github.com/chakchat/chakchat-backend/shared/go/postgres"
 	"github.com/chakchat/chakchat-backend/user-service/internal/filestorage"
 	"github.com/chakchat/chakchat-backend/user-service/internal/grpcservice"
 	"github.com/chakchat/chakchat-backend/user-service/internal/handlers"
@@ -88,12 +89,13 @@ var conf *Config = loadConfig("/app/config.yml")
 func main() {
 	jwtConf := loadJWTConfig()
 
-	db, err := pgxpool.New(context.Background(), conf.DB.DSN)
+	pgxDb, err := pgxpool.New(context.Background(), conf.DB.DSN)
 	if err != nil {
 		log.Fatalf("failed to connect DB: %v", err)
 	}
 
-	defer db.Close()
+	defer pgxDb.Close()
+	db := postgres.Tracing(pgxDb)
 	log.Println("connected to DB")
 
 	fileClient, close := createFileClient()

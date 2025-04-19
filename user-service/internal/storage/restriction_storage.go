@@ -2,11 +2,12 @@ package storage
 
 import (
 	"context"
+	"errors"
 
+	"github.com/chakchat/chakchat-backend/shared/go/postgres"
 	"github.com/chakchat/chakchat-backend/user-service/internal/models"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type FieldRestrictions struct {
@@ -16,10 +17,10 @@ type FieldRestrictions struct {
 }
 
 type RestrictionStorage struct {
-	db *pgxpool.Pool
+	db postgres.SQLer
 }
 
-func NewRestrictionStorage(db *pgxpool.Pool) *RestrictionStorage {
+func NewRestrictionStorage(db postgres.SQLer) *RestrictionStorage {
 	return &RestrictionStorage{
 		db: db,
 	}
@@ -33,9 +34,12 @@ func (s *RestrictionStorage) GetRestrictions(ctx context.Context, id uuid.UUID, 
     	AND field_name = $2 
     	AND permitted_user_id = $3`
 
-	row := s.db.QueryRow(ctx, q, id, field)
+	row, err := s.db.Query(ctx, q, id, field)
+	if err != nil {
+		return nil, err
+	}
 	var specifiedUsers []uuid.UUID
-	err := row.Scan(&fieldRestriction.Field, &specifiedUsers)
+	err = row.Scan(&fieldRestriction.Field, &specifiedUsers)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, ErrNotFound
@@ -83,11 +87,15 @@ func (s *RestrictionStorage) UpdateRestrictions(ctx context.Context, id uuid.UUI
 		currentSpecifiedUsers = append(currentSpecifiedUsers, userID)
 	}
 
+	if rows.Err() != nil {
+		return nil, errors.New(rows.Err().Error())
+	}
+
 	add := recordMisses(currentSpecifiedUsers, restrictions.SpecifiedUsers)
 	del := recordMisses(restrictions.SpecifiedUsers, currentSpecifiedUsers)
 
 	if len(del) > 0 {
-		q := `DELETE FROM users.field_restrictions WHERE owner_user_id = $1 AND field_name = $2::users.user_field AND permitted_user_id = ANY($3)`
+		q := `DELETE FROM users.field_restrictions WHERE owner_user_id = $1 AND field_name = $2::users.user_field AND permitted_user_id = ANY($3::uuid[])`
 		_, err = tx.Exec(ctx, q, id, restrictions.Field, del)
 		if err != nil {
 			return nil, err
