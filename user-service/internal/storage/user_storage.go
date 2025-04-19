@@ -58,10 +58,8 @@ func (s *UserStorage) GetUserByPhone(ctx context.Context, phone string) (*models
 	FROM users.user
 	WHERE phone = $1`
 
-	row, err := s.db.Query(ctx, q, phone)
-	if err != nil {
-		return nil, err
-	}
+	row := s.db.QueryRow(ctx, q, phone)
+
 	if err := row.Scan(&user.ID, &user.Name, &user.Username, &user.Phone,
 		&user.DateOfBirth, &user.PhotoURL, &user.CreatedAt,
 		&user.DateOfBirthVisibility, &user.PhoneVisibility); err != nil {
