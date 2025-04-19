@@ -34,7 +34,7 @@ func (r *GenericUpdateRepository) GetLastUpdateID(
 	var lastUpdateID int64
 	if err := db.QueryRow(ctx, q, id).Scan(&lastUpdateID); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return 0, repository.ErrNotFound
+			return 0, nil
 		}
 		return 0, err
 	}
