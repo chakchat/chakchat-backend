@@ -19,6 +19,12 @@ type GenericChat struct {
 	ChatType  string
 	Members   []uuid.UUID
 	Info      GenericChatInfo
+	// Last update ID in the chat.
+	// Be careful, it may hold even ID of update not visible for user (e.g. deleted)
+	LastUpdateID *int64
+	// Holds last updates to show chat preview in the client.
+	// Not fetched by default.
+	UpdatePreview []GenericUpdate
 }
 
 // You should call one of methods depending on GenericChat.ChatType

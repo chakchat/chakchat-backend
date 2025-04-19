@@ -52,6 +52,9 @@ func GenericChat(chat *services.GenericChat) JSONResponse {
 		CreatedAtField = "created_at"
 		InfoField      = "info"
 
+		LastUpdateIDField  = "last_update_id"
+		UpdatePreviewField = "update_preview"
+
 		BlockedByField = "blocked_by"
 
 		AdminField       = "admin_id"
@@ -67,6 +70,16 @@ func GenericChat(chat *services.GenericChat) JSONResponse {
 		TypeField:      chat.ChatType,
 		MembersField:   chat.Members,
 		CreatedAtField: chat.CreatedAt,
+	}
+	if chat.LastUpdateID != nil {
+		resp[LastUpdateIDField] = *chat.LastUpdateID
+	}
+	if chat.UpdatePreview != nil {
+		updates := make([]JSONResponse, len(chat.UpdatePreview))
+		for i := range chat.UpdatePreview {
+			updates[i] = GenericUpdate(&chat.UpdatePreview[i])
+		}
+		resp[UpdatePreviewField] = updates
 	}
 
 	switch chat.ChatType {
