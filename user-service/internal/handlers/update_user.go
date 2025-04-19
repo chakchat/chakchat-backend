@@ -56,6 +56,7 @@ func UpdateUser(service UpdateUserServer, getter GetUserServer) gin.HandlerFunc 
 				})
 				return
 			}
+			c.Error(err)
 			restapi.SendInternalError(c)
 			return
 		}
@@ -129,6 +130,7 @@ func DeleteMe(service UpdateUserServer) gin.HandlerFunc {
 			if errors.Is(err, services.ErrNotFound) {
 				restapi.SendUnauthorizedError(c, nil)
 			}
+			c.Error(err)
 			restapi.SendInternalError(c)
 		}
 

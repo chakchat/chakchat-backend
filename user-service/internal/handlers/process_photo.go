@@ -60,7 +60,7 @@ func UpdatePhoto(u UpdatePhotoServer) gin.HandlerFunc {
 				})
 				return
 			}
-
+			c.Error(err)
 			restapi.SendInternalError(c)
 			return
 		}
@@ -101,7 +101,7 @@ func DeletePhoto(u UpdatePhotoServer) gin.HandlerFunc {
 				})
 				return
 			}
-
+			c.Error(err)
 			restapi.SendInternalError(c)
 			return
 		}
