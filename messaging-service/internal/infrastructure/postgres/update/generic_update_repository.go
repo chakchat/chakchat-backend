@@ -351,8 +351,8 @@ func (r *GenericUpdateRepository) fillTextMessages(
 		}
 
 		textMsgs[updateID] = services.TextMessageInfo{
-			Text:    text,
-			ReplyTo: replyToID,
+			Text:      text,
+			ReplyTo:   replyToID,
 			Reactions: reactions,
 		}
 	}
@@ -597,7 +597,7 @@ func (r *GenericUpdateRepository) fillFileMessages(
 				FileURL:   fileURL,
 				CreatedAt: fileCreatedAt,
 			},
-			ReplyTo: replyToID,
+			ReplyTo:   replyToID,
 			Reactions: reactions,
 		}
 	}
@@ -645,9 +645,9 @@ func (r *GenericUpdateRepository) getMessageReactions(
 	res := make([]services.GenericUpdate, 0)
 	for rows.Next() {
 		var (
-			updateID int64
-			createdAt time.Time
-			senderID uuid.UUID
+			updateID     int64
+			createdAt    time.Time
+			senderID     uuid.UUID
 			reactionType string
 		)
 		if err := rows.Scan(&updateID, &createdAt, &senderID, &reactionType); err != nil {
@@ -660,8 +660,8 @@ func (r *GenericUpdateRepository) getMessageReactions(
 			SenderID:   senderID,
 			UpdateType: "reaction",
 			CreatedAt:  createdAt.Unix(),
-			Info:       services.GenericUpdateInfo{
-				Reaction:          &services.ReactionInfo{
+			Info: services.GenericUpdateInfo{
+				Reaction: &services.ReactionInfo{
 					Reaction: reactionType,
 				},
 			},

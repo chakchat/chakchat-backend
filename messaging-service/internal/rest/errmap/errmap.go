@@ -258,4 +258,11 @@ var domainErrMap = map[domain.Error]Response{
 			ErrorMessage: "Invalid delete mode",
 		},
 	},
+	domain.ErrInvalidReactionType: {
+		Code: http.StatusBadRequest,
+		Body: restapi.ErrorResponse{
+			ErrorType:    "invalid_reaction_type",
+			ErrorMessage: "Invalid reaction type",
+		},
+	},
 }

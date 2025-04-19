@@ -138,8 +138,8 @@ func GenericUpdate(update *services.GenericUpdate) JSONResponse {
 	switch update.UpdateType {
 	case services.UpdateTypeTextMessage:
 		resp[ContentField] = JSONResponse{
-			TextField:    update.Info.TextMessage.Text,
-			ReplyToField: update.Info.TextMessage.ReplyTo,
+			TextField:      update.Info.TextMessage.Text,
+			ReplyToField:   update.Info.TextMessage.ReplyTo,
 			ReactionsField: GenericUpdates(update.Info.TextMessage.Reactions),
 		}
 		if update.Info.TextMessage.Edited != nil {
@@ -160,7 +160,7 @@ func GenericUpdate(update *services.GenericUpdate) JSONResponse {
 				FileURLField:      update.Info.FileMessage.File.FileURL,
 				CreatedAtField:    update.Info.FileMessage.File.CreatedAt,
 			},
-			ReplyToField: update.Info.FileMessage.ReplyTo,
+			ReplyToField:   update.Info.FileMessage.ReplyTo,
 			ReactionsField: GenericUpdates(update.Info.FileMessage.Reactions),
 		}
 	case services.UpdateTypeDeleted:
