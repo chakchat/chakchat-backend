@@ -354,15 +354,11 @@ func (r *GenericUpdateRepository) fillTextMessages(
 			return err
 		}
 
-		reactions, err := r.getMessageReactions(ctx, db, chatID, domain.UpdateID(updateID))
-		if err != nil {
-			return err
-		}
+
 
 		textMsgs[updateID] = services.TextMessageInfo{
 			Text:      text,
 			ReplyTo:   replyToID,
-			Reactions: reactions,
 		}
 	}
 
@@ -383,6 +379,14 @@ func (r *GenericUpdateRepository) fillTextMessages(
 				// Check for edits
 				if edit, exists := editedInfo[update.UpdateID]; exists {
 					info.Edited = edit
+				}
+
+				reactions, err := r.getMessageReactions(ctx, db, chatID, domain.UpdateID(update.UpdateID))
+				if err != nil {
+					return err
+				}
+				if reactions != nil {
+					info.Reactions = reactions
 				}
 
 				updates[i].Info.TextMessage = &info
@@ -592,11 +596,6 @@ func (r *GenericUpdateRepository) fillFileMessages(
 			return err
 		}
 
-		reactions, err := r.getMessageReactions(ctx, db, chatID, domain.UpdateID(updateID))
-		if err != nil {
-			return err
-		}
-
 		fileMsgs[updateID] = services.FileMessageInfo{
 			File: dto.FileMetaDTO{
 				FileId:    fileID,
@@ -607,7 +606,6 @@ func (r *GenericUpdateRepository) fillFileMessages(
 				CreatedAt: fileCreatedAt,
 			},
 			ReplyTo:   replyToID,
-			Reactions: reactions,
 		}
 	}
 
@@ -619,6 +617,14 @@ func (r *GenericUpdateRepository) fillFileMessages(
 	for i, update := range updates {
 		if update.UpdateType == services.UpdateTypeFileMessage {
 			if info, ok := fileMsgs[update.UpdateID]; ok {
+				reactions, err := r.getMessageReactions(ctx, db, chatID, domain.UpdateID(update.UpdateID))
+				if err != nil {
+					return err
+				}
+				if reactions != nil {
+					info.Reactions = reactions
+				}
+
 				updates[i].Info.FileMessage = &info
 			} else {
 				panic("database is inconsistent!!!")
