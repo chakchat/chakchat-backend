@@ -36,6 +36,7 @@ images=(
     "${repository}user:$tag"
     "${repository}user-pg-migrate:$tag"
     "${repository}sms-service-stub:$tag"
+    "${repository}nginx:$tag"
 )
 paths=(
     "identity-service/" 
@@ -45,6 +46,7 @@ paths=(
     "user-service/"
     "user-service/"
     "stubs/sms-service-stub/"
+    "nginx/"
 )
 dockerfiles=(
     "Dockerfile"
@@ -53,6 +55,7 @@ dockerfiles=(
     "migrate.Dockerfile"
     "Dockerfile"
     "migrate.Dockerfile"
+    "Dockerfile"
     "Dockerfile"
 )
 

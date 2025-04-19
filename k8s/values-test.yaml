@@ -1,5 +1,5 @@
 # TODO:
-# 1. Add static to nginx
+# +++ 1. Add static to nginx
 # 2. Persist traces
 # 3. argocd
 # 4. Build CI/CD
@@ -7,7 +7,7 @@
 
 deployments:
   messaging:
-    image: cr.yandex/crppdu233q7oqs81a1ta/messaging:test-0f50733
+    image: cr.yandex/crppdu233q7oqs81a1ta/messaging:test-e7611d8
     imagePullPolicy: Always
     volumeMounts:
       /etc/messaging:
@@ -16,7 +16,7 @@ deployments:
         secret: public-rsa-key-sec
     envSecret: messaging-sec-env
   identity:
-    image: cr.yandex/crppdu233q7oqs81a1ta/identity:test-0f50733
+    image: cr.yandex/crppdu233q7oqs81a1ta/identity:test-e7611d8
     imagePullPolicy: Always
     volumeMounts:
       /etc/identity:
@@ -25,7 +25,7 @@ deployments:
         secret: identity-key-sec
     envSecret: identity-sec-env
   file-storage:
-    image: cr.yandex/crppdu233q7oqs81a1ta/file-storage:test-0f50733
+    image: cr.yandex/crppdu233q7oqs81a1ta/file-storage:test-e7611d8
     imagePullPolicy: Always
     volumeMounts:
       /etc/file-storage:
@@ -34,7 +34,7 @@ deployments:
         secret: public-rsa-key-sec
     envSecret: file-storage-sec-env
   user:
-    image: cr.yandex/crppdu233q7oqs81a1ta/user:test-0f50733
+    image: cr.yandex/crppdu233q7oqs81a1ta/user:test-e7611d8
     imagePullPolicy: Always
     volumeMounts:
       /etc/user:
@@ -43,7 +43,7 @@ deployments:
         secret: public-rsa-key-sec
     envSecret: user-sec-env
   sms-service-stub:
-    image: cr.yandex/crppdu233q7oqs81a1ta/sms-service-stub:test-0f50733
+    image: cr.yandex/crppdu233q7oqs81a1ta/sms-service-stub:test-e7611d8
     imagePullPolicy: Always
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
@@ -55,7 +55,8 @@ deployments:
     image: jaegertracing/all-in-one:latest
     envSecret: jaeger-sec-env
   nginx:
-    image: nginx
+    image: cr.yandex/crppdu233q7oqs81a1ta/nginx:test-e7611d8
+    imagePullPolicy: Always
     volumeMounts:
       /etc/nginx:
         configMap: nginx-conf
@@ -97,6 +98,10 @@ services:
         port: 5004
         targetPort: 5004
         protocol: TCP
+      - name: grpc
+        port: 5051
+        targetPort: 5051
+        protocol: TCP
   sms-service-stub:
     selector:
       app: sms-service-stub
@@ -133,6 +138,7 @@ services:
         port: 80
         targetPort: 80
         protocol: TCP
+    loadBalancerIP: "158.160.182.82"
     type: LoadBalancer
 
 redis:
@@ -149,7 +155,7 @@ jobs:
       spec:
         containers:
           - name: migrate
-            image: cr.yandex/crppdu233q7oqs81a1ta/messaging-pg-migrate:test-0f50733
+            image: cr.yandex/crppdu233q7oqs81a1ta/messaging-pg-migrate:test-e7611d8
             command: ["flyway", "migrate"]
             envFrom:
               - secretRef:
@@ -183,7 +189,7 @@ jobs:
       spec:
         containers:
           - name: migrate
-            image: cr.yandex/crppdu233q7oqs81a1ta/user-pg-migrate:test-0f50733
+            image: cr.yandex/crppdu233q7oqs81a1ta/user-pg-migrate:test-e7611d8
             command: ["flyway", "migrate"]
             envFrom:
               - secretRef:
@@ -258,7 +264,7 @@ configMaps:
         invalidated_token_storage:
           exp: 4m # A little bit longer than refresh_token.lifetime
         userservice:
-          grpc_addr: user-service:50051
+          grpc_addr: user:50051
         redis:
           addr: identity-redis:6379
           password: secret
@@ -350,7 +356,7 @@ configMaps:
                 client_max_body_size 11M;
 
                 location / {
-                    return 200 "Hello World!";
+                    root /static;
                 }
 
                 location /dev/jaeger/ {
