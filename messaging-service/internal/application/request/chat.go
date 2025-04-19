@@ -85,3 +85,33 @@ type UpdateSecretGroupInfo struct {
 	Name        string
 	Description string
 }
+
+// Options for getting chat
+type GetChatOptions struct {
+	LoadPreviewCount int
+	LoadLastUpdateID bool
+}
+
+func NewGetChatOptions(opts ...GetChatOption) *GetChatOptions {
+	res := new(GetChatOptions)
+	for _, optFunc := range opts {
+		optFunc(res)
+	}
+
+	return res
+}
+
+type GetChatOption func(*GetChatOptions)
+
+// It will fetch last updates with repository.FetchLastModeMessages option
+func WithChatPreview(count int) GetChatOption {
+	return func(opts *GetChatOptions) {
+		opts.LoadPreviewCount = count
+	}
+}
+
+func WithChatLastUpdateID() GetChatOption {
+	return func(opts *GetChatOptions) {
+		opts.LoadLastUpdateID = true
+	}
+}

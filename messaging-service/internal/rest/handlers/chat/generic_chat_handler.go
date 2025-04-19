@@ -2,7 +2,10 @@ package chat
 
 import (
 	"context"
+	"net/http"
+	"strconv"
 
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/errmap"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/response"
@@ -11,9 +14,18 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	queryParamLastUpdateID = "enableLastUpdateID"
+	queryParamPreviewCount = "preview"
+)
+
 type GenericChatService interface {
-	GetByMemberID(ctx context.Context, memberID uuid.UUID) ([]services.GenericChat, error)
-	GetByChatID(ctx context.Context, senderID, chatID uuid.UUID) (*services.GenericChat, error)
+	GetByMemberID(
+		ctx context.Context, memberID uuid.UUID, opts ...request.GetChatOption,
+	) ([]services.GenericChat, error)
+	GetByChatID(
+		ctx context.Context, senderID, chatID uuid.UUID, opts ...request.GetChatOption,
+	) (*services.GenericChat, error)
 }
 
 type GenericChatHandler struct {
@@ -29,7 +41,40 @@ func NewGenericChatHandler(service GenericChatService) *GenericChatHandler {
 func (h *GenericChatHandler) GetAllChats(c *gin.Context) {
 	userID := getUserID(c.Request.Context())
 
-	chats, err := h.service.GetByMemberID(c.Request.Context(), userID)
+	var opts []request.GetChatOption
+	if enableLastUpdateID := c.Query(queryParamLastUpdateID); enableLastUpdateID != "" {
+		switch enableLastUpdateID {
+		case "true":
+			opts = append(opts, request.WithChatLastUpdateID())
+		case "false":
+		default:
+			c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
+				ErrorType:    "invalid_query_param",
+				ErrorMessage: "Invalid query parameter",
+				ErrorDetails: []restapi.ErrorDetail{{
+					Field:   queryParamLastUpdateID,
+					Message: "Must be true or false",
+				}},
+			})
+		}
+	}
+
+	if previewCountStr := c.Query(queryParamPreviewCount); previewCountStr != "" {
+		if previewCount, err := strconv.Atoi(previewCountStr); err != nil {
+			opts = append(opts, request.WithChatPreview(previewCount))
+		} else {
+			c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
+				ErrorType:    "invalid_query_param",
+				ErrorMessage: "Invalid query parameter",
+				ErrorDetails: []restapi.ErrorDetail{{
+					Field:   queryParamPreviewCount,
+					Message: "Must be integer value",
+				}},
+			})
+		}
+	}
+
+	chats, err := h.service.GetByMemberID(c.Request.Context(), userID, opts...)
 	if err != nil {
 		errmap.Respond(c, err)
 		return
@@ -56,7 +101,40 @@ func (h *GenericChatHandler) GetChat(c *gin.Context) {
 	}
 	userID := getUserID(c.Request.Context())
 
-	chat, err := h.service.GetByChatID(c.Request.Context(), userID, chatId)
+	var opts []request.GetChatOption
+	if enableLastUpdateID := c.Query(queryParamLastUpdateID); enableLastUpdateID != "" {
+		switch enableLastUpdateID {
+		case "true":
+			opts = append(opts, request.WithChatLastUpdateID())
+		case "false":
+		default:
+			c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
+				ErrorType:    "invalid_query_param",
+				ErrorMessage: "Invalid query parameter",
+				ErrorDetails: []restapi.ErrorDetail{{
+					Field:   queryParamLastUpdateID,
+					Message: "Must be true or false",
+				}},
+			})
+		}
+	}
+
+	if previewCountStr := c.Query(queryParamPreviewCount); previewCountStr != "" {
+		if previewCount, err := strconv.Atoi(previewCountStr); err != nil {
+			opts = append(opts, request.WithChatPreview(previewCount))
+		} else {
+			c.JSON(http.StatusBadRequest, restapi.ErrorResponse{
+				ErrorType:    "invalid_query_param",
+				ErrorMessage: "Invalid query parameter",
+				ErrorDetails: []restapi.ErrorDetail{{
+					Field:   queryParamPreviewCount,
+					Message: "Must be integer value",
+				}},
+			})
+		}
+	}
+
+	chat, err := h.service.GetByChatID(c.Request.Context(), userID, chatId, opts...)
 	if err != nil {
 		errmap.Respond(c, err)
 		return

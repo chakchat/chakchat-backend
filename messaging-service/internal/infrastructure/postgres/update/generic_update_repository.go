@@ -2,6 +2,7 @@ package update
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -10,14 +11,35 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 type GenericUpdateRepository struct{}
 
 func NewGenericUpdateRepository() *GenericUpdateRepository {
 	return &GenericUpdateRepository{}
+}
+
+func (r *GenericUpdateRepository) GetLastUpdateID(
+	ctx context.Context, db storage.ExecQuerier, id domain.ChatID,
+) (domain.UpdateID, error) {
+	q := `
+	SELECT last_update_id
+	FROM messaging.chat_sequence
+	WHERE chat_id = $1`
+
+	var lastUpdateID int64
+	if err := db.QueryRow(ctx, q, id).Scan(&lastUpdateID); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return 0, repository.ErrNotFound
+		}
+		return 0, err
+	}
+
+	return domain.UpdateID(lastUpdateID), nil
 }
 
 func (r *GenericUpdateRepository) GetRange(
@@ -189,6 +211,97 @@ func (r *GenericUpdateRepository) Get(
 	}
 
 	return &updates[0], nil
+}
+
+func (r *GenericUpdateRepository) FetchLast( // TODO: rename to latest
+	ctx context.Context,
+	db storage.ExecQuerier,
+	visibleTo domain.UserID,
+	chatID domain.ChatID,
+	opts ...repository.FetchLastOption,
+) ([]services.GenericUpdate, error) {
+	opt := repository.NewFetchLastOptions(opts...)
+
+	var updateTypes []string
+	switch opt.Mode {
+	case repository.FetchLastModeMessages:
+		updateTypes = []string{"text_message", "file_message"}
+	case repository.FetchLastModeMessagesReactions:
+		updateTypes = []string{"text_message", "file_message", "reaction"}
+	case repository.FetchLastModeAll:
+		updateTypes = nil
+	default:
+		panic("it seems you added new repository.FetchLastMode but not implemented it")
+	}
+
+	lo, err := r.getUpdateIDFromLast(
+		ctx, db, uuid.UUID(visibleTo), uuid.UUID(chatID), updateTypes, opt.Count,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	hi, err := r.GetLastUpdateID(ctx, db, chatID)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.GetRange(ctx, db, visibleTo, chatID, lo, hi)
+}
+
+func (r *GenericUpdateRepository) getUpdateIDFromLast(
+	ctx context.Context,
+	db storage.ExecQuerier,
+	visibleTo, chatID uuid.UUID,
+	updateTypes []string,
+	count int,
+) (domain.UpdateID, error) {
+	var additionalWhereClause string
+	if updateTypes != nil {
+		for i := range updateTypes {
+			updateTypes[i] = fmt.Sprintf(`'%s'`, updateTypes[i])
+		}
+		additionalWhereClause = fmt.Sprintf("AND u.update_type IN (%s)", strings.Join(updateTypes, ", "))
+	}
+	// TODO: Please use squirrel package if such cringe will be repeated
+	q := fmt.Sprintf(`
+	SELECT u.update_id
+	FROM messaging.update u
+		LEFT JOIN messaging.update_deleted_update ud 
+			ON ud.deleted_update_id = u.update_id AND ud.chat_id = u.chat_id
+	WHERE u.chat_id = $1
+		%s -- Here is check for update type.
+		AND ud.mode IS DISTINCT FROM 'for_all'
+		AND (
+			ud.mode IS DISTINCT FROM 'for_deletion_sender' 
+			OR $2 <> (
+				SELECT u.sender_id 
+				FROM messaging.update 
+				WHERE u.chat_id = $1 
+					AND u.update_id = ud.update_id)
+		)
+	ORDER BY u.update_id DESC
+	LIMIT $3
+	`, additionalWhereClause)
+
+	rows, err := db.Query(ctx, q, chatID, visibleTo, count)
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+
+	minUpdateID := int64(1) << 62
+	for rows.Next() {
+		var updateID int64
+		if err := rows.Scan(&updateID); err != nil {
+			return 0, err
+		}
+		minUpdateID = min(minUpdateID, updateID)
+	}
+	if err := rows.Err(); err != nil {
+		return 0, err
+	}
+	return domain.UpdateID(minUpdateID), nil
 }
 
 func (r *GenericUpdateRepository) fillTextMessages(

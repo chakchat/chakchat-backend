@@ -44,7 +44,7 @@ func NewServices(db *DB, external *External) *Services {
 			db.SQLer, db.SecretGroupChat, external.FileStorage, external.Publisher,
 		),
 		GenericChat: chat.NewGenericChatService(
-			db.SQLer, db.GenericChat,
+			db.SQLer, db.GenericChat, db.GenericUpdate,
 		),
 		PersonalUpdate: update.NewPersonalUpdateService(
 			db.SQLer, db.PersonalChat, db.Update, db.Chatter, external.Publisher,

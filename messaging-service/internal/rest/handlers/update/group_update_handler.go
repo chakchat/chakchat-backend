@@ -2,7 +2,6 @@ package update
 
 import (
 	"context"
-	"net/http"
 	"strconv"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
@@ -209,7 +208,7 @@ func (h *GroupUpdateHandler) ForwardTextMessage(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, response.TextMessage(msg))
+	restapi.SendSuccess(c, response.TextMessage(msg))
 }
 
 func (h *GroupUpdateHandler) ForwardFileMessage(c *gin.Context) {
@@ -239,5 +238,5 @@ func (h *GroupUpdateHandler) ForwardFileMessage(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, response.FileMessage(msg))
+	restapi.SendSuccess(c, response.FileMessage(msg))
 }
