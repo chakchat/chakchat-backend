@@ -34,12 +34,10 @@ func (s *RestrictionStorage) GetRestrictions(ctx context.Context, id uuid.UUID, 
     	AND field_name = $2 
     	AND permitted_user_id = $3`
 
-	row, err := s.db.Query(ctx, q, id, field)
-	if err != nil {
-		return nil, err
-	}
+	row := s.db.QueryRow(ctx, q, id, field)
+
 	var specifiedUsers []uuid.UUID
-	err = row.Scan(&fieldRestriction.Field, &specifiedUsers)
+	err := row.Scan(&fieldRestriction.Field, &specifiedUsers)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, ErrNotFound
