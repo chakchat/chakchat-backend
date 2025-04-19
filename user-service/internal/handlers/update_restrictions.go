@@ -79,6 +79,7 @@ func UpdateRestrictions(restr UpdateRestrictionsServer) gin.HandlerFunc {
 					})
 					return
 				}
+				c.Error(err)
 				restapi.SendInternalError(c)
 				return
 			}
@@ -117,6 +118,7 @@ func UpdateRestrictions(restr UpdateRestrictionsServer) gin.HandlerFunc {
 					})
 					return
 				}
+				c.Error(err)
 				restapi.SendInternalError(c)
 				return
 			}

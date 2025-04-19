@@ -286,6 +286,7 @@ func (s *GetUserHandler) GetUsers() gin.HandlerFunc {
 				c.JSON(http.StatusNotFound, restapi.ErrTypeNotFound)
 				return
 			}
+			c.Error(err)
 			restapi.SendInternalError(c)
 		}
 

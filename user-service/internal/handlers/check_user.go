@@ -20,6 +20,7 @@ func CheckUserByUsername(service CheckUserServer) gin.HandlerFunc {
 
 		res, err := service.CheckUserByUsername(c.Request.Context(), username)
 		if err != nil {
+			c.Error(err)
 			restapi.SendInternalError(c)
 			return
 		}
