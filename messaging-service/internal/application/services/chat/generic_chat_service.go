@@ -49,7 +49,7 @@ func (s *GenericChatService) GetByMemberID(ctx context.Context, memberID uuid.UU
 
 	if opt.LoadLastUpdateID {
 		for _, chat := range chats {
-			if err := s.fillLastUpdateID(ctx, tx, &chat); err != nil {
+			if err = s.fillLastUpdateID(ctx, tx, &chat); err != nil {
 				return nil, err
 			}
 		}
@@ -57,7 +57,9 @@ func (s *GenericChatService) GetByMemberID(ctx context.Context, memberID uuid.UU
 
 	if opt.LoadPreviewCount > 0 {
 		for _, chat := range chats {
-			s.fillPreview(ctx, tx, &chat, memberID, opt.LoadPreviewCount)
+			if err = s.fillPreview(ctx, tx, &chat, memberID, opt.LoadPreviewCount); err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -86,13 +88,13 @@ func (s *GenericChatService) GetByChatID(ctx context.Context, senderID, chatID u
 	}
 
 	if opt.LoadLastUpdateID {
-		if err := s.fillLastUpdateID(ctx, tx, chat); err != nil {
+		if err = s.fillLastUpdateID(ctx, tx, chat); err != nil {
 			return nil, err
 		}
 	}
 
 	if opt.LoadPreviewCount > 0 {
-		if err := s.fillPreview(ctx, tx, chat, senderID, opt.LoadPreviewCount); err != nil {
+		if err = s.fillPreview(ctx, tx, chat, senderID, opt.LoadPreviewCount); err != nil {
 			return nil, err
 		}
 	}
