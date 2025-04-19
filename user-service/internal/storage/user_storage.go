@@ -7,10 +7,10 @@ import (
 	"log"
 	"time"
 
+	"github.com/chakchat/chakchat-backend/shared/go/postgres"
 	"github.com/chakchat/chakchat-backend/user-service/internal/models"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var ErrNotFound = errors.New("not found")
@@ -36,10 +36,10 @@ type SearchUsersResponse struct {
 }
 
 type UserStorage struct {
-	db *pgxpool.Pool
+	db postgres.SQLer
 }
 
-func NewUserStorage(db *pgxpool.Pool) *UserStorage {
+func NewUserStorage(db postgres.SQLer) *UserStorage {
 	return &UserStorage{db: db}
 }
 
@@ -58,7 +58,10 @@ func (s *UserStorage) GetUserByPhone(ctx context.Context, phone string) (*models
 	FROM users.user
 	WHERE phone = $1`
 
-	row := s.db.QueryRow(ctx, q, phone)
+	row, err := s.db.Query(ctx, q, phone)
+	if err != nil {
+		return nil, err
+	}
 	if err := row.Scan(&user.ID, &user.Name, &user.Username, &user.Phone,
 		&user.DateOfBirth, &user.PhotoURL, &user.CreatedAt,
 		&user.DateOfBirthVisibility, &user.PhoneVisibility); err != nil {
