@@ -2,7 +2,7 @@ CREATE SCHEMA "users";
 
 CREATE TYPE users.user_field AS ENUM ('date_of_birth', 'phone');
 
-CREATE TYPE users.field_visibility AS ENUM ('everyone', 'specfied', 'only_me');
+CREATE TYPE users.field_visibility AS ENUM ('everyone', 'specified', 'only_me');
 
 CREATE TABLE IF NOT EXISTS users.user (
     id          UUID    PRIMARY KEY,
