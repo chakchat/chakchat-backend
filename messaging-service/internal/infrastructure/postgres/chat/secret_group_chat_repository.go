@@ -208,6 +208,7 @@ func (r *SecretGroupChatRepository) getMembers(
 	if err != nil {
 		return nil, fmt.Errorf("get members query failed: %s", err)
 	}
+	defer rows.Close()
 
 	res := make([]domain.UserID, 0)
 	for rows.Next() {
