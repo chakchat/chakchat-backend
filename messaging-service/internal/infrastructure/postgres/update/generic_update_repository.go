@@ -234,11 +234,14 @@ func (r *GenericUpdateRepository) FetchLast( // TODO: rename to latest
 		panic("it seems you added new repository.FetchLastMode but not implemented it")
 	}
 
-	lo, err := r.getUpdateIDFromLast(
+	lo, found, err := r.getUpdateIDFromLast(
 		ctx, db, uuid.UUID(visibleTo), uuid.UUID(chatID), updateTypes, opt.Count,
 	)
 	if err != nil {
 		return nil, err
+	}
+	if !found {
+		return make([]services.GenericUpdate, 0), nil
 	}
 
 	hi, err := r.GetLastUpdateID(ctx, db, chatID)
@@ -255,7 +258,7 @@ func (r *GenericUpdateRepository) getUpdateIDFromLast(
 	visibleTo, chatID uuid.UUID,
 	updateTypes []string,
 	count int,
-) (domain.UpdateID, error) {
+) (_ domain.UpdateID, found bool, _ error) {
 	var additionalWhereClause string
 	if updateTypes != nil {
 		for i := range updateTypes {
@@ -286,22 +289,28 @@ func (r *GenericUpdateRepository) getUpdateIDFromLast(
 
 	rows, err := db.Query(ctx, q, chatID, visibleTo, count)
 	if err != nil {
-		return 0, err
+		return 0, false, err
 	}
 	defer rows.Close()
 
-	minUpdateID := int64(1) << 62
+	var minUpdateID *int64
 	for rows.Next() {
 		var updateID int64
 		if err := rows.Scan(&updateID); err != nil {
-			return 0, err
+			return 0, false, err
 		}
-		minUpdateID = min(minUpdateID, updateID)
+		if minUpdateID == nil || *minUpdateID > updateID {
+			minUpdateID = &updateID
+		}
 	}
 	if err := rows.Err(); err != nil {
-		return 0, err
+		return 0, false, err
 	}
-	return domain.UpdateID(minUpdateID), nil
+	if minUpdateID == nil {
+		return 0, false, nil
+	}
+
+	return domain.UpdateID(*minUpdateID), true, nil
 }
 
 func (r *GenericUpdateRepository) fillTextMessages(
