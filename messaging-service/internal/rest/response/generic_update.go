@@ -149,7 +149,7 @@ func GenericUpdate(update *services.GenericUpdate) JSONResponse {
 		resp[ContentField] = JSONResponse{
 			NewTextField:   update.Info.TextMessageEdited.NewText,
 			MessageIDField: update.Info.TextMessageEdited.MessageID,
-		}
+		}	
 	case services.UpdateTypeFileMessage:
 		resp[ContentField] = JSONResponse{
 			FileField: JSONResponse{
@@ -171,6 +171,7 @@ func GenericUpdate(update *services.GenericUpdate) JSONResponse {
 	case services.UpdateTypeReaction:
 		resp[ContentField] = JSONResponse{
 			ReactionField: update.Info.Reaction.Reaction,
+			MessageIDField: update.Info.Reaction.MessageID,
 		}
 	case services.UpdateTypeSecret:
 		resp[ContentField] = JSONResponse{
