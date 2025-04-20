@@ -28,11 +28,10 @@ func NewRestrictionStorage(db postgres.SQLer) *RestrictionStorage {
 
 func (s *RestrictionStorage) GetRestrictions(ctx context.Context, id uuid.UUID, field string) (*FieldRestrictions, error) {
 	var fieldRestriction FieldRestrictions
-	q := `SELECT * 
+	q := `SELECT field_name, permitted_user_ids
 		FROM users.field_restrictions 
 		WHERE owner_user_id = $1 
-    	AND field_name = $2 
-    	AND permitted_user_id = $3`
+    	AND field_name = $2`
 
 	row := s.db.QueryRow(ctx, q, field, id)
 
