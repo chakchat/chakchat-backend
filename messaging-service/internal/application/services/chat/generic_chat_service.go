@@ -56,8 +56,8 @@ func (s *GenericChatService) GetByMemberID(ctx context.Context, memberID uuid.UU
 	}
 
 	if opt.LoadPreviewCount > 0 {
-		for _, chat := range chats {
-			if err = s.fillPreview(ctx, tx, &chat, memberID, opt.LoadPreviewCount); err != nil {
+		for i := range chats {
+			if err = s.fillPreview(ctx, tx, &chats[i], memberID, opt.LoadPreviewCount); err != nil {
 				return nil, err
 			}
 		}
