@@ -75,11 +75,7 @@ func GenericChat(chat *services.GenericChat) JSONResponse {
 		resp[LastUpdateIDField] = *chat.LastUpdateID
 	}
 	if chat.UpdatePreview != nil {
-		updates := make([]JSONResponse, len(chat.UpdatePreview))
-		for i := range chat.UpdatePreview {
-			updates[i] = GenericUpdate(&chat.UpdatePreview[i])
-		}
-		resp[UpdatePreviewField] = updates
+		resp[UpdatePreviewField] = GenericUpdates(chat.UpdatePreview)
 	}
 
 	switch chat.ChatType {

@@ -9,10 +9,20 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/restapi"
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
+
+const attributeNameErrorType = "error_type"
 
 func Respond(c *gin.Context, err error) {
 	resp := Map(err)
+
+	span := trace.SpanFromContext(c.Request.Context())
+	span.SetAttributes(
+		attribute.String(attributeNameErrorType, resp.Body.ErrorType),
+	)
+
 	if resp.Code >= 500 {
 		c.Error(err)
 	}
