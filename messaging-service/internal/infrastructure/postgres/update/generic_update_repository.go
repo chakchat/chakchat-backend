@@ -678,6 +678,7 @@ func (r *GenericUpdateRepository) getMessageReactions(
 			Info: services.GenericUpdateInfo{
 				Reaction: &services.ReactionInfo{
 					Reaction: reactionType,
+					MessageID: int64(messageID),
 				},
 			},
 		})
@@ -732,6 +733,7 @@ func (r *GenericUpdateRepository) fillReactions(
 
 		reactions[updateID] = services.ReactionInfo{
 			Reaction: reaction,
+			MessageID: messageID,
 		}
 	}
 

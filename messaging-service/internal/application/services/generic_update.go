@@ -59,6 +59,7 @@ type DeletedInfo struct {
 
 type ReactionInfo struct {
 	Reaction string
+	MessageID int64
 }
 
 type SecretUpdateInfo struct {

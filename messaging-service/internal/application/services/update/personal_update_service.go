@@ -183,7 +183,7 @@ func (s *PersonalUpdateService) DeleteMessage(
 		return nil, err
 	}
 
-	msg, err := s.updateRepo.FindTextMessage(
+	msg, err := s.updateRepo.FindGenericMessage(
 		ctx, tx,
 		domain.ChatID(req.ChatID),
 		domain.UpdateID(req.MessageID),
