@@ -74,7 +74,7 @@ func GetRestrictions(service GetRestrictionsServer, getUser GetUserServer) gin.H
 				SpecifiedUsers: nil,
 			}
 		} else {
-			restrPhone, err := service.GetRestrictions(c.Request.Context(), meId, "Phone")
+			restrPhone, err := service.GetRestrictions(c.Request.Context(), meId, "phone")
 			if err != nil {
 				if err == services.ErrNotFound {
 					c.JSON(http.StatusNotFound, restapi.ErrorResponse{
@@ -104,7 +104,7 @@ func GetRestrictions(service GetRestrictionsServer, getUser GetUserServer) gin.H
 				SpecifiedUsers: nil,
 			}
 		} else {
-			restrDate, err := service.GetRestrictions(c.Request.Context(), meId, "DateOfBirth")
+			restrDate, err := service.GetRestrictions(c.Request.Context(), meId, "date_of_birth")
 			if err != nil {
 				if err == services.ErrNotFound {
 					c.JSON(http.StatusNotFound, restapi.ErrorResponse{
