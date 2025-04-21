@@ -9,7 +9,6 @@ import (
 	"github.com/chakchat/chakchat-backend/user-service/internal/models"
 	"github.com/chakchat/chakchat-backend/user-service/internal/restapi"
 	"github.com/chakchat/chakchat-backend/user-service/internal/services"
-	"github.com/chakchat/chakchat-backend/user-service/internal/storage"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -25,10 +24,10 @@ type FieldRestriction struct {
 }
 
 type GetRestrictionsServer interface {
-	GetRestrictions(ctx context.Context, id uuid.UUID, field string) (*storage.FieldRestrictions, error)
+	GetAllowedUserIDs(ctx context.Context, id uuid.UUID, field string) ([]uuid.UUID, error)
 }
 
-func GetRestrictions(service GetRestrictionsServer, getUser GetUserServer) gin.HandlerFunc {
+func GetAllowedUserIDs(service GetRestrictionsServer, getUser GetUserServer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claimId, ok := auth.GetClaims(c.Request.Context())[auth.ClaimId]
 		if !ok {
@@ -74,7 +73,7 @@ func GetRestrictions(service GetRestrictionsServer, getUser GetUserServer) gin.H
 				SpecifiedUsers: nil,
 			}
 		} else {
-			restrPhone, err := service.GetRestrictions(c.Request.Context(), meId, "phone")
+    restrPhone, err := service.GetAllowedUserIDs(c.Request.Context(), meId, "phone")
 			if err != nil {
 				if err == services.ErrNotFound {
 					c.JSON(http.StatusNotFound, restapi.ErrorResponse{
@@ -89,7 +88,7 @@ func GetRestrictions(service GetRestrictionsServer, getUser GetUserServer) gin.H
 			}
 			phoneRestriction = FieldRestriction{
 				OpenTo:         "specified",
-				SpecifiedUsers: restrPhone.SpecifiedUsers,
+				SpecifiedUsers: restrPhone,
 			}
 		}
 
@@ -104,7 +103,7 @@ func GetRestrictions(service GetRestrictionsServer, getUser GetUserServer) gin.H
 				SpecifiedUsers: nil,
 			}
 		} else {
-			restrDate, err := service.GetRestrictions(c.Request.Context(), meId, "date_of_birth")
+			restrDate, err := service.GetAllowedUserIDs(c.Request.Context(), meId, "date_of_birth")
 			if err != nil {
 				if err == services.ErrNotFound {
 					c.JSON(http.StatusNotFound, restapi.ErrorResponse{
@@ -119,7 +118,7 @@ func GetRestrictions(service GetRestrictionsServer, getUser GetUserServer) gin.H
 			}
 			dateRestrictions = FieldRestriction{
 				OpenTo:         "specified",
-				SpecifiedUsers: restrDate.SpecifiedUsers,
+				SpecifiedUsers: restrDate,
 			}
 		}
 

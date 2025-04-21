@@ -166,7 +166,7 @@ func main() {
 		GET("/v1.0/users", getUserServer.GetUsersByCriteria()).
 		GET("/v1.0/users/:users", getUserServer.GetUsers()).
 		GET("/v1.0/me", getUserServer.GetMe()).
-		GET("/v1.0/me/restrictions", handlers.GetRestrictions(getRestrictionService, getUserService)).
+		GET("/v1.0/me/restrictions", handlers.GetAllowedUserIDs(getRestrictionService, getUserService)).
 		PUT("v1.0/me", handlers.UpdateUser(updateUserService, getUserService)).
 		PUT("v1.0/me/restrictions", handlers.UpdateRestrictions(updateRestrictions)).
 		PUT("v1.0/me/profile-photo", handlers.UpdatePhoto(processPhotoService)).
