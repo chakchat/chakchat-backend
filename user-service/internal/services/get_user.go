@@ -118,7 +118,7 @@ func (g *GetUserService) GetUserByUsername(ctx context.Context, ownerId uuid.UUI
 	}
 
 	if user.DateOfBirthVisibility == models.RestrictionSpecified {
-		restr, err := g.getRestrictionRepo.GetAllowedUserIDs(ctx, user.ID, "date_of_birth")
+    restr, err := g.getRestrictionRepo.GetAllowedUserIDs(ctx, user.ID, "date_of_birth")
 		if err != nil {
 			if errors.Is(err, storage.ErrNotFound) {
 				return nil, ErrNotFound

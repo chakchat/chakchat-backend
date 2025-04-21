@@ -73,7 +73,7 @@ func GetAllowedUserIDs(service GetRestrictionsServer, getUser GetUserServer) gin
 				SpecifiedUsers: nil,
 			}
 		} else {
-			restrPhone, err := service.GetAllowedUserIDs(c.Request.Context(), meId, "phone")
+    restrPhone, err := service.GetAllowedUserIDs(c.Request.Context(), meId, "phone")
 			if err != nil {
 				if err == services.ErrNotFound {
 					c.JSON(http.StatusNotFound, restapi.ErrorResponse{
