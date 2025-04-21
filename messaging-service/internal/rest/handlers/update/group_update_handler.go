@@ -133,7 +133,7 @@ func (h *GroupUpdateHandler) SendReaction(c *gin.Context) {
 	userID := getUserID(c.Request.Context())
 
 	req := struct {
-		Reaction  string `json:"reaction_type"`
+		Reaction  string `json:"reaction"`
 		MessageID int64  `json:"message_id"`
 	}{}
 	if err := c.ShouldBindBodyWithJSON(&req); err != nil {

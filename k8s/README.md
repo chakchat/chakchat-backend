@@ -1,0 +1,1 @@
+You should call `minikube tunnel` to expose nginx to your local network.
