@@ -1,0 +1,48 @@
+{{- range $key, $value := .Values.redis }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ $.Release.Namespace }}
+  name: {{ $key }}
+  labels:
+    app.kubernetes.io/name: {{ $key }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ $key }}
+  template:
+    metadata:
+      labels:
+       app: {{ $key }}
+    spec:
+      containers:
+        - name: redis
+          image: redis:alpine
+          resources:
+            requests:
+              memory: "100Mi"
+              cpu: "50m"
+            limits: 
+              memory: "300Mi"
+              cpu: "100m"
+          ports:
+            - containerPort: 6379
+          envFrom:
+            - secretRef:
+                name: {{ $value.secret }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: {{ $.Release.Namespace }}
+  name: {{ $key }}
+spec:
+  selector:
+    app: {{ $key }}
+  ports:
+    - port: 6379
+      targetPort: 6379
+      protocol: TCP
+---
+{{- end }}

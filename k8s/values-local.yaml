@@ -1,0 +1,605 @@
+deployments:
+  messaging:
+    image: docker.io/library/messaging:local
+    volumeMounts:
+      /etc/messaging:
+        configMap: messaging-conf
+      /app/keys:
+        secret: public-rsa-key-sec
+    envSecret: messaging-sec-env
+  identity:
+    image: identity:local
+    volumeMounts:
+      /etc/identity:
+        configMap: identity-conf
+      /app/keys:
+        secret: identity-key-sec
+  file-storage:
+    image: file-storage:local
+    volumeMounts:
+      /etc/file-storage:
+        configMap: file-storage-conf
+      /app/keys:
+        secret: public-rsa-key-sec
+    envSecret: file-storage-sec-env
+  minio:
+    image: quay.io/minio/minio:latest
+    args: ["server", "/data", "--console-address", ":9001"]
+    envSecret: minio-sec-env
+    volumeMounts:
+      /data:
+        readOnly: false
+  user:
+    image: user:local
+    volumeMounts:
+      /etc/user:
+        configMap: user-conf
+      /app/keys:
+        secret: public-rsa-key-sec
+    envSecret: user-sec-env
+  sms-service-stub:
+    image: sms-service-stub:local
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    args: ["--config=/etc/otel-collector/config.yaml"]
+    volumeMounts:
+      /etc/otel-collector:
+        configMap: otel-collector-conf
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    envSecret: jaeger-sec-env
+  nginx:
+    image: nginx
+    volumeMounts:
+      /etc/nginx:
+        configMap: nginx-conf
+
+services:
+  messaging:
+    selector:
+      app: messaging
+    ports:
+      - name: http
+        port: 8080
+        targetPort: 8080
+        protocol: TCP
+  identity:
+    selector:
+      app: identity
+    ports:
+      - name: http
+        port: 5000
+        targetPort: 5000
+        protocol: TCP
+  file-storage:
+    selector:
+      app: file-storage
+    ports:
+      - name: http
+        port: 5004
+        targetPort: 5004
+        protocol: TCP
+      - name: grpc
+        port: 9090
+        targetPort: 9090
+        protocol: TCP
+  minio:
+    selector:
+      app: minio
+    ports:
+      - name: api
+        port: 9000
+        targetPort: 9000
+      - name: console
+        port: 9001
+        targetPort: 9001
+    type: LoadBalancer
+  user:
+    selector:
+      app: user
+    ports:
+      - name: http
+        port: 5004
+        targetPort: 5004
+        protocol: TCP
+  sms-service-stub:
+    selector:
+      app: sms-service-stub
+    ports:
+      - name: http
+        port: 5023
+        targetPort: 5023
+        protocol: TCP
+  otel-collector:
+    selector:
+      app: otel-collector
+    ports:
+      - name: grpc
+        port: 4317
+        targetPort: 4317
+        protocol: TCP
+  jaeger:
+    selector:
+      app: jaeger
+    ports:
+      - name: grpc
+        port: 4317
+        targetPort: 4317
+        protocol: TCP
+      - name: ui
+        port: 16686
+        targetPort: 16686
+        protocol: TCP
+  nginx:
+    selector:
+      app: nginx
+    ports:
+      - name: http
+        port: 80
+        targetPort: 80
+        protocol: TCP
+    type: LoadBalancer
+
+redis:
+  messaging-redis:
+    secret: messaging-redis-sec-env
+  identity-redis:
+    secret: identity-redis-sec-env
+  file-storage-redis:
+    secret: file-storage-redis-sec-env
+
+jobs:
+  messaging-pg-migrate:
+    template:
+      spec:
+        containers:
+          - name: migrate
+            image: messaging-pg-migrate:local
+            command: ["flyway", "migrate"]
+            envFrom:
+              - secretRef:
+                  name: messaging-migrate-sec-env
+        initContainers:
+          - name: wait-pg
+            image: postgres:latest
+            command: &wait-pg-command
+              - sh
+              - -c
+              - |
+                wait() {
+                    echo "Waiting for PostgreSQL readiness..."
+                    timeout 300 sh -c "
+                        until pg_isready -d $PG_CONNECTION_STRING ; do
+                            sleep 1
+                        done
+                        echo \"PostgreSQL is ready!\"
+                    "
+                }
+                if ! wait; then
+                    echo "Timeout reached while attempting to connect PostgreSQL"
+                    exit 1
+                fi
+            envFrom:
+              - secretRef:
+                  name: messaging-wait-pg-sec-env
+        restartPolicy: Never
+  user-pg-migrate:
+    template:
+      spec:
+        containers:
+          - name: migrate
+            image: user-pg-migrate:local
+            command: ["flyway", "migrate"]
+            envFrom:
+              - secretRef:
+                  name: user-migrate-sec-env
+        initContainers:
+          - name: wait-pg
+            image: postgres:latest
+            command: *wait-pg-command
+            envFrom:
+              - secretRef:
+                  name: user-wait-pg-sec-env
+        restartPolicy: Never
+  minio-init:
+    template:
+      spec:
+        containers:
+          - name: init
+            image: minio/mc
+            command:
+              - bash
+              - -c
+              - |
+                mc alias set myminio http://minio:9000 $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD
+                mc mb myminio/files
+                mc anonymous set download myminio/files
+                mc admin accesskey create myminio --access-key $ACCESS_KEY_ID --secret-key $SECRET_ACCESS_KEY
+            envFrom:
+              - secretRef:
+                  name: minio-init-sec-env
+        restartPolicy: Never
+
+pg:
+  messaging-pg:
+    instances: 1
+    database: messaging
+    owner: messaging
+    secret: messaging-pg-sec
+  user-pg:
+    instances: 1
+    database: userdb
+    owner: user
+    secret: user-pg-sec
+  file-storage-pg:
+    instances: 1
+    database: filemetadata
+    owner: filestorage
+    secret: file-storage-pg-sec
+
+configMaps:
+  messaging-conf:
+    data:
+      config.yml: |
+        jwt:
+          signing_method: RS256
+          issuer: identity_service
+          audience:
+            - messaging_service
+          key_file_path: /app/keys/rsa.pub
+        redis:
+          addr: messaging-redis:6379
+          password: secret
+          db: 0
+        file_storage:
+          grpc_addr: file-storage-service:9090
+        otlp:
+          grpc_addr: otel-collector:4317
+  identity-conf:
+    data:
+      config.yml: |
+        access_token:
+          signing_method: HS512
+          lifetime: 5m 
+          issuer: identity_service
+          audience: 
+            - client
+          key_file_path: /app/keys/sym
+        refresh_token:
+          signing_method: HS512
+          lifetime: 30m 
+          issuer: identity_service
+          audience: 
+            - client
+          key_file_path: /app/keys/sym
+        internal_token:
+          signing_method: RS256
+          lifetime: 1m 
+          issuer: identity_service
+          audience: 
+            - identity_service
+          key_file_path: /app/keys/rsa
+        invalidated_token_storage:
+          exp: 4m # A little bit longer than refresh_token.lifetime
+        userservice:
+          grpc_addr: user-service:50051
+        redis:
+          addr: identity-redis:6379
+          password: secret
+          db: 0
+        signin_meta:
+          lifetime: 2m
+        signup_meta:
+          lifetime: 2m
+        idempotency:
+          data_exp: 10m
+        phone_code:
+          send_frequency: 1m
+        sms:
+          type: stub
+          stub:
+            addr: http://sms-service-stub:5023
+        otlp:
+          grpc_addr: otel-collector:4317
+  file-storage-conf:
+    data:
+      config.yml: |
+        jwt:
+          signing_method: RS256
+          lifetime: 3m
+          issuer: identity_service
+          audience: 
+            - file_storage_service
+          key_file_path: /app/keys/rsa.pub
+        redis:
+          addr: file-storage-redis:6379
+          password: secret
+          db: 0
+        idempotency:
+          data_exp: 10m
+        upload:
+          file_size_limit: 10485760 # 10MB
+        multipart_upload:
+          min_file_size: 524288000 # 10MB
+          max_part_size: 1048576 # 100MB
+        otlp:
+          grpc_addr: otel-collector:4317
+        grpc_service:
+          port: 9090
+  user-conf:
+    data:
+      config.yml: |
+        server:
+          grpc-port: "50051" 
+        jwt:
+          signing_method: RS256
+          lifetime: 3m
+          issuer: identity_service
+          audience: 
+            - user_service
+          key_file_path: /app/keys/rsa.pub
+        otlp:
+          grpc_addr: otel-collector:4317
+  otel-collector-conf:
+    data:
+      config.yaml: |
+        receivers:
+          otlp:
+            protocols:
+              grpc:
+                endpoint: 0.0.0.0:4317
+        exporters:
+          otlp:
+            endpoint: jaeger:4317
+            tls:
+              insecure: true
+        service:
+          pipelines:
+            traces:
+              receivers: [otlp]
+              processors: []
+              exporters: [otlp]
+  nginx-conf:
+    data:
+      nginx.conf: |
+        events{
+            worker_connections 1024;
+        }
+
+        http {
+            server {
+                listen 80;
+
+                # 10M plus reserved 1M
+                client_max_body_size 11M;
+
+                location / {
+                    return 200 "Hello World!";
+                }
+
+                location /dev/jaeger/ {
+                    proxy_pass http://jaeger:16686/; 
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                    
+                    sub_filter_once off;
+                    sub_filter_types *;
+                    sub_filter 'href="/' 'href="/dev/jaeger/';
+                    sub_filter 'src="/' 'src="/dev/jaeger/';
+                    sub_filter 'url(/' 'url(/dev/jaeger/';
+                }
+
+                location /api/identity/ {
+                    proxy_pass http://identity:5000/;
+                }
+
+                location /api/file-storage/ {
+                    auth_request /auth;
+                    auth_request_set $x_internal_token $upstream_http_x_internal_token;
+
+                    # Internal services shouldn't know about the Authorization header.
+                    proxy_set_header Authorization "";
+                    proxy_set_header X-Internal-Token $x_internal_token;
+                    proxy_pass http://file-storage:5004/;
+                    # To prevent the client from seeing the Authorization header.
+                    proxy_hide_header X-Internal-Token;
+                }
+                
+                location /api/user/v1.0/are-you-a-real-teapot/ {
+                    proxy_pass http://user:5004/v1.0/are-you-a-real-teapot;
+                }
+
+                location /api/user/v1.0/username/ {
+                    proxy_pass http://user:5004/v1.0/username/;
+                }
+                
+                location /api/user/ {
+                    auth_request /auth;
+                    auth_request_set $x_internal_token $upstream_http_x_internal_token;
+
+                    # Internal services shouldn't know about the Authorization header.
+                    proxy_set_header Authorization "";
+                    proxy_set_header X-Internal-Token $x_internal_token;
+                    proxy_pass http://user:5004/;
+                    # To prevent the client from seeing the Authorization header.
+                    proxy_hide_header X-Internal-Token;
+                }
+
+                location /api/messaging/ {
+                    auth_request /auth;
+                    auth_request_set $x_internal_token $upstream_http_x_internal_token;
+
+                    # Internal services shouldn't know about the Authorization header.
+                    proxy_set_header Authorization "";
+                    proxy_set_header X-Internal-Token $x_internal_token;
+                    proxy_pass http://messaging:8080/;
+                    # To prevent the client from seeing the Authorization header.
+                    proxy_hide_header X-Internal-Token;
+                }
+
+                location /auth {
+                    proxy_pass http://identity:5000/v1.0/identity;
+                    internal; # Ensure this location is not directly accessible by the client
+                }
+
+                location /sms/ {
+                    proxy_pass http://sms-service-stub:5023/;
+                }
+
+                error_page 401 @401.json;
+                location @401.json {
+                    default_type application/json;
+                    return 401 '{\n\t"error_type": "unauthorized",\n\t"error_message": "Unauthorized."\n}';
+                }
+
+                error_page 413 @413.json;
+                location @413.json {
+                    default_type application/json;
+                    return 413 '{\n\t"error_type": "body_too_large",\n\t"error_message": "Request body is too large."\n}';
+                }
+
+                error_page 404 @404.json;
+                location @404.json {
+                    default_type application/json;
+                    return 404 '{\n\t"error_type": "not_found",\n\t"error_message": "Not Found"\n}';
+                }
+                
+                error_page 500 @500.json;
+                location @500.json {
+                    default_type application/json;
+                    return 500 '{\n\t"error_type": "internal_error",\n\t"error_message": "Internal Server Error (nginx)"\n}';
+                }
+                
+                error_page 502 @502.json;
+                location @502.json {
+                    default_type application/json;
+                    return 502 '{\n\t"error_type": "internal_error",\n\t"error_message": "Bad gateway (nginx)"\n}';
+                }
+            }
+        }
+
+localSecrets:
+  # Messaging service
+  messaging-sec-env:
+    stringData:
+      PG_CONN_STRING: postgres://messaging:secret@messaging-pg-rw:5432/messaging
+  messaging-migrate-sec-env:
+    stringData:
+      FLYWAY_URL: jdbc:postgresql://messaging-pg-rw:5432/messaging
+      FLYWAY_USER: messaging
+      FLYWAY_PASSWORD: secret
+      FLYWAY_LOCATIONS: filesystem:/app/migrations
+      FLYWAY_VALIDATE_MIGRATION_NAMING: "true"
+      FLYWAY_BASELINE_ON_MIGRATE: "true"
+  messaging-wait-pg-sec-env:
+    stringData:
+      PG_CONNECTION_STRING: postgres://messaging:secret@messaging-pg-rw:5432/messaging
+  messaging-pg-sec:
+    stringData:
+      username: messaging
+      password: secret
+  messaging-redis-sec-env:
+    stringData:
+      REDIS_PASSWORD: secret
+  # Identity service
+  identity-redis-sec-env:
+    stringData:
+      REDIS_PASSWORD: secret
+  # File storage service
+  file-storage-sec-env:
+    stringData:
+      FILE_STORAGE_AWS_ACCESS_KEY_ID: &minio-access-key-id file-storage
+      FILE_STORAGE_AWS_SECRET_ACCESS_KEY: &minio-secret-access-key file-storage-access-secret
+      FILE_STORAGE_AWS_REGION: moscow
+      FILE_STORAGE_AWS_ENDPOINT_URL: http://minio:9000
+      FILE_STORAGE_S3_BUCKET: files
+      FILE_STORAGE_S3_URL_PREFIX: http://0.0.0.0:9000/files/
+      FILE_STORAGE_DB_DSN: host=file-storage-pg-rw port=5432 user=filestorage password=secret dbname=filemetadata sslmode=disable
+  file-storage-pg-sec:
+    stringData:
+      username: filestorage
+      password: secret
+  file-storage-redis-sec-env:
+    stringData:
+      REDIS_PASSWORD: secret
+  minio-sec-env:
+    stringData:
+      MINIO_ROOT_USER: &minio-root-user admin
+      MINIO_ROOT_PASSWORD: &minio-root-password admin123
+  minio-init-sec-env:
+    stringData:
+      MINIO_ROOT_USER: *minio-root-user
+      MINIO_ROOT_PASSWORD: *minio-root-password
+      ACCESS_KEY_ID: *minio-access-key-id
+      SECRET_ACCESS_KEY: *minio-secret-access-key
+  jaeger-sec-env:
+    stringData:
+      COLLECTOR_OTLP_ENABLED: "true"
+      QUERY_BASE_PATH: /dev/jaeger
+      SERVER_STATIC_FILES: /dev/jaeger
+  # User service
+  user-sec-env:
+    stringData:
+      PG_CONNECTION_STRING: postgres://user:secret@user-pg-rw:5432/userdb?sslmode=disable
+  user-pg-sec:
+    stringData:
+      username: user
+      password: secret
+  user-migrate-sec-env:
+    stringData:
+      FLYWAY_URL: jdbc:postgresql://user-pg-rw:5432/userdb
+      FLYWAY_USER: user
+      FLYWAY_PASSWORD: secret
+      FLYWAY_LOCATIONS: filesystem:/app/migrations
+      FLYWAY_VALIDATE_MIGRATION_NAMING: "true"
+      FLYWAY_BASELINE_ON_MIGRATE: "true"
+  user-wait-pg-sec-env:
+    stringData:
+      PG_CONNECTION_STRING: postgres://user:secret@user-pg-rw:5432/userdb?sslmode=disable
+  # JWT signing keys
+  public-rsa-key-sec:
+    stringData:
+      rsa.pub: &rsapub |
+        -----BEGIN PUBLIC KEY-----
+        MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnbN5PLBLOiEdxNkvTHLM
+        7Xj8rec3Vmcp1pMo2tCk5Ga4PycwEidpdxuDsW+OuA6k6ZqUof72iY8sAeq+RVyD
+        165u7MEWmPrMbPaaDBB1N6GqV3Ux00G3acR0BvF/4TrsIxVHKnl4MMkDkX6m0zM/
+        wVGWxZWbs+t5R3Vzn85L2ldEl/ZOk0HVyKV7tCeJme1pwztsGUscuShPVXwsdbpl
+        dyo29/WvvxGfawKeFYrIYrTxXmRC2kLuGQ3YS6evTFuSNMVQVcESNxQRJTsQTWDk
+        5Abz97Smis+A375AeyMVbwa7g/QprxvFL0+8JQkEExxKGwsuH+EmB4TV2O/Mj9hG
+        pwIDAQAB
+        -----END PUBLIC KEY-----
+  identity-key-sec:
+    stringData:
+      sym: ee2273552ddeb48b8012691417a0d17ef24feb1a53cf3fd936e999e5827436334861878b8d22a0278a659323d1b2605ab5ccafd4bf38c8417df998035f2f2558
+      rsa.pub: *rsapub
+      rsa: |
+        -----BEGIN PRIVATE KEY-----
+        MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCds3k8sEs6IR3E
+        2S9McsztePyt5zdWZynWkyja0KTkZrg/JzASJ2l3G4Oxb464DqTpmpSh/vaJjywB
+        6r5FXIPXrm7swRaY+sxs9poMEHU3oapXdTHTQbdpxHQG8X/hOuwjFUcqeXgwyQOR
+        fqbTMz/BUZbFlZuz63lHdXOfzkvaV0SX9k6TQdXIpXu0J4mZ7WnDO2wZSxy5KE9V
+        fCx1umV3Kjb39a+/EZ9rAp4VishitPFeZELaQu4ZDdhLp69MW5I0xVBVwRI3FBEl
+        OxBNYOTkBvP3tKaKz4DfvkB7IxVvBruD9CmvG8UvT7wlCQQTHEobCy4f4SYHhNXY
+        78yP2EanAgMBAAECggEABJdzVLkx/4fI+kXJPZnBbg/4lMb80qcJ+KWWlMRqwKcI
+        VKJl9mlaW0LxqIATMOMQRH2hN+mYsQmk94tSWJT91mZNntbCZdg2N91NlUNXaQlr
+        0G8Tm8833BGsaoABQAQQrbbSuHcKm6pb+xJWdiNxsZsYCjm1wQfT+KjVTIEGWV2R
+        t+cdNw1PsxNV6N2DF5IUU83iMJ4TfYAmgClTfRWSXkGI1L/81q003LQZikBh6qIq
+        P19h6aSBKhXMd6AehMbepNiTd/fIMmLHMPDOVJxA+zXzgemJi0FpHwv4m9lxHu+K
+        NydBDemRaT4VIs/h85fV7tk/iM0esvLSz3RoHFmtHQKBgQDWaNkvd56zl3VkhMgB
+        3qq4Feb2DJTr6WdEwezpHuwgXTyVYZVq8gpI5tziIvUM7NYgXa37241j9V9ieOnj
+        hMCNTq4JsAI03jTs3RJFarNFXAXjOmjjiBgKw8wmhhfuFjWO67blgnFQA7RjPYpY
+        4+eT8pge0QRjixsYnJlgv6SfhQKBgQC8SpgnKFtHhrXT8aARJSgwUUpEB7ZJu5ED
+        BYeSy9o3cKdMFtYd2Zx/HJprvWDfevUgFc1tKQDI3p3FyviJ8YA4V7eqv1YnIpW5
+        MVSDxPkIAIimUvIU4EnNS/C3cMyvC0X2dR2kys1Lwzsl+3W2MFSBBzhyjr8h9EKB
+        4JC0eKVnOwKBgQCEjSVX1xfh50zH697KaSIZ1FCI5JZcklspgso4BMnt6DZAE6gQ
+        CbqZ/z+m/f2JFBH8yG17OuxaU6O4eQ//fF6d/XpSuuFiVc1acgGNsL1Lr+xj4gRe
+        RhC29v0LA/NfWZOa29aiZNYwpVmr0Kvq8FqGeH/a7VVNRP5nZMjdqxzXEQKBgBwj
+        ga2IaGu+A/pSh7tINENUQqb8CA/oyfkLoIEdmdTjLv0+BG2dkbelTKaBPLLpKyzK
+        VVLU59sc+bMPbCkhQCorYbVQts1Oa9WrO5gdnaHGgqVoi+j2w9C8YpLndo9KPgBg
+        7DcuX5PM70/zzlmVy2sk6xijoIiweifyqW1vAjj1AoGBANMbgbfNdeZEF1d9X04d
+        e0kbra97p0k1I1E09L4895/3lZU+HkSrbnlPHGZ9aKB2VIlY0+8xwHgUN8HvT5/a
+        6fX7MPkRSFszgmydJIg5emxb6zhQCRlh7M4EOMmRqjJrnv22VoGaSZYD6SW6ItLa
+        vHasSnqsYHwoGeirQr2ACOkX
+        -----END PRIVATE KEY-----
