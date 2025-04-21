@@ -18,7 +18,7 @@ type GetUserRepository interface {
 }
 
 type GetRestrictionRepository interface {
-	GetRestrictions(ctx context.Context, id uuid.UUID, field string) (*storage.FieldRestrictions, error)
+	GetAllowedUserIDs(ctx context.Context, id uuid.UUID, field string) ([]uuid.UUID, error)
 }
 
 type GetUserService struct {
@@ -51,14 +51,14 @@ func (g *GetUserService) GetUserByID(ctx context.Context, ownerId uuid.UUID, tar
 	}
 
 	if user.PhoneVisibility == models.RestrictionSpecified {
-		restr, err := g.getRestrictionRepo.GetRestrictions(ctx, targetId, "phone")
+		restr, err := g.getRestrictionRepo.GetAllowedUserIDs(ctx, targetId, "phone")
 		if err != nil {
 			if errors.Is(err, storage.ErrNotFound) {
 				return nil, ErrNotFound
 			}
 			return nil, err
 		}
-		if !canView(ownerId, restr.SpecifiedUsers) {
+		if !canView(ownerId, restr) {
 			user.Phone = ""
 		}
 	}
@@ -68,14 +68,14 @@ func (g *GetUserService) GetUserByID(ctx context.Context, ownerId uuid.UUID, tar
 	}
 
 	if user.DateOfBirthVisibility == models.RestrictionSpecified {
-		restr, err := g.getRestrictionRepo.GetRestrictions(ctx, targetId, "date_of_birth")
+		restr, err := g.getRestrictionRepo.GetAllowedUserIDs(ctx, targetId, "date_of_birth")
 		if err != nil {
 			if errors.Is(err, storage.ErrNotFound) {
 				return nil, ErrNotFound
 			}
 			return nil, err
 		}
-		if !canView(ownerId, restr.SpecifiedUsers) {
+		if !canView(ownerId, restr) {
 			user.DateOfBirth = nil
 		}
 	}
@@ -101,14 +101,14 @@ func (g *GetUserService) GetUserByUsername(ctx context.Context, ownerId uuid.UUI
 	}
 
 	if user.PhoneVisibility == models.RestrictionSpecified {
-		restr, err := g.getRestrictionRepo.GetRestrictions(ctx, user.ID, "Phone")
+		restr, err := g.getRestrictionRepo.GetAllowedUserIDs(ctx, user.ID, "Phone")
 		if err != nil {
 			if errors.Is(err, storage.ErrNotFound) {
 				return nil, ErrNotFound
 			}
 			return nil, err
 		}
-		if !canView(ownerId, restr.SpecifiedUsers) {
+		if !canView(ownerId, restr) {
 			user.Phone = ""
 		}
 	}
@@ -118,14 +118,14 @@ func (g *GetUserService) GetUserByUsername(ctx context.Context, ownerId uuid.UUI
 	}
 
 	if user.DateOfBirthVisibility == models.RestrictionSpecified {
-		restr, err := g.getRestrictionRepo.GetRestrictions(ctx, user.ID, "DateOfBirth")
+		restr, err := g.getRestrictionRepo.GetAllowedUserIDs(ctx, user.ID, "DateOfBirth")
 		if err != nil {
 			if errors.Is(err, storage.ErrNotFound) {
 				return nil, ErrNotFound
 			}
 			return nil, err
 		}
-		if !canView(ownerId, restr.SpecifiedUsers) {
+		if !canView(ownerId, restr) {
 			user.DateOfBirth = nil
 		}
 	}
