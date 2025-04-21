@@ -26,26 +26,32 @@ func NewRestrictionStorage(db postgres.SQLer) *RestrictionStorage {
 	}
 }
 
-func (s *RestrictionStorage) GetRestrictions(ctx context.Context, id uuid.UUID, field string) (*FieldRestrictions, error) {
+func (s *RestrictionStorage) GetAllowedUserIDs(ctx context.Context, id uuid.UUID, field string) ([]uuid.UUID, error) {
 	var fieldRestriction FieldRestrictions
-	q := `SELECT field_name, permitted_user_ids
-		FROM users.field_restrictions 
-		WHERE owner_user_id = $1 
-    	AND field_name = $2`
+	q := `SELECT field_name, permitted_user_id
+	 FROM users.field_restrictions 
+	 WHERE owner_user_id = $1 
+		AND field_name = $2`
 
-	row := s.db.QueryRow(ctx, q, field, id)
+	rows, err := s.db.Query(ctx, q, id, field)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
 	var specifiedUsers []uuid.UUID
-	err := row.Scan(&fieldRestriction.Field, &specifiedUsers)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, ErrNotFound
+	for rows.Next() {
+		var userID uuid.UUID
+		if err := rows.Scan(&fieldRestriction.Field, &userID); err != nil {
+			return nil, err
 		}
+		specifiedUsers = append(specifiedUsers, userID)
+	}
+	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 
-	fieldRestriction.SpecifiedUsers = specifiedUsers
-	return &fieldRestriction, nil
+	return specifiedUsers, nil
 }
 
 func (s *RestrictionStorage) UpdateRestrictions(ctx context.Context, id uuid.UUID, restrictions FieldRestrictions) (*FieldRestrictions, error) {
