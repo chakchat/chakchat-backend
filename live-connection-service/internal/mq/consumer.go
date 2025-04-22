@@ -63,6 +63,7 @@ func (c *Consumer) Start(ctx context.Context, handler func(ctx context.Context, 
 					log.Printf("Error to commit message: %s", err)
 					continue
 				}
+				log.Printf("Successfully commited")
 			}
 		}
 	}()
