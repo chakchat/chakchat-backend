@@ -7,9 +7,9 @@ BEGIN
     ELSIF TG_TABLE_NAME = 'group_chat' THEN
         must_chat_type := 'group';
     ELSIF TG_TABLE_NAME = 'secret_personal_chat' THEN
-        must_chat_type := 'personal';
+        must_chat_type := 'secret_personal';
     ELSIF TG_TABLE_NAME = 'secret_group_chat' THEN
-        must_chat_type := 'group';
+        must_chat_type := 'secret_group';
     ELSE
         RAISE EXCEPTION 'Unknown chat relation %', TG_TABLE_NAME;
     END IF;
