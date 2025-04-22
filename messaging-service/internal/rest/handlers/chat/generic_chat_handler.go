@@ -5,10 +5,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/generic"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/errmap"
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/response"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/restapi"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -22,10 +21,10 @@ const (
 type GenericChatService interface {
 	GetByMemberID(
 		ctx context.Context, memberID uuid.UUID, opts ...request.GetChatOption,
-	) ([]services.GenericChat, error)
+	) ([]generic.Chat, error)
 	GetByChatID(
 		ctx context.Context, senderID, chatID uuid.UUID, opts ...request.GetChatOption,
-	) (*services.GenericChat, error)
+	) (*generic.Chat, error)
 }
 
 type GenericChatHandler struct {
@@ -82,17 +81,9 @@ func (h *GenericChatHandler) GetAllChats(c *gin.Context) {
 		return
 	}
 
-	resp := struct {
-		Chats []any `json:"chats"`
-	}{
-		Chats: make([]any, 0, len(chats)),
-	}
-
-	for _, chat := range chats {
-		resp.Chats = append(resp.Chats, response.GenericChat(&chat))
-	}
-
-	restapi.SendSuccess(c, resp)
+	restapi.SendSuccess(c, gin.H{
+		"chats": chats,
+	})
 }
 
 func (h *GenericChatHandler) GetChat(c *gin.Context) {
@@ -142,5 +133,5 @@ func (h *GenericChatHandler) GetChat(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.GenericChat(chat))
+	restapi.SendSuccess(c, chat)
 }

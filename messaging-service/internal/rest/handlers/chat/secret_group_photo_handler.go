@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/generic"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/errmap"
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/response"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/restapi"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -53,7 +53,7 @@ func (h *SecretGroupPhotoHandler) UpdatePhoto(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.SecretGroupChat(group))
+	restapi.SendSuccess(c, generic.FromSecretGroupChatDTO(group))
 }
 
 func (h *SecretGroupPhotoHandler) DeletePhoto(c *gin.Context) {
@@ -81,5 +81,5 @@ func (h *SecretGroupPhotoHandler) DeletePhoto(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.SecretGroupChat(group))
+	restapi.SendSuccess(c, generic.FromSecretGroupChatDTO(group))
 }

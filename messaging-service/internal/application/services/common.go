@@ -32,7 +32,7 @@ func NewDomainFileMeta(f *external.FileMeta) domain.FileMeta {
 		FileName:  f.FileName,
 		MimeType:  f.MimeType,
 		FileSize:  f.FileSize,
-		FileUrl:   domain.URL(f.FileUrl),
+		FileURL:   domain.URL(f.FileUrl),
 		CreatedAt: domain.Timestamp(f.CreatedAt),
 	}
 }

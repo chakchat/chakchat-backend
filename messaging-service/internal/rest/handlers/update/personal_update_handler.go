@@ -5,9 +5,9 @@ import (
 	"strconv"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/generic"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/errmap"
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/response"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/restapi"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -66,7 +66,7 @@ func (h *PersonalUpdateHandler) SendTextMessage(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.TextMessage(msg))
+	restapi.SendSuccess(c, generic.FromTextMessageDTO(msg))
 }
 
 func (h *PersonalUpdateHandler) EditTextMessage(c *gin.Context) {
@@ -100,7 +100,7 @@ func (h *PersonalUpdateHandler) EditTextMessage(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.TextMessage(msg))
+	restapi.SendSuccess(c, generic.FromTextMessageDTO(msg))
 }
 
 func (h *PersonalUpdateHandler) DeleteMessage(c *gin.Context) {
@@ -127,7 +127,7 @@ func (h *PersonalUpdateHandler) DeleteMessage(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.UpdateDeleted(deleted))
+	restapi.SendSuccess(c, generic.FromUpdateDeletedDTO(deleted))
 }
 
 func (h *PersonalUpdateHandler) SendReaction(c *gin.Context) {
@@ -158,7 +158,7 @@ func (h *PersonalUpdateHandler) SendReaction(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.Reaction(reaction))
+	restapi.SendSuccess(c, generic.FromReactionDTO(reaction))
 }
 
 func (h *PersonalUpdateHandler) DeleteReaction(c *gin.Context) {
@@ -184,7 +184,7 @@ func (h *PersonalUpdateHandler) DeleteReaction(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.UpdateDeleted(deleted))
+	restapi.SendSuccess(c, generic.FromUpdateDeletedDTO(deleted))
 }
 
 func (h *PersonalUpdateHandler) ForwardTextMessage(c *gin.Context) {
@@ -214,7 +214,7 @@ func (h *PersonalUpdateHandler) ForwardTextMessage(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.TextMessage(msg))
+	restapi.SendSuccess(c, generic.FromTextMessageDTO(msg))
 }
 
 func (h *PersonalUpdateHandler) ForwardFileMessage(c *gin.Context) {
@@ -244,5 +244,5 @@ func (h *PersonalUpdateHandler) ForwardFileMessage(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.FileMessage(msg))
+	restapi.SendSuccess(c, generic.FromFileMessageDTO(msg))
 }

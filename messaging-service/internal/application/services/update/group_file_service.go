@@ -104,7 +104,7 @@ func (s *GroupFileService) SendFileMessage(
 				FileName:  msg.File.FileName,
 				MimeType:  msg.File.MimeType,
 				FileSize:  msg.File.FileSize,
-				FileUrl:   string(msg.File.FileUrl),
+				FileUrl:   string(msg.File.FileURL),
 				CreatedAt: int64(msg.File.CreatedAt),
 			},
 			CreatedAt: int64(msg.CreatedAt),

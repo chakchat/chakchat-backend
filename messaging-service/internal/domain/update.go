@@ -3,6 +3,14 @@ package domain
 import (
 	"time"
 )
+const (
+	UpdateTypeTextMessage       = "text_message"
+	UpdateTypeTextMessageEdited = "text_message_edited"
+	UpdateTypeFileMessage       = "file_message"
+	UpdateTypeReaction          = "reaction"
+	UpdateTypeDeleted           = "update_deleted"
+	UpdateTypeSecret            = "secret_update"
+)
 
 type (
 	UpdateID uint64

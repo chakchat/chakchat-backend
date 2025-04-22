@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/generic"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
@@ -22,7 +22,7 @@ func NewGenericChatRepository() *GenericChatRepository {
 
 func (r *GenericChatRepository) GetByMemberID(
 	ctx context.Context, db storage.ExecQuerier, memberID domain.UserID,
-) ([]services.GenericChat, error) {
+) ([]generic.Chat, error) {
 	// I guess this query is so fucking slow in real production,
 	// but for now we have more microservices than users, so nobody cares.
 	//
@@ -60,7 +60,7 @@ func (r *GenericChatRepository) GetByMemberID(
 	}
 	defer rows.Close()
 
-	res := make([]services.GenericChat, 0)
+	res := make([]generic.Chat, 0)
 	for rows.Next() {
 		var (
 			chatID            uuid.UUID
@@ -93,7 +93,7 @@ func (r *GenericChatRepository) GetByMemberID(
 
 func (r *GenericChatRepository) GetByChatID(
 	ctx context.Context, db storage.ExecQuerier, id domain.ChatID,
-) (*services.GenericChat, error) {
+) (*generic.Chat, error) {
 	// I guess this query is so fucking slow in real production,
 	// but for now we have more microservices than users, so nobody cares.
 	//
@@ -171,59 +171,53 @@ func (r *GenericChatRepository) buildGenericChat(
 	groupPhoto *string,
 	groupDescription *string,
 	expirationSeconds *int,
-) services.GenericChat {
-	if chatType == services.ChatTypePersonal {
-		return services.NewPersonalGenericChat(chatID, createdAt.Unix(), members, services.PersonalInfo{
+) generic.Chat {
+	result := generic.Chat{
+		ChatID:        chatID,
+		CreatedAt:     createdAt.Unix(),
+		Type:          chatType,
+		Members:       members,
+	}
+
+	switch chatType {
+	case domain.ChatTypePersonal:
+		result.Info.Personal = &generic.PersonalInfo{
 			BlockedBy: blockedBy,
-		})
-	}
-
-	if chatType == services.ChatTypeGroup {
-		return services.NewGroupGenericChat(chatID, createdAt.Unix(), members, services.GroupInfo{
-			Admin:            *adminID,
-			GroupName:        *groupName,
-			GroupDescription: deref(groupDescription, ""),
+		}
+	case domain.ChatTypeGroup:
+		result.Info.Group = &generic.GroupInfo{
+			AdminID:            *adminID,
+			Name:        *groupName,
+			Description: deref(groupDescription, ""),
 			GroupPhoto:       deref(groupPhoto, ""),
-		})
-	}
-
-	if chatType == services.ChatTypeSecretPersonal {
+		}
+	case domain.ChatTypeSecretPersonal:
 		var exp *time.Duration
 		if expirationSeconds != nil {
 			cp := time.Duration(*expirationSeconds) * time.Second
 			exp = &cp
 		}
-		return services.NewSecretPersonalGenericChat(
-			chatID,
-			createdAt.Unix(),
-			members,
-			services.SecretPersonalInfo{
-				Expiration: exp,
-			},
-		)
-	}
-
-	if chatType == services.ChatTypeSecretGroup {
+		result.Info.SecretPersonal = &generic.SecretPersonalInfo{
+			Expiration: exp,
+		}
+	case domain.ChatTypeSecretGroup:
 		var exp *time.Duration
 		if expirationSeconds != nil {
 			cp := time.Duration(*expirationSeconds) * time.Second
 			exp = &cp
 		}
-		return services.NewSecretGroupGenericChat(
-			chatID,
-			createdAt.Unix(),
-			members,
-			services.SecretGroupInfo{
-				Admin:            *adminID,
-				GroupName:        *groupName,
-				GroupDescription: deref(groupDescription, ""),
-				GroupPhoto:       deref(groupPhoto, ""),
-				Expiration:       exp,
-			},
-		)
+		result.Info.SecretGroup = &generic.SecretGroupInfo{
+			AdminID:            *adminID,
+			Name:        *groupName,
+			Description: deref(groupDescription, ""),
+			GroupPhoto:       deref(groupPhoto, ""),
+			Expiration:       exp,
+		}
+	default:
+		panic(fmt.Errorf("unknown chat type is gotten from db: %s", chatType))
 	}
 
-	panic(fmt.Errorf("unknown chat type is gotten from db: %s", chatType))
+	return result
 }
 
 func (r *GenericChatRepository) GetChatType(

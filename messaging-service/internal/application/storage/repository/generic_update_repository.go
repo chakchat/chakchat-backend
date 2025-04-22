@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/generic"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
 )
@@ -21,21 +21,21 @@ type GenericUpdateRepository interface {
 		visibleTo domain.UserID,
 		chatID domain.ChatID,
 		from, to domain.UpdateID,
-	) ([]services.GenericUpdate, error)
+	) ([]generic.Update, error)
 	Get(
 		ctx context.Context,
 		db storage.ExecQuerier,
 		visibleTo domain.UserID,
 		chatID domain.ChatID,
 		updateID domain.UpdateID,
-	) (*services.GenericUpdate, error)
+	) (*generic.Update, error)
 	FetchLast(
 		ctx context.Context,
 		db storage.ExecQuerier,
 		visibleTo domain.UserID,
 		chatID domain.ChatID,
 		opts ...FetchLastOption,
-	) ([]services.GenericUpdate, error)
+	) ([]generic.Update, error)
 }
 
 // Specifies what updates are counted

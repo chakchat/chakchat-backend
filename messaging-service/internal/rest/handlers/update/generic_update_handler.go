@@ -4,10 +4,9 @@ import (
 	"context"
 	"strconv"
 
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/generic"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/errmap"
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/response"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/restapi"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -19,8 +18,8 @@ const (
 )
 
 type GenericUpdateService interface {
-	GetUpdatesRange(context.Context, request.GetUpdatesRange) ([]services.GenericUpdate, error)
-	GetUpdate(context.Context, request.GetUpdate) (*services.GenericUpdate, error)
+	GetUpdatesRange(context.Context, request.GetUpdatesRange) ([]generic.Update, error)
+	GetUpdate(context.Context, request.GetUpdate) (*generic.Update, error)
 }
 
 type GenericUpdateHandler struct {
@@ -67,6 +66,6 @@ func (h *GenericUpdateHandler) GetUpdatesRange(c *gin.Context) {
 	}
 
 	restapi.SendSuccess(c, gin.H{
-		"updates": response.GenericUpdates(updates),
+		"updates": updates,
 	})
 }

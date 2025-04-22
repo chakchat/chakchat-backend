@@ -431,7 +431,7 @@ func (r *UpdateRepository) FindFileMessage(
 			FileName:  fileName,
 			MimeType:  fileMimeType,
 			FileSize:  fileSize,
-			FileUrl:   domain.URL(fileURL),
+			FileURL:   domain.URL(fileURL),
 			CreatedAt: domain.Timestamp(fileCreatedAt),
 		},
 	}
@@ -482,7 +482,7 @@ func (r *UpdateRepository) CreateFileMessage(
 		msg.File.FileName,
 		msg.File.MimeType,
 		msg.File.FileSize,
-		string(msg.File.FileUrl),
+		string(msg.File.FileURL),
 		msg.File.CreatedAt,
 		replyToID,
 	)

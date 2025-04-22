@@ -2,14 +2,14 @@ package update
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/generic"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
@@ -48,7 +48,7 @@ func (r *GenericUpdateRepository) GetRange(
 	visibleTo domain.UserID,
 	chatID domain.ChatID,
 	from, to domain.UpdateID,
-) ([]services.GenericUpdate, error) {
+) ([]generic.Update, error) {
 	// TODO: This query should be optimized.
 	// Especially the check of being deleted.
 	q := `
@@ -77,7 +77,7 @@ func (r *GenericUpdateRepository) GetRange(
 	}
 	defer rows.Close()
 
-	updates := make([]services.GenericUpdate, 0, max(0, to-from+1))
+	updates := make([]generic.Update, 0, max(0, to-from+1))
 
 	for rows.Next() {
 		var (
@@ -89,13 +89,13 @@ func (r *GenericUpdateRepository) GetRange(
 		if err := rows.Scan(&updateID, &updateType, &createdAt, &senderID); err != nil {
 			return nil, err
 		}
-		updates = append(updates, services.GenericUpdate{
+		updates = append(updates, generic.Update{
 			UpdateID:   updateID,
 			ChatID:     uuid.UUID(chatID),
 			SenderID:   senderID,
 			UpdateType: updateType,
 			CreatedAt:  createdAt.Unix(),
-			Info:       services.GenericUpdateInfo{},
+			Content:       generic.UpdateContent{},
 		})
 	}
 
@@ -133,7 +133,7 @@ func (r *GenericUpdateRepository) Get(
 	visibleTo domain.UserID,
 	chatID domain.ChatID,
 	updateID domain.UpdateID,
-) (*services.GenericUpdate, error) {
+) (*generic.Update, error) {
 	q := `
 	SELECT
 		u.update_id,
@@ -171,40 +171,40 @@ func (r *GenericUpdateRepository) Get(
 		return nil, err
 	}
 
-	update := services.GenericUpdate{
+	update := generic.Update{
 		UpdateID:   updateIDVal,
 		ChatID:     uuid.UUID(chatID),
 		SenderID:   senderID,
 		UpdateType: updateType,
 		CreatedAt:  createdAt.Unix(),
-		Info:       services.GenericUpdateInfo{},
+		Content:       generic.UpdateContent{},
 	}
 
 	// Fill in details based on update type
-	updates := []services.GenericUpdate{update}
+	updates := []generic.Update{update}
 
 	switch updateType {
-	case services.UpdateTypeTextMessage:
+	case domain.UpdateTypeTextMessage:
 		if err := r.fillTextMessages(ctx, db, chatID, updates); err != nil {
 			return nil, err
 		}
-	case services.UpdateTypeTextMessageEdited:
+	case domain.UpdateTypeTextMessageEdited:
 		if err := r.fillTextMessageEdited(ctx, db, chatID, updates); err != nil {
 			return nil, err
 		}
-	case services.UpdateTypeFileMessage:
+	case domain.UpdateTypeFileMessage:
 		if err := r.fillFileMessages(ctx, db, chatID, updates); err != nil {
 			return nil, err
 		}
-	case services.UpdateTypeReaction:
+	case domain.UpdateTypeReaction:
 		if err := r.fillReactions(ctx, db, chatID, updates); err != nil {
 			return nil, err
 		}
-	case services.UpdateTypeDeleted:
+	case domain.UpdateTypeDeleted:
 		if err := r.fillUpdateDeleted(ctx, db, chatID, updates); err != nil {
 			return nil, err
 		}
-	case services.UpdateTypeSecret:
+	case domain.UpdateTypeSecret:
 		if err := r.fillSecretUpdates(ctx, db, chatID, updates); err != nil {
 			return nil, err
 		}
@@ -219,7 +219,7 @@ func (r *GenericUpdateRepository) FetchLast( // TODO: rename to latest
 	visibleTo domain.UserID,
 	chatID domain.ChatID,
 	opts ...repository.FetchLastOption,
-) ([]services.GenericUpdate, error) {
+) ([]generic.Update, error) {
 	opt := repository.NewFetchLastOptions(opts...)
 
 	var updateTypes []string
@@ -241,7 +241,7 @@ func (r *GenericUpdateRepository) FetchLast( // TODO: rename to latest
 		return nil, err
 	}
 	if !found {
-		return make([]services.GenericUpdate, 0), nil
+		return make([]generic.Update, 0), nil
 	}
 
 	hi, err := r.GetLastUpdateID(ctx, db, chatID)
@@ -317,9 +317,9 @@ func (r *GenericUpdateRepository) fillTextMessages(
 	ctx context.Context,
 	db storage.ExecQuerier,
 	chatID domain.ChatID,
-	updates []services.GenericUpdate,
+	updates []generic.Update,
 ) error {
-	ids := updateTypesIDs(updates, services.UpdateTypeTextMessage)
+	ids := updateTypesIDs(updates, domain.UpdateTypeTextMessage)
 	if len(ids) == 0 {
 		return nil
 	}
@@ -341,7 +341,7 @@ func (r *GenericUpdateRepository) fillTextMessages(
 	defer rows.Close()
 
 	// Map to store text messages by update_id
-	textMsgs := make(map[int64]services.TextMessageInfo)
+	textMsgs := make(map[int64]generic.TextMessageInfo)
 
 	for rows.Next() {
 		var (
@@ -354,11 +354,9 @@ func (r *GenericUpdateRepository) fillTextMessages(
 			return err
 		}
 
-
-
-		textMsgs[updateID] = services.TextMessageInfo{
-			Text:      text,
-			ReplyTo:   replyToID,
+		textMsgs[updateID] = generic.TextMessageInfo{
+			Text:    text,
+			ReplyTo: replyToID,
 		}
 	}
 
@@ -374,7 +372,7 @@ func (r *GenericUpdateRepository) fillTextMessages(
 
 	// Update the updates with the text message info
 	for i, update := range updates {
-		if update.UpdateType == services.UpdateTypeTextMessage {
+		if update.UpdateType == domain.UpdateTypeTextMessage {
 			if info, ok := textMsgs[update.UpdateID]; ok {
 				// Check for edits
 				if edit, exists := editedInfo[update.UpdateID]; exists {
@@ -389,7 +387,7 @@ func (r *GenericUpdateRepository) fillTextMessages(
 					info.Reactions = reactions
 				}
 
-				updates[i].Info.TextMessage = &info
+				updates[i].Content.TextMessage = &info
 			} else {
 				panic("database is inconsistent!!!")
 			}
@@ -405,7 +403,7 @@ func (r *GenericUpdateRepository) getTextEdits(
 	db storage.ExecQuerier,
 	chatID domain.ChatID,
 	messageIDs []int64,
-) (map[int64]*services.GenericUpdate, error) {
+) (map[int64]*generic.Update, error) {
 	if len(messageIDs) == 0 {
 		return nil, nil
 	}
@@ -431,7 +429,7 @@ func (r *GenericUpdateRepository) getTextEdits(
 	defer rows.Close()
 
 	// Map message ID to the most recent edit
-	result := make(map[int64]*services.GenericUpdate)
+	result := make(map[int64]*generic.Update)
 
 	for rows.Next() {
 		var (
@@ -448,18 +446,18 @@ func (r *GenericUpdateRepository) getTextEdits(
 
 		// Only store the first edit we encounter for each message ID (most recent)
 		if _, exists := result[messageID]; !exists {
-			editInfo := services.TextMessageEditedInfo{
+			editInfo := generic.TextMessageEditedInfo{
 				MessageID: messageID,
 				NewText:   newText,
 			}
 
-			result[messageID] = &services.GenericUpdate{
+			result[messageID] = &generic.Update{
 				UpdateID:   updateID,
 				ChatID:     uuid.UUID(chatID),
 				SenderID:   senderID,
-				UpdateType: services.UpdateTypeTextMessageEdited,
+				UpdateType: domain.UpdateTypeTextMessageEdited,
 				CreatedAt:  createdAt.Unix(),
-				Info: services.GenericUpdateInfo{
+				Content: generic.UpdateContent{
 					TextMessageEdited: &editInfo,
 				},
 			}
@@ -477,9 +475,9 @@ func (r *GenericUpdateRepository) fillTextMessageEdited(
 	ctx context.Context,
 	db storage.ExecQuerier,
 	chatID domain.ChatID,
-	updates []services.GenericUpdate,
+	updates []generic.Update,
 ) error {
-	ids := updateTypesIDs(updates, services.UpdateTypeTextMessageEdited)
+	ids := updateTypesIDs(updates, domain.UpdateTypeTextMessageEdited)
 	if len(ids) == 0 {
 		return nil
 	}
@@ -500,7 +498,7 @@ func (r *GenericUpdateRepository) fillTextMessageEdited(
 	}
 	defer rows.Close()
 
-	edits := make(map[int64]services.TextMessageEditedInfo)
+	edits := make(map[int64]generic.TextMessageEditedInfo)
 
 	for rows.Next() {
 		var (
@@ -513,7 +511,7 @@ func (r *GenericUpdateRepository) fillTextMessageEdited(
 			return err
 		}
 
-		edits[updateID] = services.TextMessageEditedInfo{
+		edits[updateID] = generic.TextMessageEditedInfo{
 			NewText:   newText,
 			MessageID: messageID,
 		}
@@ -525,9 +523,9 @@ func (r *GenericUpdateRepository) fillTextMessageEdited(
 
 	// Update the updates with the edit info
 	for i, update := range updates {
-		if update.UpdateType == services.UpdateTypeTextMessageEdited {
+		if update.UpdateType == domain.UpdateTypeTextMessageEdited {
 			if info, ok := edits[update.UpdateID]; ok {
-				updates[i].Info.TextMessageEdited = &info
+				updates[i].Content.TextMessageEdited = &info
 			} else {
 				panic("database is inconsistent!!!")
 			}
@@ -541,9 +539,9 @@ func (r *GenericUpdateRepository) fillFileMessages(
 	ctx context.Context,
 	db storage.ExecQuerier,
 	chatID domain.ChatID,
-	updates []services.GenericUpdate,
+	updates []generic.Update,
 ) error {
-	ids := updateTypesIDs(updates, services.UpdateTypeFileMessage)
+	ids := updateTypesIDs(updates, domain.UpdateTypeFileMessage)
 	if len(ids) == 0 {
 		return nil
 	}
@@ -569,7 +567,7 @@ func (r *GenericUpdateRepository) fillFileMessages(
 	}
 	defer rows.Close()
 
-	fileMsgs := make(map[int64]services.FileMessageInfo)
+	fileMsgs := make(map[int64]generic.FileMessageInfo)
 
 	for rows.Next() {
 		var (
@@ -596,8 +594,8 @@ func (r *GenericUpdateRepository) fillFileMessages(
 			return err
 		}
 
-		fileMsgs[updateID] = services.FileMessageInfo{
-			File: dto.FileMetaDTO{
+		fileMsgs[updateID] = generic.FileMessageInfo{
+			File: generic.FileMeta{
 				FileId:    fileID,
 				FileName:  fileName,
 				MimeType:  fileMimeType,
@@ -605,7 +603,7 @@ func (r *GenericUpdateRepository) fillFileMessages(
 				FileURL:   fileURL,
 				CreatedAt: fileCreatedAt,
 			},
-			ReplyTo:   replyToID,
+			ReplyTo: replyToID,
 		}
 	}
 
@@ -615,7 +613,7 @@ func (r *GenericUpdateRepository) fillFileMessages(
 
 	// Update the updates with the file message info
 	for i, update := range updates {
-		if update.UpdateType == services.UpdateTypeFileMessage {
+		if update.UpdateType == domain.UpdateTypeFileMessage {
 			if info, ok := fileMsgs[update.UpdateID]; ok {
 				reactions, err := r.getMessageReactions(ctx, db, chatID, domain.UpdateID(update.UpdateID))
 				if err != nil {
@@ -625,7 +623,7 @@ func (r *GenericUpdateRepository) fillFileMessages(
 					info.Reactions = reactions
 				}
 
-				updates[i].Info.FileMessage = &info
+				updates[i].Content.FileMessage = &info
 			} else {
 				panic("database is inconsistent!!!")
 			}
@@ -640,7 +638,7 @@ func (r *GenericUpdateRepository) getMessageReactions(
 	db storage.ExecQuerier,
 	chatID domain.ChatID,
 	messageID domain.UpdateID,
-) ([]services.GenericUpdate, error) {
+) ([]generic.Update, error) {
 	q := `
 	SELECT 
 		u.update_id,
@@ -657,7 +655,7 @@ func (r *GenericUpdateRepository) getMessageReactions(
 	}
 	defer rows.Close()
 
-	res := make([]services.GenericUpdate, 0)
+	res := make([]generic.Update, 0)
 	for rows.Next() {
 		var (
 			updateID     int64
@@ -669,15 +667,15 @@ func (r *GenericUpdateRepository) getMessageReactions(
 			return nil, err
 		}
 
-		res = append(res, services.GenericUpdate{
+		res = append(res, generic.Update{
 			UpdateID:   updateID,
 			ChatID:     uuid.UUID(chatID),
 			SenderID:   senderID,
 			UpdateType: "reaction",
 			CreatedAt:  createdAt.Unix(),
-			Info: services.GenericUpdateInfo{
-				Reaction: &services.ReactionInfo{
-					Reaction: reactionType,
+			Content: generic.UpdateContent{
+				Reaction: &generic.ReactionInfo{
+					Reaction:  reactionType,
 					MessageID: int64(messageID),
 				},
 			},
@@ -695,9 +693,9 @@ func (r *GenericUpdateRepository) fillReactions(
 	ctx context.Context,
 	db storage.ExecQuerier,
 	chatID domain.ChatID,
-	updates []services.GenericUpdate,
+	updates []generic.Update,
 ) error {
-	ids := updateTypesIDs(updates, services.UpdateTypeReaction)
+	ids := updateTypesIDs(updates, domain.UpdateTypeReaction)
 	if len(ids) == 0 {
 		return nil
 	}
@@ -718,7 +716,7 @@ func (r *GenericUpdateRepository) fillReactions(
 	}
 	defer rows.Close()
 
-	reactions := make(map[int64]services.ReactionInfo)
+	reactions := make(map[int64]generic.ReactionInfo)
 
 	for rows.Next() {
 		var (
@@ -731,8 +729,8 @@ func (r *GenericUpdateRepository) fillReactions(
 			return err
 		}
 
-		reactions[updateID] = services.ReactionInfo{
-			Reaction: reaction,
+		reactions[updateID] = generic.ReactionInfo{
+			Reaction:  reaction,
 			MessageID: messageID,
 		}
 	}
@@ -743,9 +741,9 @@ func (r *GenericUpdateRepository) fillReactions(
 
 	// Update the updates with the reaction info
 	for i, update := range updates {
-		if update.UpdateType == services.UpdateTypeReaction {
+		if update.UpdateType == domain.UpdateTypeReaction {
 			if info, ok := reactions[update.UpdateID]; ok {
-				updates[i].Info.Reaction = &info
+				updates[i].Content.Reaction = &info
 			} else {
 				panic("database is inconsistent!!!")
 			}
@@ -759,9 +757,9 @@ func (r *GenericUpdateRepository) fillUpdateDeleted(
 	ctx context.Context,
 	db storage.ExecQuerier,
 	chatID domain.ChatID,
-	updates []services.GenericUpdate,
+	updates []generic.Update,
 ) error {
-	ids := updateTypesIDs(updates, services.UpdateTypeDeleted)
+	ids := updateTypesIDs(updates, domain.UpdateTypeDeleted)
 	if len(ids) == 0 {
 		return nil
 	}
@@ -782,7 +780,7 @@ func (r *GenericUpdateRepository) fillUpdateDeleted(
 	}
 	defer rows.Close()
 
-	deletedUpdates := make(map[int64]services.DeletedInfo)
+	deletedUpdates := make(map[int64]generic.DeletedInfo)
 
 	for rows.Next() {
 		var (
@@ -795,9 +793,9 @@ func (r *GenericUpdateRepository) fillUpdateDeleted(
 			return err
 		}
 
-		deletedUpdates[updateID] = services.DeletedInfo{
+		deletedUpdates[updateID] = generic.DeletedInfo{
 			DeletedID:  deletedUpdateID,
-			DeleteMode: mode,
+			DeletedMode: mode,
 		}
 	}
 
@@ -807,9 +805,9 @@ func (r *GenericUpdateRepository) fillUpdateDeleted(
 
 	// Update the updates with the deleted update info
 	for i, update := range updates {
-		if update.UpdateType == services.UpdateTypeDeleted {
+		if update.UpdateType == domain.UpdateTypeDeleted {
 			if info, ok := deletedUpdates[update.UpdateID]; ok {
-				updates[i].Info.Deleted = &info
+				updates[i].Content.Deleted = &info
 			} else {
 				panic("database is inconsistent!!!")
 			}
@@ -823,9 +821,9 @@ func (r *GenericUpdateRepository) fillSecretUpdates(
 	ctx context.Context,
 	db storage.ExecQuerier,
 	chatID domain.ChatID,
-	updates []services.GenericUpdate,
+	updates []generic.Update,
 ) error {
-	ids := updateTypesIDs(updates, services.UpdateTypeSecret)
+	ids := updateTypesIDs(updates, domain.UpdateTypeSecret)
 	if len(ids) == 0 {
 		return nil
 	}
@@ -847,7 +845,7 @@ func (r *GenericUpdateRepository) fillSecretUpdates(
 	}
 	defer rows.Close()
 
-	secretUpdates := make(map[int64]services.SecretUpdateInfo)
+	secretUpdates := make(map[int64]generic.SecretUpdateInfo)
 
 	for rows.Next() {
 		var (
@@ -861,10 +859,10 @@ func (r *GenericUpdateRepository) fillSecretUpdates(
 			return err
 		}
 
-		secretUpdates[updateID] = services.SecretUpdateInfo{
-			Payload:              payload,
-			KeyHash:              keyHash,
-			InitializationVector: initializationVector,
+		secretUpdates[updateID] = generic.SecretUpdateInfo{
+			PayloadBase64:              base64.StdEncoding.EncodeToString(payload),
+			KeyHashBase64:              base64.StdEncoding.EncodeToString(keyHash),
+			InitializationVectorBase64: base64.StdEncoding.EncodeToString(initializationVector),
 		}
 	}
 
@@ -874,9 +872,9 @@ func (r *GenericUpdateRepository) fillSecretUpdates(
 
 	// Update the updates with the secret update info
 	for i, update := range updates {
-		if update.UpdateType == services.UpdateTypeSecret {
+		if update.UpdateType == domain.UpdateTypeSecret {
 			if info, ok := secretUpdates[update.UpdateID]; ok {
-				updates[i].Info.Secret = &info
+				updates[i].Content.Secret = &info
 			} else {
 				panic("database is inconsistent!!!")
 			}
@@ -895,7 +893,7 @@ func idsToAny(ids []int64) []any {
 	return result
 }
 
-func updateTypesIDs(updates []services.GenericUpdate, typ string) []int64 {
+func updateTypesIDs(updates []generic.Update, typ string) []int64 {
 	ids := make([]int64, 0)
 	for _, up := range updates {
 		if up.UpdateType == typ {

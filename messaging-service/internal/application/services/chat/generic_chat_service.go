@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/generic"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage"
@@ -33,7 +34,7 @@ func NewGenericChatService(
 	}
 }
 
-func (s *GenericChatService) GetByMemberID(ctx context.Context, memberID uuid.UUID, opts ...request.GetChatOption) (_ []services.GenericChat, err error) {
+func (s *GenericChatService) GetByMemberID(ctx context.Context, memberID uuid.UUID, opts ...request.GetChatOption) (_ []generic.Chat, err error) {
 	opt := request.NewGetChatOptions(opts...)
 
 	tx, err := s.txProvider.Begin(ctx)
@@ -66,7 +67,7 @@ func (s *GenericChatService) GetByMemberID(ctx context.Context, memberID uuid.UU
 	return chats, nil
 }
 
-func (s *GenericChatService) GetByChatID(ctx context.Context, senderID, chatID uuid.UUID, opts ...request.GetChatOption) (_ *services.GenericChat, err error) {
+func (s *GenericChatService) GetByChatID(ctx context.Context, senderID, chatID uuid.UUID, opts ...request.GetChatOption) (_ *generic.Chat, err error) {
 	opt := request.NewGetChatOptions(opts...)
 
 	tx, err := s.txProvider.Begin(ctx)
@@ -102,7 +103,7 @@ func (s *GenericChatService) GetByChatID(ctx context.Context, senderID, chatID u
 	return chat, nil
 }
 
-func (s *GenericChatService) fillLastUpdateID(ctx context.Context, tx pgx.Tx, chat *services.GenericChat) error {
+func (s *GenericChatService) fillLastUpdateID(ctx context.Context, tx pgx.Tx, chat *generic.Chat) error {
 	lastUpdateID, err := s.updaterepo.GetLastUpdateID(ctx, tx, domain.ChatID(chat.ChatID))
 	if err != nil {
 		return fmt.Errorf("fill last UpdateID: %w", err)
@@ -114,7 +115,7 @@ func (s *GenericChatService) fillLastUpdateID(ctx context.Context, tx pgx.Tx, ch
 }
 
 func (s *GenericChatService) fillPreview(
-	ctx context.Context, tx pgx.Tx, chat *services.GenericChat, senderID uuid.UUID, previewCount int,
+	ctx context.Context, tx pgx.Tx, chat *generic.Chat, senderID uuid.UUID, previewCount int,
 ) error {
 	updates, err := s.updaterepo.FetchLast(
 		ctx, tx, domain.UserID(senderID), domain.ChatID(chat.ChatID),

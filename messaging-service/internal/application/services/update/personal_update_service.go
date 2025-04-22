@@ -467,7 +467,7 @@ func (s *PersonalUpdateService) ForwardFileMessage(
 				FileName:  forwarded.File.FileName,
 				MimeType:  forwarded.File.MimeType,
 				FileSize:  forwarded.File.FileSize,
-				FileUrl:   string(forwarded.File.FileUrl),
+				FileUrl:   string(forwarded.File.FileURL),
 				CreatedAt: int64(forwarded.File.CreatedAt),
 			},
 			CreatedAt: int64(forwarded.CreatedAt),

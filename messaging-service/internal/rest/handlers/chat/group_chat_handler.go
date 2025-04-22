@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/generic"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/errmap"
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/response"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/restapi"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -54,7 +54,7 @@ func (h *GroupChatHandler) CreateGroup(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.GroupChat(group))
+	restapi.SendSuccess(c, generic.FromGroupChatDTO(group))
 }
 
 func (h *GroupChatHandler) UpdateGroup(c *gin.Context) {
@@ -85,7 +85,7 @@ func (h *GroupChatHandler) UpdateGroup(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.GroupChat(group))
+	restapi.SendSuccess(c, generic.FromGroupChatDTO(group))
 }
 
 func (h GroupChatHandler) DeleteGroup(c *gin.Context) {
@@ -132,7 +132,7 @@ func (h *GroupChatHandler) AddMember(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.GroupChat(group))
+	restapi.SendSuccess(c, generic.FromGroupChatDTO(group))
 }
 
 func (h *GroupChatHandler) DeleteMember(c *gin.Context) {
@@ -159,28 +159,5 @@ func (h *GroupChatHandler) DeleteMember(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.GroupChat(group))
+	restapi.SendSuccess(c, generic.FromGroupChatDTO(group))
 }
-
-// type groupResponse struct {
-// 	ChatID  uuid.UUID   `json:"chat_id"`
-// 	Admin   uuid.UUID   `json:"admin"`
-// 	Members []uuid.UUID `json:"members"`
-
-// 	Name        string `json:"name"`
-// 	Description string `json:"description"`
-// 	GroupPhoto  string `json:"group_photo"`
-// 	CreatedAt   int64  `json:"created_at"`
-// }
-
-// func newGroupResponse(dto *dto.GroupChatDTO) groupResponse {
-// 	return groupResponse{
-// 		ChatID:      dto.ID,
-// 		Admin:       dto.Admin,
-// 		Members:     dto.Members,
-// 		Name:        dto.Name,
-// 		Description: dto.Description,
-// 		GroupPhoto:  dto.GroupPhoto,
-// 		CreatedAt:   dto.CreatedAt,
-// 	}
-// }
