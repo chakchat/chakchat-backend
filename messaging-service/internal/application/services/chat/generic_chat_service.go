@@ -119,7 +119,8 @@ func (s *GenericChatService) fillPreview(
 	updates, err := s.updaterepo.FetchLast(
 		ctx, tx, domain.UserID(senderID), domain.ChatID(chat.ChatID),
 		repository.WithFetchLastCount(previewCount),
-		repository.WithFetchLastOptions(repository.FetchLastModeMessages),
+		repository.WithFetchLastMode(repository.FetchLastModeMessages),
+		repository.WithFetchLastMode(repository.FetchLastModeSecret),
 	)
 	if err != nil {
 		return err
