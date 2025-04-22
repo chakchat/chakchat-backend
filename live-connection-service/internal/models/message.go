@@ -1,9 +1,11 @@
 package models
 
+import "github.com/google/uuid"
+
 type KafkaMessage struct {
-	Receivers []string `json:"receivers"`
-	Type      string   `json:"type"`
-	Data      any      `json:"data"`
+	Receivers []uuid.UUID `json:"receivers"`
+	Type      string      `json:"type"`
+	Data      any         `json:"data"`
 }
 
 type WSMessage struct {

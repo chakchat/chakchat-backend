@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/chakchat/chakchat-backend/shared/go/postgres"
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
 
@@ -35,7 +36,7 @@ func (s *OnlineStorage) UpdateLastPing(ctx context.Context, userId string) error
 	return err
 }
 
-func (s *OnlineStorage) GetOnlineStatus(ctx context.Context, userIds []string) (map[string]OnlineResponse, error) {
+func (s *OnlineStorage) GetOnlineStatus(ctx context.Context, userIds []uuid.UUID) (map[uuid.UUID]OnlineResponse, error) {
 	query := `
 		SELECT user_id, last_ping
 		FROM user_online_status
@@ -48,11 +49,11 @@ func (s *OnlineStorage) GetOnlineStatus(ctx context.Context, userIds []string) (
 	}
 	defer rows.Close()
 
-	result := make(map[string]OnlineResponse)
+	result := make(map[uuid.UUID]OnlineResponse)
 	now := time.Now()
 
 	for rows.Next() {
-		var userID string
+		var userID uuid.UUID
 		var lastPing time.Time
 		if err := rows.Scan(&userID, &lastPing); err != nil {
 			continue
