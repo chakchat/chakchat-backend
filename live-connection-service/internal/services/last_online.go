@@ -6,6 +6,7 @@ import (
 
 	"github.com/chakchat/chakchat-backend/live-connection-service/internal/storage"
 	"github.com/chakchat/chakchat-backend/live-connection-service/internal/ws"
+	"github.com/google/uuid"
 )
 
 type StatusService struct {
@@ -14,7 +15,7 @@ type StatusService struct {
 }
 
 type StatusResponse struct {
-	UserId     string
+	UserId     uuid.UUID
 	Status     bool
 	LastOnline string
 }
@@ -26,7 +27,7 @@ func NewStatusService(storage *storage.OnlineStorage, hub *ws.Hub) *StatusServic
 	}
 }
 
-func (s *StatusService) GetStatus(ctx context.Context, userIds []string) (map[string]StatusResponse, error) {
+func (s *StatusService) GetStatus(ctx context.Context, userIds []uuid.UUID) (map[uuid.UUID]StatusResponse, error) {
 	dbStatus, err := s.storage.GetOnlineStatus(ctx, userIds)
 	if err != nil {
 		return nil, err
@@ -34,7 +35,7 @@ func (s *StatusService) GetStatus(ctx context.Context, userIds []string) (map[st
 
 	wsStatus := s.hub.GetOnlineStatus(userIds)
 
-	result := make(map[string]StatusResponse)
+	result := make(map[uuid.UUID]StatusResponse)
 	for _, id := range userIds {
 		result[id] = StatusResponse{
 			UserId:     id,

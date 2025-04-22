@@ -8,6 +8,7 @@ import (
 	"github.com/chakchat/chakchat-backend/live-connection-service/internal/restapi"
 	"github.com/chakchat/chakchat-backend/shared/go/auth"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -17,12 +18,12 @@ type Client struct {
 }
 
 type BroadcastMessage struct {
-	UserId  string
+	UserId  uuid.UUID
 	Message any
 }
 
 type Hub struct {
-	clients    map[string]*Client
+	clients    map[uuid.UUID]*Client
 	mu         sync.RWMutex
 	broadcast  chan BroadcastMessage
 	pingTicker *time.Ticker
@@ -30,7 +31,7 @@ type Hub struct {
 
 func NewHub() *Hub {
 	return &Hub{
-		clients:    make(map[string]*Client),
+		clients:    make(map[uuid.UUID]*Client),
 		broadcast:  make(chan BroadcastMessage, 100),
 		pingTicker: time.NewTicker(5 * time.Second),
 	}
@@ -44,7 +45,13 @@ func (h *Hub) WebSocketHandler() gin.HandlerFunc {
 			return
 		}
 
-		userId := claimId.(string)
+		id := claimId.(string)
+
+		userId, err := uuid.Parse(id)
+		if err != nil {
+			restapi.SendUnauthorizedError(c, nil)
+			return
+		}
 
 		upgrade := websocket.Upgrader{
 			ReadBufferSize:  1024,
@@ -87,7 +94,7 @@ func (h *Hub) WebSocketHandler() gin.HandlerFunc {
 	}
 }
 
-func (h *Hub) Send(userId string, message any) bool {
+func (h *Hub) Send(userId uuid.UUID, message any) bool {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
@@ -98,11 +105,11 @@ func (h *Hub) Send(userId string, message any) bool {
 	return false
 }
 
-func (h *Hub) GetOnlineStatus(userIds []string) map[string]bool {
+func (h *Hub) GetOnlineStatus(userIds []uuid.UUID) map[uuid.UUID]bool {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	status := make(map[string]bool)
+	status := make(map[uuid.UUID]bool)
 	now := time.Now()
 
 	for _, userId := range userIds {

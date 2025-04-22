@@ -8,6 +8,7 @@ import (
 	"github.com/chakchat/chakchat-backend/live-connection-service/internal/services"
 	"github.com/chakchat/chakchat-backend/live-connection-service/internal/storage"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type OnlineStatusServer struct {
@@ -22,10 +23,19 @@ func NewOnlineStatusServer(service *services.StatusService) *OnlineStatusServer 
 
 func (s *OnlineStatusServer) GetStatus() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userIds := c.QueryArray("users")
-		if len(userIds) == 0 {
+		ids := c.QueryArray("users")
+		if len(ids) == 0 {
 			c.JSON(http.StatusBadRequest, restapi.ErrTypeBadRequest)
 			return
+		}
+		var userIds []uuid.UUID
+		for _, id := range ids {
+			userId, err := uuid.Parse(id)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, restapi.ErrTypeBadRequest)
+				return
+			}
+			userIds = append(userIds, userId)
 		}
 
 		status, err := s.service.GetStatus(c.Request.Context(), userIds)
