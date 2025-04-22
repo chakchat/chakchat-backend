@@ -23,65 +23,31 @@ func NewKafkaProcessor(hub *ws.Hub, dlq *mq.Producer) *KafkaProcessor {
 	}
 }
 
-func (p *KafkaProcessor) MessageHandler(ctx context.Context, msg kafka.Message) {
-	msgType, err := p.detectMessageType(msg.Value)
-	if err != nil {
-		p.notifq.Send(ctx, msg.Value)
+func (p *KafkaProcessor) MessageHandler(ctx context.Context, msg kafka.Message) error {
+	var message models.KafkaMessage
+
+	if err := json.Unmarshal(msg.Value, &message); err != nil {
+		return err
 	}
 
-	if msgType == "update" {
-		p.processUpdateMessage(ctx, msg.Value)
-	} else {
-		p.processChatMessage(ctx, msg.Value)
-	}
-}
-
-func (p *KafkaProcessor) detectMessageType(data []byte) (string, error) {
-	var msg struct {
-		Receivers []string `json:"receivers"`
-		Type      string   `json:"type"`
-		Data      any      `json:"data"`
+	response := models.WSMessage{
+		Type: message.Type,
+		Data: message.Data,
 	}
 
-	if err := json.Unmarshal(data, &msg); err != nil {
-		return "", err
-	}
-
-	return msg.Type, nil
-}
-
-func (p *KafkaProcessor) processUpdateMessage(ctx context.Context, data []byte) {
-	var update models.KafkaMessageUpdate
-	if err := json.Unmarshal(data, &update); err != nil {
-		return
-	}
-
-	response := models.WSMessageUpdate{
-		Type: update.Type,
-		Data: update.Data,
-	}
-	for _, userId := range update.Receivers {
+	var notificReceivers []string
+	for _, userId := range message.Receivers {
 		if !p.hub.Send(userId, response) {
-			p.notifq.Send(ctx, data)
+			notificReceivers = append(notificReceivers, userId)
 		}
 	}
-
-}
-
-func (p *KafkaProcessor) processChatMessage(ctx context.Context, data []byte) {
-	var update models.KafkaMessageChat
-	if err := json.Unmarshal(data, &update); err != nil {
-		return
-	}
-
-	response := models.WSMessageChat{
-		Type: update.Type,
-		Data: update.Data,
-	}
-	for _, userId := range update.Receivers {
-		if !p.hub.Send(userId, response) {
-			p.notifq.Send(ctx, data)
+	if len(notificReceivers) != 0 {
+		notificMessage := models.KafkaMessage{
+			Receivers: notificReceivers,
+			Type:      message.Type,
+			Data:      message.Data,
 		}
+		p.notifq.Send(ctx, notificMessage)
 	}
-
+	return nil
 }
