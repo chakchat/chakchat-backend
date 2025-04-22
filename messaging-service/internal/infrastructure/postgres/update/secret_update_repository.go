@@ -161,10 +161,9 @@ func (r *SecretUpdateRepository) CreateUpdateDeleted(
 
 	deleted.CreatedAt = domain.Timestamp(now.Unix())
 
-	// Insert update_deleted specific data
 	q2 := `
-	INSERT INTO messaging.update_deleted_update (chat_id, update_id, reaction, deleted_update_id, mode)
-	VALUES ($1, $2, '', $3, $4)`
+	INSERT INTO messaging.update_deleted_update (chat_id, update_id, deleted_update_id, mode)
+	VALUES ($1, $2, $3, $4)`
 
 	_, err = db.Exec(ctx, q2,
 		deleted.ChatID,
