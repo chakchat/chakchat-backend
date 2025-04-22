@@ -147,16 +147,19 @@ func (r *SecretUpdateRepository) CreateUpdateDeleted(
 	VALUES ($1, $2, 'update_deleted', $3, $4)
 	RETURNING update_id`
 
+	now := time.Now()
 	var updateID int64
 	err := db.QueryRow(ctx, q1,
 		deleted.ChatID,
 		deleted.UpdateID,
-		deleted.CreatedAt,
+		now,
 		uuid.UUID(deleted.SenderID),
 	).Scan(&updateID)
 	if err != nil {
 		return nil, err
 	}
+
+	deleted.CreatedAt = domain.Timestamp(now.Unix())
 
 	// Insert update_deleted specific data
 	q2 := `
