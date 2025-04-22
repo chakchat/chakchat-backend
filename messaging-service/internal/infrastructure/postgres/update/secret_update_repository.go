@@ -78,7 +78,7 @@ func (r *SecretUpdateRepository) FindSecretUpdate(
 		createdAt            time.Time
 		senderID             uuid.UUID
 		payload              []byte
-		keyHash              string
+		keyHash              []byte
 		initializationVector []byte
 	)
 
