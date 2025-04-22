@@ -47,20 +47,17 @@ func (h *SecretPersonalUpdateHandler) SendSecretUpdate(c *gin.Context) {
 		return
 	}
 
-	var (
-		payload = make([]byte, 0, len(req.Payload))
-		iv      = make([]byte, 0, len(req.InitializationVector))
-		keyHash = make([]byte, 0, len(req.KeyHash))
-	)
-	if _, err := base64.StdEncoding.Decode(payload, []byte(req.Payload)); err != nil {
+	var payload, iv, keyHash []byte
+
+	if payload, err = base64.StdEncoding.DecodeString(req.Payload); err != nil {
+	restapi.SendUnprocessableJSON(c)
+		return
+	}
+	if iv, err = base64.StdEncoding.DecodeString(req.InitializationVector); err != nil {
 		restapi.SendUnprocessableJSON(c)
 		return
 	}
-	if _, err := base64.StdEncoding.Decode(iv, []byte(req.InitializationVector)); err != nil {
-		restapi.SendUnprocessableJSON(c)
-		return
-	}
-	if _, err := base64.StdEncoding.Decode(keyHash, []byte(req.KeyHash)); err != nil {
+	if keyHash, err = base64.StdEncoding.DecodeString(req.KeyHash); err != nil {
 		restapi.SendUnprocessableJSON(c)
 		return
 	}
