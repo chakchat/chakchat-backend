@@ -40,19 +40,21 @@ type GenericUpdateRepository interface {
 
 // Specifies what updates are counted
 //
-// For example if [FetchLastModeMessagesReactions] is chosen and Count = 5
+// For example if `FetchLastModeMessages | FetchLastModeReactions` is chosen and Count = 5
 // then last updates will be fetched with 5 messages or reactions.
 //
 // Other update types are not counted but are also fetched.
+//
+// It works like bit mask
 type FetchLastMode int
 
 const (
-	// Count only messages
-	FetchLastModeMessages FetchLastMode = iota
-	// Count only messages and reactions
-	FetchLastModeMessagesReactions
-	// Count all update types
-	FetchLastModeAll
+	// Count messages
+	FetchLastModeMessages FetchLastMode = 1<<iota
+	// Count reactions
+	FetchLastModeReactions
+	// Count secret updates
+	FetchLastModeSecret
 )
 
 type FetchLastOptions struct {
@@ -83,8 +85,8 @@ func WithFetchLastCount(count int) FetchLastOption {
 }
 
 // Defaults to FetchLastModeMessages
-func WithFetchLastOptions(mode FetchLastMode) FetchLastOption {
+func WithFetchLastMode(mode FetchLastMode) FetchLastOption {
 	return func(opts *FetchLastOptions) {
-		opts.Mode = mode
+		opts.Mode |= mode
 	}
 }

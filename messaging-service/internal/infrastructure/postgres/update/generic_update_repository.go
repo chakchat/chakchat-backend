@@ -223,15 +223,14 @@ func (r *GenericUpdateRepository) FetchLast( // TODO: rename to latest
 	opt := repository.NewFetchLastOptions(opts...)
 
 	var updateTypes []string
-	switch opt.Mode {
-	case repository.FetchLastModeMessages:
-		updateTypes = []string{"text_message", "file_message"}
-	case repository.FetchLastModeMessagesReactions:
-		updateTypes = []string{"text_message", "file_message", "reaction"}
-	case repository.FetchLastModeAll:
-		updateTypes = nil
-	default:
-		panic("it seems you added new repository.FetchLastMode but not implemented it")
+	if opt.Mode & repository.FetchLastModeMessages != 0 {
+		updateTypes = append(updateTypes, "text_message", "file_message")
+	}
+	if opt.Mode & repository.FetchLastModeReactions != 0 {
+		updateTypes = append(updateTypes, "reaction")
+	}
+	if opt.Mode & repository.FetchLastModeSecret != 0 {
+		updateTypes = append(updateTypes, "secret_update")
 	}
 
 	lo, found, err := r.getUpdateIDFromLast(
