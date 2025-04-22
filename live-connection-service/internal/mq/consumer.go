@@ -14,23 +14,24 @@ type ConsumerConf struct {
 
 type Consumer struct {
 	reader   *kafka.Reader
-	handler  func(ctx context.Context, msg kafka.Message)
+	handler  func(ctx context.Context, msg kafka.Message) error
 	shutdown chan struct{}
 }
 
 func NewConsumer(reader *ConsumerConf) *Consumer {
 	return &Consumer{
 		reader: kafka.NewReader(kafka.ReaderConfig{
-			Topic:       reader.Topic,
-			Brokers:     reader.Brokers,
-			GroupID:     reader.GroupID,
-			StartOffset: kafka.LastOffset,
+			Topic:          reader.Topic,
+			Brokers:        reader.Brokers,
+			GroupID:        reader.GroupID,
+			StartOffset:    kafka.LastOffset,
+			CommitInterval: 0,
 		}),
 		shutdown: make(chan struct{}),
 	}
 }
 
-func (c *Consumer) Start(ctx context.Context, handler func(ctx context.Context, msg kafka.Message)) {
+func (c *Consumer) Start(ctx context.Context, handler func(ctx context.Context, msg kafka.Message) error) {
 	c.handler = handler
 	go func() {
 		for {
@@ -40,11 +41,21 @@ func (c *Consumer) Start(ctx context.Context, handler func(ctx context.Context, 
 			case <-ctx.Done():
 				return
 			default:
-				msg, err := c.reader.ReadMessage(ctx)
+				msg, err := c.reader.FetchMessage(ctx)
 				if err != nil {
+					if err == context.Canceled {
+						return
+					}
 					continue
 				}
-				go c.handler(ctx, msg)
+				processErr := c.handler(ctx, msg)
+				if processErr != nil {
+					continue
+				}
+
+				if err := c.reader.CommitMessages(ctx, msg); err != nil {
+					continue
+				}
 			}
 		}
 	}()
