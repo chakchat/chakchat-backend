@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/google/uuid"
 	"github.com/segmentio/kafka-go"
 
 	"github.com/chakchat/chakchat-backend/live-connection-service/internal/models"
@@ -35,7 +36,7 @@ func (p *KafkaProcessor) MessageHandler(ctx context.Context, msg kafka.Message) 
 		Data: message.Data,
 	}
 
-	var notificReceivers []string
+	var notificReceivers []uuid.UUID
 	for _, userId := range message.Receivers {
 		if !p.hub.Send(userId, response) {
 			notificReceivers = append(notificReceivers, userId)
@@ -47,7 +48,9 @@ func (p *KafkaProcessor) MessageHandler(ctx context.Context, msg kafka.Message) 
 			Type:      message.Type,
 			Data:      message.Data,
 		}
-		p.notifq.Send(ctx, notificMessage)
+		if err := p.notifq.Send(ctx, notificMessage); err != nil {
+			return err
+		}
 	}
 	return nil
 }
