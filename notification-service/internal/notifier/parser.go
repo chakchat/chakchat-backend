@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/chakchat/chakchat-backend/notification-service/internal/grpc"
 	"github.com/gofrs/uuid"
 )
 
@@ -61,11 +60,18 @@ type UpdateGroupMembers struct {
 	Members []uuid.UUID `json:"members"`
 }
 
-type Parser struct {
-	grpcHandler grpc.GRPCClients
+type GRPCClients interface {
+	GetChatType() (string, error)
+	GetGroupName() (string, error)
+	GetUsername() (string, error)
+	GetChatName() (string, error)
 }
 
-func NewParser(grpcHandl grpc.GRPCClients) *Parser {
+type Parser struct {
+	grpcHandler GRPCClients
+}
+
+func NewParser(grpcHandl GRPCClients) *Parser {
 	return &Parser{
 		grpcHandler: grpcHandl,
 	}
@@ -79,13 +85,13 @@ func (p *Parser) ParseNotification(ctx context.Context, raw []byte) (string, err
 
 	switch notific.Type {
 	case "update":
-		return p.ParseUpdateNotification(raw)
+		return p.ParseUpdateNotification(notific.Data)
 	case "chat_created":
-		return p.ParseChatCreted(raw)
+		return p.ParseChatCreated(notific.Data)
 	case "group_info_updated":
-		return p.ParseGroupInfoUpdated(raw)
+		return p.ParseGroupInfoUpdated(notific.Data)
 	case "group_members_added", "group_members_removed":
-		return p.ParseGroupMembersChanged(notific.Type, raw)
+		return p.ParseGroupMembersChanged(notific.Type, notific.Data)
 	}
 	return "", nil
 }
@@ -115,9 +121,9 @@ func (p *Parser) ParseUpdateNotification(data json.RawMessage) (string, error) {
 			if err != nil {
 				return "", nil
 			}
-			return fmt.Sprintf("%s sent new message: %s from %s", sender, truncate(content.Text, 30), groupName), nil
+			return fmt.Sprintf("%s sent new message: %s from %s", sender, Truncate(content.Text, 30), groupName), nil
 		}
-		return fmt.Sprintf("%s sent new message: %s", sender, truncate(content.Text, 30)), nil
+		return fmt.Sprintf("%s sent new message: %s", sender, Truncate(content.Text, 30)), nil
 	case "file":
 		var content FileMessageContent
 		if err := json.Unmarshal(update.Content, &content); err != nil {
@@ -155,7 +161,7 @@ func (p *Parser) ParseUpdateNotification(data json.RawMessage) (string, error) {
 	return "", fmt.Errorf("incorrect json")
 }
 
-func (p *Parser) ParseChatCreted(data json.RawMessage) (string, error) {
+func (p *Parser) ParseChatCreated(data json.RawMessage) (string, error) {
 	var chat CreateChatMessage
 	if err := json.Unmarshal(data, &chat); err != nil {
 		return "", err
@@ -199,7 +205,7 @@ func (p *Parser) ParseGroupMembersChanged(notifiqType string, data json.RawMessa
 	return "", nil
 }
 
-func truncate(s string, maxLen int) string {
+func Truncate(s string, maxLen int) string {
 	if len(s) <= maxLen {
 		return s
 	}
