@@ -69,11 +69,15 @@ func (s *SecretGroupUpdateService) SendSecretUpdate(
 
 	updateDto := dto.NewSecretUpdateDTO(update)
 
-	s.pub.PublishForReceivers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingUpdateMembers(chat.Members[:], domain.UserID(req.SenderID), &update.Update),
 		events.TypeUpdate,
 		generic.FromSecretUpdateDTO(&updateDto),
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &updateDto, nil
 }
@@ -123,11 +127,15 @@ func (s *SecretGroupUpdateService) DeleteSecretUpdate(
 	deleted := update.Deleted[len(update.Deleted)-1]
 	deletedDto := dto.NewUpdateDeletedDTO(deleted)
 
-	s.pub.PublishForReceivers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingUpdateMembers(chat.Members[:], domain.UserID(req.SenderID), &update.Update),
 		events.TypeUpdate,
 		generic.FromUpdateDeletedDTO(&deletedDto),
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &deletedDto, nil
 }

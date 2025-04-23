@@ -60,7 +60,8 @@ func (s *PersonalChatService) BlockChat(
 		return nil, err
 	}
 
-	s.pub.PublishForReceivers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingMembers(chat.Members[:], domain.UserID(req.SenderID)),
 		events.TypeChatBlocked,
 		events.ChatBlocked{
@@ -68,6 +69,9 @@ func (s *PersonalChatService) BlockChat(
 			ChatID:   req.ChatID,
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	chatDto := dto.NewPersonalChatDTO(chat)
 	return &chatDto, nil
@@ -100,7 +104,8 @@ func (s *PersonalChatService) UnblockChat(
 		return nil, err
 	}
 
-	s.pub.PublishForReceivers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingMembers(chat.Members[:], domain.UserID(req.SenderID)),
 		events.TypeChatUnblocked,
 		events.ChatUnblocked{
@@ -108,6 +113,9 @@ func (s *PersonalChatService) UnblockChat(
 			ChatID:   req.ChatID,
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	chatDto := dto.NewPersonalChatDTO(chat)
 	return &chatDto, nil
@@ -141,7 +149,8 @@ func (s *PersonalChatService) CreateChat(
 
 	chatDto := dto.NewPersonalChatDTO(chat)
 
-	s.pub.PublishForReceivers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		[]uuid.UUID{req.MemberID},
 		events.TypeChatCreated,
 		events.ChatCreated{
@@ -198,7 +207,8 @@ func (s *PersonalChatService) DeleteChat(ctx context.Context, req request.Delete
 		return err
 	}
 
-	s.pub.PublishForReceivers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingMembers(chat.Members[:], domain.UserID(req.SenderID)),
 		events.TypeChatDeleted,
 		events.ChatDeleted{
@@ -206,6 +216,9 @@ func (s *PersonalChatService) DeleteChat(ctx context.Context, req request.Delete
 			ChatID:   req.ChatID,
 		},
 	)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

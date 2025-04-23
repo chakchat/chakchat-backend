@@ -89,7 +89,8 @@ func (s *GroupPhotoService) UpdatePhoto(ctx context.Context, req request.UpdateG
 
 	gDto := dto.NewGroupChatDTO(g)
 
-	s.pub.PublishForReceivers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingMembers(g.Members, domain.UserID(req.SenderID)),
 		events.TypeGroupInfoUpdated,
 		events.GroupInfoUpdated{
@@ -100,6 +101,9 @@ func (s *GroupPhotoService) UpdatePhoto(ctx context.Context, req request.UpdateG
 			GroupPhoto:  string(g.GroupPhoto),
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &gDto, nil
 }
@@ -144,7 +148,8 @@ func (s *GroupPhotoService) DeletePhoto(ctx context.Context, req request.DeleteG
 
 	gDto := dto.NewGroupChatDTO(g)
 
-	s.pub.PublishForReceivers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingMembers(g.Members, domain.UserID(req.SenderID)),
 		events.TypeGroupInfoUpdated,
 		events.GroupInfoUpdated{
@@ -154,6 +159,9 @@ func (s *GroupPhotoService) DeletePhoto(ctx context.Context, req request.DeleteG
 			GroupPhoto:  string(g.GroupPhoto),
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &gDto, nil
 }

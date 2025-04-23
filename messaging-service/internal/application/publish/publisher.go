@@ -1,6 +1,7 @@
 package publish
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/external"
@@ -14,7 +15,7 @@ type UserEvent struct {
 }
 
 type Publisher interface {
-	PublishForReceivers(users []uuid.UUID, typ string, data any)
+	PublishForReceivers(ctx context.Context, users []uuid.UUID, typ string, data any) error
 }
 
 type UserEventPublisher struct {
@@ -27,9 +28,9 @@ func NewUserEventPublisher(mq external.MqPublisher) UserEventPublisher {
 	}
 }
 
-func (p UserEventPublisher) PublishForReceivers(users []uuid.UUID, typ string, data any) {
+func (p UserEventPublisher) PublishForReceivers(ctx context.Context, users []uuid.UUID, typ string, data any) error {
 	if len(users) == 0 {
-		return
+		return nil
 	}
 
 	e := UserEvent{
@@ -40,12 +41,14 @@ func (p UserEventPublisher) PublishForReceivers(users []uuid.UUID, typ string, d
 
 	binE, err := json.Marshal(e)
 	if err != nil {
-		panic(err) // TODO: use smth like outbox and here return an error
+		return err
 	}
 
-	p.mq.Publish(binE)
+	return p.mq.Publish(ctx, binE)
 }
 
 type PublisherStub struct{}
 
-func (PublisherStub) PublishForReceivers(users []uuid.UUID, typ string, data any) {}
+func (PublisherStub) PublishForReceivers(ctx context.Context, users []uuid.UUID, typ string, data any) error {
+	return nil
+}

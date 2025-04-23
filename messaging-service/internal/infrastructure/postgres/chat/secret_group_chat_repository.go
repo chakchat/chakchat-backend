@@ -25,24 +25,25 @@ func (r *SecretGroupChatRepository) FindById(
 	ctx context.Context, db storage.ExecQuerier, id domain.ChatID,
 ) (*secgroup.SecretGroupChat, error) {
 	q := `
-	SELECT c.chat_id, c.created_at, g.admin_id, g.group_name, g.group_photo, g.group_description,
+	SELECT c.chat_id, c.created_at, g.admin_id, g.group_name, g.group_photo, g.group_description, g.expiration_seconds,
 		(SELECT ARRAY_AGG(m.user_id) FROM messaging.membership m WHERE m.chat_id = c.chat_id)
 	FROM messaging.chat c
-		JOIN messaging.group_chat g ON g.chat_id = c.chat_id
+		JOIN messaging.secret_group_chat g ON g.chat_id = c.chat_id
 	WHERE c.chat_id = $1`
 
 	row := db.QueryRow(ctx, q, id)
 
 	var (
-		chatID      uuid.UUID
-		createdAt   time.Time
-		adminID     uuid.UUID
-		name        string
-		photo       string
-		description string
-		members     []uuid.UUID
+		chatID            uuid.UUID
+		createdAt         time.Time
+		adminID           uuid.UUID
+		name              string
+		photo             string
+		description       string
+		expirationSeconds *int
+		members           []uuid.UUID
 	)
-	err := row.Scan(&chatID, &createdAt, &adminID, &name, &photo, &description, &members)
+	err := row.Scan(&chatID, &createdAt, &adminID, &name, &photo, &description, &expirationSeconds, &members)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, repository.ErrNotFound
@@ -50,12 +51,18 @@ func (r *SecretGroupChatRepository) FindById(
 		return nil, fmt.Errorf("getting group chat failed: %s", err)
 	}
 
+	var exp *time.Duration
+	if expirationSeconds != nil {
+		cp := time.Duration(*expirationSeconds) * time.Second
+		exp = &cp
+	}
 	return &secgroup.SecretGroupChat{
 		SecretChat: domain.SecretChat{
 			Chat: domain.Chat{
 				ID:        id,
 				CreatedAt: domain.Timestamp(createdAt.Unix()),
 			},
+			Exp: exp,
 		},
 		Admin:       domain.UserID(adminID),
 		Members:     userIDs(members),
@@ -88,7 +95,7 @@ func (r *SecretGroupChatRepository) Update(
 	}
 
 	q := `
-	UPDATE messaging.group_chat 
+	UPDATE messaging.secret_group_chat 
 	SET admin_id = $2, 
 		group_name = $3, 
 		group_photo = $4, 
@@ -133,7 +140,7 @@ func (r *SecretGroupChatRepository) Create(
 			exp = &cp
 		}
 		q := `
-		INSERT INTO messaging.group_chat
+		INSERT INTO messaging.secret_group_chat
 		(chat_id, admin_id, group_name, group_photo, group_description, expiration_seconds)
 		VALUES ($1, $2, $3, $4, $5)`
 		_, err := db.Exec(ctx, q, g.ID, g.Admin, g.GroupPhoto, g.Description, exp)

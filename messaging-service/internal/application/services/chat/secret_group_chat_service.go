@@ -60,7 +60,8 @@ func (s *SecretGroupChatService) CreateGroup(
 
 	gDto := dto.NewSecretGroupChatDTO(g)
 
-	s.pub.PublishForReceivers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingMembers(g.Members, domain.UserID(req.SenderID)),
 		events.TypeChatCreated,
 		events.ChatCreated{
@@ -68,6 +69,9 @@ func (s *SecretGroupChatService) CreateGroup(
 			Chat:     generic.FromSecretGroupChatDTO(&gDto),
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &gDto, nil
 }
@@ -102,7 +106,8 @@ func (s *SecretGroupChatService) UpdateGroupInfo(
 
 	gDto := dto.NewSecretGroupChatDTO(g)
 
-	s.pub.PublishForReceivers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingMembers(g.Members, domain.UserID(req.SenderID)),
 		events.TypeGroupInfoUpdated,
 		events.GroupInfoUpdated{
@@ -113,6 +118,9 @@ func (s *SecretGroupChatService) UpdateGroupInfo(
 			GroupPhoto:  string(g.GroupPhoto),
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &gDto, nil
 }
@@ -141,7 +149,8 @@ func (s *SecretGroupChatService) DeleteGroup(ctx context.Context, req request.De
 		return err
 	}
 
-	s.pub.PublishForReceivers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingMembers(g.Members, domain.UserID(req.SenderID)),
 		events.TypeChatDeleted,
 		events.ChatDeleted{
@@ -149,6 +158,9 @@ func (s *SecretGroupChatService) DeleteGroup(ctx context.Context, req request.De
 			ChatID:   req.ChatID,
 		},
 	)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -179,7 +191,8 @@ func (s *SecretGroupChatService) AddMember(
 		return nil, err
 	}
 
-	s.pub.PublishForReceivers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingMembers(g.Members, domain.UserID(req.SenderID)),
 		events.TypeGroupMembersAdded,
 		events.GroupMemberAdded{
@@ -188,6 +201,9 @@ func (s *SecretGroupChatService) AddMember(
 			Members:  []uuid.UUID{req.MemberID},
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	gDto := dto.NewSecretGroupChatDTO(g)
 	return &gDto, nil
@@ -222,7 +238,8 @@ func (s *SecretGroupChatService) DeleteMember(
 
 	gDto := dto.NewSecretGroupChatDTO(g)
 
-	s.pub.PublishForReceivers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingMembers(g.Members, domain.UserID(req.SenderID)),
 		events.TypeGroupMembersRemoved,
 		events.GroupMemberAdded{
@@ -231,6 +248,9 @@ func (s *SecretGroupChatService) DeleteMember(
 			Members:  []uuid.UUID{req.MemberID},
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &gDto, nil
 }
@@ -262,7 +282,8 @@ func (s *SecretGroupChatService) SetExpiration(
 		return nil, err
 	}
 
-	s.pub.PublishForReceivers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingMembers(g.Members[:], domain.UserID(req.SenderID)),
 		events.TypeChatExpirationSet,
 		events.ExpirationSet{
@@ -271,6 +292,9 @@ func (s *SecretGroupChatService) SetExpiration(
 			Expiration: req.Expiration,
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	gDto := dto.NewSecretGroupChatDTO(g)
 	return &gDto, nil

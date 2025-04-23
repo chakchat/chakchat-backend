@@ -89,11 +89,15 @@ func (s *PersonalUpdateService) SendTextMessage(
 
 	msgDto := dto.NewTextMessageDTO(msg)
 
-	s.pub.PublishForReceivers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingUpdateMembers(chat.Members[:], msg.SenderID, &msg.Update),
 		events.TypeUpdate,
 		generic.FromTextMessageDTO(&msgDto),
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &msgDto, nil
 }
@@ -148,11 +152,15 @@ func (s *PersonalUpdateService) EditTextMessage(
 
 	msgDto := dto.NewTextMessageDTO(msg)
 
-	s.pub.PublishForReceivers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingUpdateMembers(chat.Members[:], msg.Edited.SenderID, &msg.Update),
 		events.TypeUpdate,
 		generic.FromTextMessageEditedDTO(msgDto.Edited),
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &msgDto, nil
 }
@@ -210,11 +218,15 @@ func (s *PersonalUpdateService) DeleteMessage(
 	deletedDto := dto.NewUpdateDeletedDTO(deleted)
 
 	if msg.DeletedForAll() {
-		s.pub.PublishForReceivers(
+		err = s.pub.PublishForReceivers(
+			ctx,
 			services.GetReceivingUpdateMembers(chat.Members[:], domain.UserID(req.SenderID), &msg.Update),
 			events.TypeUpdate,
 			generic.FromUpdateDeletedDTO(&deletedDto),
 		)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &deletedDto, nil
@@ -261,11 +273,15 @@ func (s *PersonalUpdateService) SendReaction(
 
 	reactionDto := dto.NewReactionDTO(reaction)
 
-	s.pub.PublishForReceivers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingUpdateMembers(chat.Members[:], reaction.SenderID, &msg.Update),
 		events.TypeUpdate,
 		generic.FromReactionDTO(&reactionDto),
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &reactionDto, nil
 }
@@ -317,11 +333,15 @@ func (s *PersonalUpdateService) DeleteReaction(
 	deleted := reaction.Deleted[len(reaction.Deleted)-1]
 	deletedDto := dto.NewUpdateDeletedDTO(deleted)
 
-	s.pub.PublishForReceivers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingUpdateMembers(chat.Members[:], domain.UserID(req.SenderID), &reaction.Update),
 		events.TypeUpdate,
 		generic.FromUpdateDeletedDTO(&deletedDto),
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &deletedDto, nil
 }
@@ -375,11 +395,15 @@ func (s *PersonalUpdateService) ForwardTextMessage(
 
 	forwardedDto := dto.NewTextMessageDTO(forwarded)
 
-	s.pub.PublishForReceivers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingUpdateMembers(toChat.Members[:], forwarded.SenderID, &forwarded.Update),
 		events.TypeUpdate,
 		generic.FromTextMessageDTO(&forwardedDto),
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &forwardedDto, nil
 }
@@ -431,11 +455,15 @@ func (s *PersonalUpdateService) ForwardFileMessage(
 
 	forwardedDto := dto.NewFileMessageDTO(forwarded)
 
-	s.pub.PublishForReceivers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingUpdateMembers(toChat.Members[:], forwarded.SenderID, &forwarded.Update),
 		events.TypeUpdate,
 		generic.FromFileMessageDTO(&forwardedDto),
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &forwardedDto, nil
 }

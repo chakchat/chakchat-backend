@@ -63,7 +63,8 @@ func (s *SecretPersonalChatService) CreateChat(
 
 	chatDto := dto.NewSecretPersonalChatDTO(chat)
 
-	s.pub.PublishForReceivers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		[]uuid.UUID{req.MemberID},
 		events.TypeChatCreated,
 		events.ChatCreated{
@@ -71,6 +72,9 @@ func (s *SecretPersonalChatService) CreateChat(
 			Chat:     generic.FromSecretPersonalChatDTO(&chatDto),
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &chatDto, nil
 }
@@ -123,7 +127,8 @@ func (s *SecretPersonalChatService) SetExpiration(
 		return nil, err
 	}
 
-	s.pub.PublishForReceivers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingMembers(chat.Members[:], domain.UserID(req.SenderID)),
 		events.TypeChatExpirationSet,
 		events.ExpirationSet{
@@ -132,6 +137,9 @@ func (s *SecretPersonalChatService) SetExpiration(
 			Expiration: req.Expiration,
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	chatDto := dto.NewSecretPersonalChatDTO(chat)
 	return &chatDto, nil
@@ -161,7 +169,8 @@ func (s *SecretPersonalChatService) DeleteChat(ctx context.Context, req request.
 		return err
 	}
 
-	s.pub.PublishForReceivers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingMembers(chat.Members[:], domain.UserID(req.SenderID)),
 		events.TypeChatDeleted,
 		events.ChatDeleted{
@@ -169,6 +178,9 @@ func (s *SecretPersonalChatService) DeleteChat(ctx context.Context, req request.
 			ChatID:   req.ChatID,
 		},
 	)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

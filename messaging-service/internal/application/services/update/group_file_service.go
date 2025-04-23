@@ -95,11 +95,15 @@ func (s *GroupFileService) SendFileMessage(
 
 	msgDto := dto.NewFileMessageDTO(msg)
 
-	s.pub.PublishForReceivers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingUpdateMembers(chat.Members[:], msg.SenderID, &msg.Update),
 		events.TypeUpdate,
 		generic.FromFileMessageDTO(&msgDto),
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &msgDto, nil
 }
