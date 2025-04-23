@@ -50,7 +50,7 @@ func (r *SecretUpdateRepository) CreateSecretUpdate(
 		updateID,
 		secret.Data.Payload,
 		secret.Data.KeyHash,
-		secret.Data.Payload,
+		secret.Data.IV,
 	)
 	if err != nil {
 		return nil, err
