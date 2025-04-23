@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/generic"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish/events"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
@@ -12,7 +13,6 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
-	"github.com/google/uuid"
 )
 
 type PersonalUpdateService struct {
@@ -87,18 +87,14 @@ func (s *PersonalUpdateService) SendTextMessage(
 		return nil, err
 	}
 
-	s.pub.PublishForUsers(
+	msgDto := dto.NewTextMessageDTO(msg)
+
+	s.pub.PublishForReceivers(
 		services.GetReceivingUpdateMembers(chat.Members[:], msg.SenderID, &msg.Update),
-		events.TextMessageSent{
-			ChatID:    uuid.UUID(msg.ChatID),
-			UpdateID:  int64(msg.UpdateID),
-			SenderID:  uuid.UUID(msg.SenderID),
-			Text:      msg.Text,
-			CreatedAt: int64(msg.CreatedAt),
-		},
+		events.TypeUpdate,
+		generic.FromTextMessageDTO(&msgDto),
 	)
 
-	msgDto := dto.NewTextMessageDTO(msg)
 	return &msgDto, nil
 }
 
@@ -150,19 +146,14 @@ func (s *PersonalUpdateService) EditTextMessage(
 		return nil, err
 	}
 
-	s.pub.PublishForUsers(
+	msgDto := dto.NewTextMessageDTO(msg)
+
+	s.pub.PublishForReceivers(
 		services.GetReceivingUpdateMembers(chat.Members[:], msg.Edited.SenderID, &msg.Update),
-		events.TextMessageEdited{
-			ChatID:    uuid.UUID(msg.ChatID),
-			UpdateID:  int64(msg.Edited.UpdateID),
-			SenderID:  uuid.UUID(msg.Edited.SenderID),
-			MessageID: int64(msg.UpdateID),
-			NewText:   msg.Edited.NewText,
-			CreatedAt: int64(msg.Edited.CreatedAt),
-		},
+		events.TypeUpdate,
+		generic.FromTextMessageEditedDTO(msgDto.Edited),
 	)
 
-	msgDto := dto.NewTextMessageDTO(msg)
 	return &msgDto, nil
 }
 
@@ -213,24 +204,19 @@ func (s *PersonalUpdateService) DeleteMessage(
 	}
 
 	// I do not delete updates because it may cause incosistency.
-	// Add triggers and change on delete behavior on foreighn keys before deleting physically
+	// Add triggers and change "on delete" behavior on foreign keys before deleting physically
 
 	deleted := msg.Deleted[len(msg.Deleted)-1]
+	deletedDto := dto.NewUpdateDeletedDTO(deleted)
+
 	if msg.DeletedForAll() {
-		s.pub.PublishForUsers(
+		s.pub.PublishForReceivers(
 			services.GetReceivingUpdateMembers(chat.Members[:], domain.UserID(req.SenderID), &msg.Update),
-			events.UpdateDeleted{
-				ChatID:     uuid.UUID(msg.ChatID),
-				UpdateID:   int64(deleted.UpdateID),
-				SenderID:   req.SenderID,
-				DeletedID:  req.MessageID,
-				DeleteMode: req.DeleteMode,
-				CreatedAt:  int64(deleted.CreatedAt),
-			},
+			events.TypeUpdate,
+			generic.FromUpdateDeletedDTO(&deletedDto),
 		)
 	}
 
-	deletedDto := dto.NewUpdateDeletedDTO(deleted)
 	return &deletedDto, nil
 }
 
@@ -273,18 +259,14 @@ func (s *PersonalUpdateService) SendReaction(
 		return nil, err
 	}
 
-	s.pub.PublishForUsers(
+	reactionDto := dto.NewReactionDTO(reaction)
+
+	s.pub.PublishForReceivers(
 		services.GetReceivingUpdateMembers(chat.Members[:], reaction.SenderID, &msg.Update),
-		events.ReactionSent{
-			ChatID:       uuid.UUID(reaction.ChatID),
-			UpdateID:     int64(reaction.UpdateID),
-			SenderID:     uuid.UUID(reaction.SenderID),
-			CreatedAt:    int64(reaction.CreatedAt),
-			ReactionType: string(reaction.Type),
-		},
+		events.TypeUpdate,
+		generic.FromReactionDTO(&reactionDto),
 	)
 
-	reactionDto := dto.NewReactionDTO(reaction)
 	return &reactionDto, nil
 }
 
@@ -330,22 +312,17 @@ func (s *PersonalUpdateService) DeleteReaction(
 	}
 
 	// I do not delete updates because it may cause incosistency.
-	// Add triggers and change on delete behavior on foreighn keys before deleting physically
+	// Add triggers and change on delete behavior on foreign keys before deleting physically
 
 	deleted := reaction.Deleted[len(reaction.Deleted)-1]
-	s.pub.PublishForUsers(
+	deletedDto := dto.NewUpdateDeletedDTO(deleted)
+
+	s.pub.PublishForReceivers(
 		services.GetReceivingUpdateMembers(chat.Members[:], domain.UserID(req.SenderID), &reaction.Update),
-		events.UpdateDeleted{
-			ChatID:     uuid.UUID(reaction.ChatID),
-			UpdateID:   int64(deleted.UpdateID),
-			SenderID:   uuid.UUID(deleted.SenderID),
-			DeletedID:  int64(deleted.DeletedID),
-			DeleteMode: string(deleted.Mode),
-			CreatedAt:  int64(deleted.CreatedAt),
-		},
+		events.TypeUpdate,
+		generic.FromUpdateDeletedDTO(&deletedDto),
 	)
 
-	deletedDto := dto.NewUpdateDeletedDTO(deleted)
 	return &deletedDto, nil
 }
 
@@ -396,18 +373,14 @@ func (s *PersonalUpdateService) ForwardTextMessage(
 		return nil, err
 	}
 
-	s.pub.PublishForUsers(
+	forwardedDto := dto.NewTextMessageDTO(forwarded)
+
+	s.pub.PublishForReceivers(
 		services.GetReceivingUpdateMembers(toChat.Members[:], forwarded.SenderID, &forwarded.Update),
-		events.TextMessageSent{
-			ChatID:    uuid.UUID(forwarded.ChatID),
-			UpdateID:  int64(forwarded.UpdateID),
-			SenderID:  uuid.UUID(forwarded.SenderID),
-			Text:      forwarded.Text,
-			CreatedAt: int64(forwarded.CreatedAt),
-		},
+		events.TypeUpdate,
+		generic.FromTextMessageDTO(&forwardedDto),
 	)
 
-	forwardedDto := dto.NewTextMessageDTO(forwarded)
 	return &forwardedDto, nil
 }
 
@@ -456,24 +429,13 @@ func (s *PersonalUpdateService) ForwardFileMessage(
 		return nil, err
 	}
 
-	s.pub.PublishForUsers(
+	forwardedDto := dto.NewFileMessageDTO(forwarded)
+
+	s.pub.PublishForReceivers(
 		services.GetReceivingUpdateMembers(toChat.Members[:], forwarded.SenderID, &forwarded.Update),
-		events.FileMessageSent{
-			ChatID:   uuid.UUID(forwarded.ChatID),
-			UpdateID: int64(forwarded.UpdateID),
-			SenderID: uuid.UUID(forwarded.SenderID),
-			File: events.FileMeta{
-				FileId:    forwarded.File.FileId,
-				FileName:  forwarded.File.FileName,
-				MimeType:  forwarded.File.MimeType,
-				FileSize:  forwarded.File.FileSize,
-				FileUrl:   string(forwarded.File.FileURL),
-				CreatedAt: int64(forwarded.File.CreatedAt),
-			},
-			CreatedAt: int64(forwarded.CreatedAt),
-		},
+		events.TypeUpdate,
+		generic.FromFileMessageDTO(&forwardedDto),
 	)
 
-	forwardedDto := dto.NewFileMessageDTO(forwarded)
 	return &forwardedDto, nil
 }

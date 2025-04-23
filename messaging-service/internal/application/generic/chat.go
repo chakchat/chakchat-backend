@@ -10,11 +10,11 @@ import (
 )
 
 type Chat struct {
-	ChatID    uuid.UUID `json:"chat_id"`
-	CreatedAt int64 	`json:"created_at"`
-	Type  string `json:"type"`
+	ChatID    uuid.UUID   `json:"chat_id"`
+	CreatedAt int64       `json:"created_at"`
+	Type      string      `json:"type"`
 	Members   []uuid.UUID `json:"members"`
-	Info      ChatInfo `json:"info"`
+	Info      ChatInfo    `json:"info"`
 	// Last update ID in the chat.
 	// Be careful, it may hold even ID of update not visible for user (e.g. deleted)
 	LastUpdateID *int64 `json:"last_update_id,omitempty"`
@@ -24,10 +24,10 @@ type Chat struct {
 }
 
 type ChatInfo struct {
-	Personal *PersonalInfo `json:",inline,omitempty"`
-	Group *GroupInfo `json:",inline,omitempty"`
+	Personal       *PersonalInfo       `json:",inline,omitempty"`
+	Group          *GroupInfo          `json:",inline,omitempty"`
 	SecretPersonal *SecretPersonalInfo `json:",inline,omitempty"`
-	SecretGroup *SecretGroupInfo `json:",inline,omitempty"`
+	SecretGroup    *SecretGroupInfo    `json:",inline,omitempty"`
 }
 
 type PersonalInfo struct {
@@ -35,10 +35,10 @@ type PersonalInfo struct {
 }
 
 type GroupInfo struct {
-	AdminID            uuid.UUID `json:"admin_id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	GroupPhoto       string `json:"group_photo"`
+	AdminID     uuid.UUID `json:"admin_id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	GroupPhoto  string    `json:"group_photo"`
 }
 
 type SecretPersonalInfo struct {
@@ -46,19 +46,19 @@ type SecretPersonalInfo struct {
 }
 
 type SecretGroupInfo struct {
-	AdminID            uuid.UUID `json:"admin_id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	GroupPhoto       string `json:"group_photo"`
-	Expiration       *time.Duration `json:"expiration"`
+	AdminID     uuid.UUID      `json:"admin_id"`
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	GroupPhoto  string         `json:"group_photo"`
+	Expiration  *time.Duration `json:"expiration"`
 }
 
 func FromPersonalChatDTO(chatDTO *dto.PersonalChatDTO) Chat {
 	return Chat{
-		ChatID:      chatDTO.ID,
-		CreatedAt:   chatDTO.CreatedAt,
-		Type:        domain.ChatTypePersonal,
-		Members:     chatDTO.Members[:],
+		ChatID:    chatDTO.ID,
+		CreatedAt: chatDTO.CreatedAt,
+		Type:      domain.ChatTypePersonal,
+		Members:   chatDTO.Members[:],
 		Info: ChatInfo{
 			Personal: &PersonalInfo{
 				BlockedBy: chatDTO.BlockedBy,

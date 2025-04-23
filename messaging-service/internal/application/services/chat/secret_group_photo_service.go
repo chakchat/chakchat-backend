@@ -78,13 +78,15 @@ func (s *SecretGroupPhotoService) UpdatePhoto(
 
 	gDto := dto.NewSecretGroupChatDTO(g)
 
-	s.pub.PublishForUsers(
+	s.pub.PublishForReceivers(
 		services.GetReceivingMembers(g.Members, domain.UserID(req.SenderID)),
+		events.TypeGroupInfoUpdated,
 		events.GroupInfoUpdated{
-			ChatID:        gDto.ID,
-			Name:          gDto.Name,
-			Description:   gDto.Description,
-			GroupPhotoURL: string(g.GroupPhoto),
+			SenderID:    req.SenderID,
+			ChatID:      gDto.ID,
+			Name:        gDto.Name,
+			Description: gDto.Description,
+			GroupPhoto:  string(g.GroupPhoto),
 		},
 	)
 
@@ -121,13 +123,15 @@ func (s *SecretGroupPhotoService) DeletePhoto(
 
 	gDto := dto.NewSecretGroupChatDTO(g)
 
-	s.pub.PublishForUsers(
+	s.pub.PublishForReceivers(
 		services.GetReceivingMembers(g.Members, domain.UserID(req.SenderID)),
+		events.TypeGroupInfoUpdated,
 		events.GroupInfoUpdated{
-			ChatID:        gDto.ID,
-			Name:          gDto.Name,
-			Description:   gDto.Description,
-			GroupPhotoURL: string(g.GroupPhoto),
+			SenderID:    req.SenderID,
+			ChatID:      gDto.ID,
+			Name:        gDto.Name,
+			Description: gDto.Description,
+			GroupPhoto:  string(g.GroupPhoto),
 		},
 	)
 

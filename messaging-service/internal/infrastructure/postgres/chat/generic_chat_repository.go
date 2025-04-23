@@ -173,10 +173,10 @@ func (r *GenericChatRepository) buildGenericChat(
 	expirationSeconds *int,
 ) generic.Chat {
 	result := generic.Chat{
-		ChatID:        chatID,
-		CreatedAt:     createdAt.Unix(),
-		Type:          chatType,
-		Members:       members,
+		ChatID:    chatID,
+		CreatedAt: createdAt.Unix(),
+		Type:      chatType,
+		Members:   members,
 	}
 
 	switch chatType {
@@ -186,10 +186,10 @@ func (r *GenericChatRepository) buildGenericChat(
 		}
 	case domain.ChatTypeGroup:
 		result.Info.Group = &generic.GroupInfo{
-			AdminID:            *adminID,
+			AdminID:     *adminID,
 			Name:        *groupName,
 			Description: deref(groupDescription, ""),
-			GroupPhoto:       deref(groupPhoto, ""),
+			GroupPhoto:  deref(groupPhoto, ""),
 		}
 	case domain.ChatTypeSecretPersonal:
 		var exp *time.Duration
@@ -207,11 +207,11 @@ func (r *GenericChatRepository) buildGenericChat(
 			exp = &cp
 		}
 		result.Info.SecretGroup = &generic.SecretGroupInfo{
-			AdminID:            *adminID,
+			AdminID:     *adminID,
 			Name:        *groupName,
 			Description: deref(groupDescription, ""),
-			GroupPhoto:       deref(groupPhoto, ""),
-			Expiration:       exp,
+			GroupPhoto:  deref(groupPhoto, ""),
+			Expiration:  exp,
 		}
 	default:
 		panic(fmt.Errorf("unknown chat type is gotten from db: %s", chatType))

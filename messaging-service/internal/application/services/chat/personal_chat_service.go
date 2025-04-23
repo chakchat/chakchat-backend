@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/generic"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish/events"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
@@ -59,10 +60,12 @@ func (s *PersonalChatService) BlockChat(
 		return nil, err
 	}
 
-	s.pub.PublishForUsers(
+	s.pub.PublishForReceivers(
 		services.GetReceivingMembers(chat.Members[:], domain.UserID(req.SenderID)),
+		events.TypeChatBlocked,
 		events.ChatBlocked{
-			ChatID: req.ChatID,
+			SenderID: req.SenderID,
+			ChatID:   req.ChatID,
 		},
 	)
 
@@ -97,10 +100,12 @@ func (s *PersonalChatService) UnblockChat(
 		return nil, err
 	}
 
-	s.pub.PublishForUsers(
+	s.pub.PublishForReceivers(
 		services.GetReceivingMembers(chat.Members[:], domain.UserID(req.SenderID)),
+		events.TypeChatUnblocked,
 		events.ChatUnblocked{
-			ChatID: req.ChatID,
+			SenderID: req.SenderID,
+			ChatID:   req.ChatID,
 		},
 	)
 
@@ -136,10 +141,14 @@ func (s *PersonalChatService) CreateChat(
 
 	chatDto := dto.NewPersonalChatDTO(chat)
 
-	s.pub.PublishForUsers([]uuid.UUID{req.MemberID}, events.ChatCreated{
-		ChatID:   chatDto.ID,
-		ChatType: events.ChatTypePersonal,
-	})
+	s.pub.PublishForReceivers(
+		[]uuid.UUID{req.MemberID},
+		events.TypeChatCreated,
+		events.ChatCreated{
+			SenderID: req.SenderID,
+			Chat:     generic.FromPersonalChatDTO(&chatDto),
+		},
+	)
 
 	return &chatDto, nil
 }
@@ -189,10 +198,12 @@ func (s *PersonalChatService) DeleteChat(ctx context.Context, req request.Delete
 		return err
 	}
 
-	s.pub.PublishForUsers(
+	s.pub.PublishForReceivers(
 		services.GetReceivingMembers(chat.Members[:], domain.UserID(req.SenderID)),
+		events.TypeChatDeleted,
 		events.ChatDeleted{
-			ChatID: req.ChatID,
+			SenderID: req.SenderID,
+			ChatID:   req.ChatID,
 		},
 	)
 

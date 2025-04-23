@@ -1,19 +1,20 @@
 package publish
 
 import (
+	"encoding/json"
+
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/external"
 	"github.com/google/uuid"
 )
 
-type Event any
-
 type UserEvent struct {
-	Users []uuid.UUID `json:"users"`
-	Data  Event       `json:"data"`
+	Receivers []uuid.UUID `json:"receivers"`
+	Type      string      `json:"type"`
+	Data      any         `json:"data"`
 }
 
 type Publisher interface {
-	PublishForUsers(users []uuid.UUID, ev Event)
+	PublishForReceivers(users []uuid.UUID, typ string, data any)
 }
 
 type UserEventPublisher struct {
@@ -26,19 +27,25 @@ func NewUserEventPublisher(mq external.MqPublisher) UserEventPublisher {
 	}
 }
 
-func (p UserEventPublisher) PublishForUsers(users []uuid.UUID, ev Event) {
+func (p UserEventPublisher) PublishForReceivers(users []uuid.UUID, typ string, data any) {
 	if len(users) == 0 {
 		return
 	}
 
-	userEvent := UserEvent{
-		Users: users,
-		Data:  ev,
+	e := UserEvent{
+		Receivers: users,
+		Type:      typ,
+		Data:      data,
 	}
 
-	p.mq.Publish(userEvent)
+	binE, err := json.Marshal(e)
+	if err != nil {
+		panic(err) // TODO: use smth like outbox and here return an error
+	}
+
+	p.mq.Publish(binE)
 }
 
 type PublisherStub struct{}
 
-func (PublisherStub) PublishForUsers(users []uuid.UUID, ev Event) {}
+func (PublisherStub) PublishForReceivers(users []uuid.UUID, typ string, data any) {}

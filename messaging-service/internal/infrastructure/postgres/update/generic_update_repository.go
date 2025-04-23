@@ -95,7 +95,7 @@ func (r *GenericUpdateRepository) GetRange(
 			SenderID:   senderID,
 			UpdateType: updateType,
 			CreatedAt:  createdAt.Unix(),
-			Content:       generic.UpdateContent{},
+			Content:    generic.UpdateContent{},
 		})
 	}
 
@@ -177,7 +177,7 @@ func (r *GenericUpdateRepository) Get(
 		SenderID:   senderID,
 		UpdateType: updateType,
 		CreatedAt:  createdAt.Unix(),
-		Content:       generic.UpdateContent{},
+		Content:    generic.UpdateContent{},
 	}
 
 	// Fill in details based on update type
@@ -794,7 +794,7 @@ func (r *GenericUpdateRepository) fillUpdateDeleted(
 		}
 
 		deletedUpdates[updateID] = generic.DeletedInfo{
-			DeletedID:  deletedUpdateID,
+			DeletedID:   deletedUpdateID,
 			DeletedMode: mode,
 		}
 	}

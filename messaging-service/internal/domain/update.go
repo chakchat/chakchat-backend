@@ -3,6 +3,7 @@ package domain
 import (
 	"time"
 )
+
 const (
 	UpdateTypeTextMessage       = "text_message"
 	UpdateTypeTextMessageEdited = "text_message_edited"

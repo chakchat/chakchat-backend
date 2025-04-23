@@ -225,12 +225,9 @@ All update chat messages have the same structure as update messages(previous).
 
 ## Update group info
 
-Update only info about group< not about members.
+Update only info about group not about members.
 
-
-If any of fields name/description/group-photo was removed then value is empty string. If value is null then nothing has changed.
-
-
+All fields are passed.
 
 ```json
 {
