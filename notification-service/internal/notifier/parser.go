@@ -64,7 +64,6 @@ type GRPCClients interface {
 	GetChatType() (string, error)
 	GetGroupName() (string, error)
 	GetUsername() (string, error)
-	GetChatName() (string, error)
 }
 
 type Parser struct {
@@ -117,7 +116,7 @@ func (p *Parser) ParseUpdateNotification(data json.RawMessage) (string, error) {
 			return "", err
 		}
 		if chatType == "group" {
-			groupName, err := p.grpcHandler.GetChatName()
+			groupName, err := p.grpcHandler.GetGroupName()
 			if err != nil {
 				return "", nil
 			}
@@ -138,7 +137,7 @@ func (p *Parser) ParseUpdateNotification(data json.RawMessage) (string, error) {
 			return "", err
 		}
 		if chatType == "group" {
-			groupName, err := p.grpcHandler.GetChatName()
+			groupName, err := p.grpcHandler.GetGroupName()
 			if err != nil {
 				return "", nil
 			}
@@ -188,7 +187,7 @@ func (p *Parser) ParseGroupMembersChanged(notifiqType string, data json.RawMessa
 		return "", nil
 	}
 
-	groupName, err := p.grpcHandler.GetChatName()
+	groupName, err := p.grpcHandler.GetGroupName()
 	if err != nil {
 		return "", nil
 	}
