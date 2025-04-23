@@ -3,6 +3,8 @@ package storage
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/chakchat/chakchat-backend/identity-service/internal/services"
@@ -11,6 +13,8 @@ import (
 )
 
 const DeviceKeyPrefix = "Device:User:"
+
+var ErrNotFound = errors.New("not_found")
 
 type DeviceStorageConfig struct {
 	DeviceInfoLifetime time.Duration
@@ -64,4 +68,19 @@ func (s *DeviceStorage) Remove(ctx context.Context, userID uuid.UUID) error {
 		return err
 	}
 	return nil
+}
+
+func (s *DeviceStorage) GetDeviceTokenByID(ctx context.Context, userID uuid.UUID) (*string, error) {
+	key := DeviceKeyPrefix + userID.String()
+
+	token := s.client.Get(ctx, key)
+	if err := token.Err(); err != nil {
+		if err == redis.Nil {
+			return nil, ErrNotFound
+		}
+		return nil, fmt.Errorf("redis get key by id failed: %s", err)
+	}
+
+	deviceToken := token.String()
+	return &deviceToken, nil
 }

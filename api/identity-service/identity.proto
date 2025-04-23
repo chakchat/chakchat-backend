@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package identity;
+
+option go_package = "./identity";
+
+message UUID {
+    string value = 1;
+}
+
+enum DeviceTokenResponseStatus {
+    SUCCESS = 0;
+    FAILED = 1;
+    NOT_FOUND = 2;
+}
+
+message DeviceTokenRequest {
+    string user_id = 1;
+}
+
+message DeviceTokenResponse {
+  DeviceTokenResponseStatus status = 1;
+  optional string device_token = 2;
+}
+
+service IdentityService {
+    rpc GetDeviceTokens(DeviceTokenRequest) returns (DeviceTokenResponse);
+  }

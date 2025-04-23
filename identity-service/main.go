@@ -3,10 +3,14 @@ package main
 import (
 	"context"
 	"log"
+	"net"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/chakchat/chakchat-backend/identity-service/internal/handlers"
+	"github.com/chakchat/chakchat-backend/identity-service/internal/proto"
+	"github.com/chakchat/chakchat-backend/identity-service/internal/proto/identity"
 	"github.com/chakchat/chakchat-backend/identity-service/internal/restapi"
 	"github.com/chakchat/chakchat-backend/identity-service/internal/services"
 	"github.com/chakchat/chakchat-backend/identity-service/internal/sms"
@@ -76,6 +80,22 @@ func main() {
 	signUpSendCodeService := createSignUpSendCodeService(sms, signUpMetaStorage, usersClient)
 	signUpVerifyService := services.NewSignUpVerifyCodeService(signUpMetaStorage)
 	signUpService := services.NewSignUpService(accessTokenConfig, refreshTokenConfig, usersClient, signUpMetaStorage)
+
+	grpcListener, err := net.Listen("tcp", ":"+strconv.Itoa(conf.GRPCService.Port))
+	if err != nil {
+		log.Fatalf("Listening TCP failed: %s", err)
+	}
+
+	grpcService := proto.NewGRPCServer(deviceStorage)
+
+	grpcServer := grpc.NewServer()
+	identity.RegisterIdentityServiceServer(grpcServer, grpcService)
+
+	go func() {
+		if err := grpcServer.Serve(grpcListener); err != nil {
+			log.Fatalf("failed to serve: %v", err)
+		}
+	}()
 
 	r := gin.New()
 
