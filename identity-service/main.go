@@ -66,11 +66,12 @@ func main() {
 	signInMetaStorage := createSignInMetaStorage(rdb)
 	invalidatedTokenStorage := createInvalidatedTokenStorage(rdb)
 	signUpMetaStorage := createSignUpMetaStorage(rdb)
+	deviceStorage := createDeviceStorage(rdb)
 
 	sendCodeService := createSignInSendCodeService(sms, signInMetaStorage, usersClient)
-	signInService := services.NewSignInService(signInMetaStorage, accessTokenConfig, refreshTokenConfig)
-	refreshService := services.NewRefreshService(invalidatedTokenStorage, accessTokenConfig, refreshTokenConfig)
-	signOutService := services.NewSignOutService(invalidatedTokenStorage)
+	signInService := services.NewSignInService(signInMetaStorage, accessTokenConfig, refreshTokenConfig, deviceStorage)
+	refreshService := services.NewRefreshService(invalidatedTokenStorage, accessTokenConfig, refreshTokenConfig, deviceStorage)
+	signOutService := services.NewSignOutService(invalidatedTokenStorage, refreshTokenConfig, deviceStorage)
 	identityService := services.NewIdentityService(accessTokenConfig, internalTokenConfig)
 	signUpSendCodeService := createSignUpSendCodeService(sms, signUpMetaStorage, usersClient)
 	signUpVerifyService := services.NewSignUpVerifyCodeService(signUpMetaStorage)
@@ -117,6 +118,13 @@ func createSignUpMetaStorage(redisClient *redis.Client) *storage.SignUpMetaStora
 		MetaLifetime: conf.SignUpMeta.Lifetime,
 	}
 	return storage.NewSignUpMetaStorage(stConf, redisClient)
+}
+
+func createDeviceStorage(redisClient *redis.Client) *storage.DeviceStorage {
+	conf := &storage.DeviceStorageConfig{
+		DeviceInfoLifetime: conf.RefreshToken.Lifetime,
+	}
+	return storage.NewDeviceStorage(redisClient, conf)
 }
 
 func createSmsSender() sms.SmsSender {

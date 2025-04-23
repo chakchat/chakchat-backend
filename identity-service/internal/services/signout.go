@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/chakchat/chakchat-backend/shared/go/jwt"
+	"github.com/google/uuid"
 )
 
 type RefreshTokenInvalidator interface {
@@ -12,12 +13,16 @@ type RefreshTokenInvalidator interface {
 }
 
 type SignOutService struct {
-	invalidator RefreshTokenInvalidator
+	invalidator   RefreshTokenInvalidator
+	refreshConfig *jwt.Config
+	deviceStorage DeviceStorage
 }
 
-func NewSignOutService(invalidator RefreshTokenInvalidator) *SignOutService {
+func NewSignOutService(invalidator RefreshTokenInvalidator, refreshConf *jwt.Config, deviceStorage DeviceStorage) *SignOutService {
 	return &SignOutService{
-		invalidator: invalidator,
+		invalidator:   invalidator,
+		refreshConfig: refreshConf,
+		deviceStorage: deviceStorage,
 	}
 }
 
@@ -25,6 +30,22 @@ func (s *SignOutService) SignOut(ctx context.Context, refresh jwt.Token) error {
 	// idk should I check smth?
 	if err := s.invalidator.Invalidate(ctx, refresh); err != nil {
 		return fmt.Errorf("token invalidation failed: %s", err)
+	}
+	claims, err := jwt.Parse(s.refreshConfig, refresh)
+	if err != nil {
+		return fmt.Errorf("failed to parse refresh token: %s", err)
+	}
+	sub, ok := claims[jwt.ClaimSub].(string)
+	if !ok {
+		return fmt.Errorf("invalid sub claim type")
+	}
+	userID, err := uuid.Parse(sub)
+	if err != nil {
+		return fmt.Errorf("failed to parse sub claim")
+	}
+
+	if err := s.deviceStorage.Remove(ctx, userID); err != nil {
+		return fmt.Errorf("failed to delete device token: %s", err)
 	}
 	return nil
 }
