@@ -340,7 +340,7 @@ func (r *GenericUpdateRepository) fillTextMessages(
 	defer rows.Close()
 
 	// Map to store text messages by update_id
-	textMsgs := make(map[int64]generic.TextMessageInfo)
+	textMsgs := make(map[int64]generic.TextMessageContent)
 
 	for rows.Next() {
 		var (
@@ -353,7 +353,7 @@ func (r *GenericUpdateRepository) fillTextMessages(
 			return err
 		}
 
-		textMsgs[updateID] = generic.TextMessageInfo{
+		textMsgs[updateID] = generic.TextMessageContent{
 			Text:    text,
 			ReplyTo: replyToID,
 		}
@@ -445,7 +445,7 @@ func (r *GenericUpdateRepository) getTextEdits(
 
 		// Only store the first edit we encounter for each message ID (most recent)
 		if _, exists := result[messageID]; !exists {
-			editInfo := generic.TextMessageEditedInfo{
+			editInfo := generic.TextMessageEditedContent{
 				MessageID: messageID,
 				NewText:   newText,
 			}
@@ -497,7 +497,7 @@ func (r *GenericUpdateRepository) fillTextMessageEdited(
 	}
 	defer rows.Close()
 
-	edits := make(map[int64]generic.TextMessageEditedInfo)
+	edits := make(map[int64]generic.TextMessageEditedContent)
 
 	for rows.Next() {
 		var (
@@ -510,7 +510,7 @@ func (r *GenericUpdateRepository) fillTextMessageEdited(
 			return err
 		}
 
-		edits[updateID] = generic.TextMessageEditedInfo{
+		edits[updateID] = generic.TextMessageEditedContent{
 			NewText:   newText,
 			MessageID: messageID,
 		}
@@ -566,7 +566,7 @@ func (r *GenericUpdateRepository) fillFileMessages(
 	}
 	defer rows.Close()
 
-	fileMsgs := make(map[int64]generic.FileMessageInfo)
+	fileMsgs := make(map[int64]generic.FileMessageContent)
 
 	for rows.Next() {
 		var (
@@ -593,7 +593,7 @@ func (r *GenericUpdateRepository) fillFileMessages(
 			return err
 		}
 
-		fileMsgs[updateID] = generic.FileMessageInfo{
+		fileMsgs[updateID] = generic.FileMessageContent{
 			File: generic.FileMeta{
 				FileId:    fileID,
 				FileName:  fileName,
@@ -673,7 +673,7 @@ func (r *GenericUpdateRepository) getMessageReactions(
 			UpdateType: "reaction",
 			CreatedAt:  createdAt.Unix(),
 			Content: generic.UpdateContent{
-				Reaction: &generic.ReactionInfo{
+				Reaction: &generic.ReactionContent{
 					Reaction:  reactionType,
 					MessageID: int64(messageID),
 				},
@@ -715,7 +715,7 @@ func (r *GenericUpdateRepository) fillReactions(
 	}
 	defer rows.Close()
 
-	reactions := make(map[int64]generic.ReactionInfo)
+	reactions := make(map[int64]generic.ReactionContent)
 
 	for rows.Next() {
 		var (
@@ -728,7 +728,7 @@ func (r *GenericUpdateRepository) fillReactions(
 			return err
 		}
 
-		reactions[updateID] = generic.ReactionInfo{
+		reactions[updateID] = generic.ReactionContent{
 			Reaction:  reaction,
 			MessageID: messageID,
 		}
@@ -779,7 +779,7 @@ func (r *GenericUpdateRepository) fillUpdateDeleted(
 	}
 	defer rows.Close()
 
-	deletedUpdates := make(map[int64]generic.DeletedInfo)
+	deletedUpdates := make(map[int64]generic.DeletedContent)
 
 	for rows.Next() {
 		var (
@@ -792,7 +792,7 @@ func (r *GenericUpdateRepository) fillUpdateDeleted(
 			return err
 		}
 
-		deletedUpdates[updateID] = generic.DeletedInfo{
+		deletedUpdates[updateID] = generic.DeletedContent{
 			DeletedID:   deletedUpdateID,
 			DeletedMode: mode,
 		}
@@ -844,7 +844,7 @@ func (r *GenericUpdateRepository) fillSecretUpdates(
 	}
 	defer rows.Close()
 
-	secretUpdates := make(map[int64]generic.SecretUpdateInfo)
+	secretUpdates := make(map[int64]generic.SecretUpdateContent)
 
 	for rows.Next() {
 		var (
@@ -858,7 +858,7 @@ func (r *GenericUpdateRepository) fillSecretUpdates(
 			return err
 		}
 
-		secretUpdates[updateID] = generic.SecretUpdateInfo{
+		secretUpdates[updateID] = generic.SecretUpdateContent{
 			PayloadBase64:              base64.StdEncoding.EncodeToString(payload),
 			KeyHashBase64:              base64.StdEncoding.EncodeToString(keyHash),
 			InitializationVectorBase64: base64.StdEncoding.EncodeToString(initializationVector),
