@@ -158,6 +158,9 @@ func (s *PersonalChatService) CreateChat(
 			Chat:     generic.FromPersonalChatDTO(&chatDto),
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &chatDto, nil
 }

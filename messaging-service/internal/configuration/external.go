@@ -12,9 +12,9 @@ type External struct {
 	FileStorage external.FileStorage
 }
 
-func NewExternal(fileStConn *grpc.ClientConn) *External {
+func NewExternal(fileStConn *grpc.ClientConn, mq external.MqPublisher) *External {
 	return &External{
-		Publisher:   publish.PublisherStub{},
+		Publisher:   publish.NewUserEventPublisher(mq),
 		FileStorage: proto.NewFileStorage(fileStConn),
 	}
 }

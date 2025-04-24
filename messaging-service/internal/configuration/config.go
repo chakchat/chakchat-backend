@@ -31,6 +31,11 @@ type Config struct {
 	FileStorage struct {
 		GrpcAddr string `mapstructure:"grpc_addr"`
 	} `mapstructure:"file_storage"`
+
+	Kafka struct {
+		Brokers []string `mapstructure:"brokers"`
+		Topic string `mapstructure:"topic"`
+	} `mapstructure:"kafka"`
 }
 
 func LoadConfig(file string) (*Config, error) {

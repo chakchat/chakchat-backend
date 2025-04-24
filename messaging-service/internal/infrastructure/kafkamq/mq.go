@@ -13,7 +13,7 @@ type KafkaMQPublisher struct {
 	tracer trace.Tracer
 }
 
-func NewKafkaMQPublicher(writer *kafka.Writer) *KafkaMQPublisher {
+func NewKafkaMQPublisher(writer *kafka.Writer) *KafkaMQPublisher {
 	return &KafkaMQPublisher{
 		writer: writer,
 		tracer: otel.GetTracerProvider().Tracer("kafka-mq-publisher"),

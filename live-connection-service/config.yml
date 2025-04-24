@@ -7,6 +7,8 @@ jwt:
   key_file_path: /app/keys/rsa.pub
 
 kafka:
-  brokers: "live-connection-service:9092"
-  consume_topic:  "update_topic"
-  produce_topic:  "dlq_topic"
+  brokers: ml-kafka:9092
+  consume_topic:  updates
+  produce_topic: notifq
+# Ann, you look here and think what is happening here
+# Here should be two separate Kafka configs to two separate kafka "clusters" 

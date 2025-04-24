@@ -2,6 +2,7 @@
 package generic
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
@@ -24,10 +25,25 @@ type Chat struct {
 }
 
 type ChatInfo struct {
-	Personal       *PersonalInfo       `json:",inline,omitempty"`
-	Group          *GroupInfo          `json:",inline,omitempty"`
-	SecretPersonal *SecretPersonalInfo `json:",inline,omitempty"`
-	SecretGroup    *SecretGroupInfo    `json:",inline,omitempty"`
+	Personal       *PersonalInfo
+	Group          *GroupInfo
+	SecretPersonal *SecretPersonalInfo
+	SecretGroup    *SecretGroupInfo
+}
+
+func (c ChatInfo) MarshalJSON() ([]byte, error) {
+	switch {
+	case c.Personal != nil:
+		return json.Marshal(c.Personal)
+	case c.Group != nil:
+		return json.Marshal(c.Group)
+	case c.SecretPersonal != nil:
+		return json.Marshal(c.SecretPersonal)
+	case c.SecretGroup != nil:
+		return json.Marshal(c.SecretGroup)
+	default:
+		return nil, nil
+	}
 }
 
 type PersonalInfo struct {
