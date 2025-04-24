@@ -59,10 +59,8 @@ func (s *RefreshService) Refresh(ctx context.Context, refresh jwt.Token) (jwt.Pa
 
 	claims := extractPublic(parsed)
 
-	sub, ok := claims[jwt.ClaimSub].(string)
-	if !ok {
-		return jwt.Pair{}, fmt.Errorf("invalid sub claim type")
-	}
+	sub := claims[jwt.ClaimSub].(string)
+
 	userId, err := uuid.Parse(sub)
 	if err != nil {
 		return jwt.Pair{}, fmt.Errorf("failed to parse sub claim")

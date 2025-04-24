@@ -35,10 +35,8 @@ func (s *SignOutService) SignOut(ctx context.Context, refresh jwt.Token) error {
 	if err != nil {
 		return fmt.Errorf("failed to parse refresh token: %s", err)
 	}
-	sub, ok := claims[jwt.ClaimSub].(string)
-	if !ok {
-		return fmt.Errorf("invalid sub claim type")
-	}
+	sub := claims[jwt.ClaimSub].(string)
+
 	userID, err := uuid.Parse(sub)
 	if err != nil {
 		return fmt.Errorf("failed to parse sub claim")
