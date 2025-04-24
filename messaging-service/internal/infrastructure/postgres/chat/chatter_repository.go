@@ -54,11 +54,11 @@ func (r *ChatterRepository) FindChatter(
 		return r.groupRepo.FindById(ctx, db, id)
 	}
 
-	if chatType == services.ChatTypeSecretPersonal {
+	if chatType == domain.ChatTypeSecretPersonal {
 		return r.secpPersonalRepo.FindById(ctx, db, id)
 	}
 
-	if chatType == services.ChatTypeSecretGroup {
+	if chatType == domain.ChatTypeSecretGroup {
 		return r.secGroupRepo.FindById(ctx, db, id)
 	}
 
