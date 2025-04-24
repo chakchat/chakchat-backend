@@ -2,6 +2,7 @@ package generic
 
 import (
 	"encoding/base64"
+	"encoding/json"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
@@ -20,27 +21,46 @@ type Update struct {
 
 // You should get one of fields depending on GenericUpdate.UpdateType
 type UpdateContent struct {
-	TextMessage       *TextMessageInfo       `json:",inline,omitempty"`
-	TextMessageEdited *TextMessageEditedInfo `json:",inline,omitempty"`
-	FileMessage       *FileMessageInfo       `json:",inline,omitempty"`
-	Deleted           *DeletedInfo           `json:",inline,omitempty"`
-	Reaction          *ReactionInfo          `json:",inline,omitempty"`
-	Secret            *SecretUpdateInfo      `json:",inline,omitempty"`
+	TextMessage       *TextMessageContent
+	TextMessageEdited *TextMessageEditedContent
+	FileMessage       *FileMessageContent
+	Deleted           *DeletedContent
+	Reaction          *ReactionContent 
+	Secret            *SecretUpdateContent
 }
 
-type TextMessageInfo struct {
+func (c UpdateContent) MarshalJSON() ([]byte, error) {
+	switch {
+	case c.TextMessage != nil:
+		return json.Marshal(c.TextMessage)
+	case c.TextMessageEdited != nil:
+		return json.Marshal(c.TextMessageEdited)
+	case c.FileMessage != nil:
+		return json.Marshal(c.FileMessage)
+	case c.Deleted != nil:
+		return json.Marshal(c.Deleted)
+	case c.Reaction != nil:
+		return json.Marshal(c.Reaction)
+	case c.Secret != nil:
+		return json.Marshal(c.Secret)
+	default:
+		return nil, nil
+	}
+}
+
+type TextMessageContent struct {
 	Text      string   `json:"text"`
 	Edited    *Update  `json:"edited,omitempty"`
 	ReplyTo   *int64   `json:"reply_to,omitempty"`
 	Reactions []Update `json:"reactions,omitempty"`
 }
 
-type TextMessageEditedInfo struct {
+type TextMessageEditedContent struct {
 	MessageID int64  `json:"message_id"`
 	NewText   string `json:"new_text"`
 }
 
-type FileMessageInfo struct {
+type FileMessageContent struct {
 	File      FileMeta `json:"file"`
 	ReplyTo   *int64   `json:"reply_to,omitempty"`
 	Reactions []Update `json:"reactions,omitempty"`
@@ -55,17 +75,17 @@ type FileMeta struct {
 	CreatedAt int64     `json:"created_at"`
 }
 
-type DeletedInfo struct {
+type DeletedContent struct {
 	DeletedID   int64  `json:"deleted_id"`
 	DeletedMode string `json:"deleted_mode"`
 }
 
-type ReactionInfo struct {
+type ReactionContent struct {
 	Reaction  string `json:"reaction"`
 	MessageID int64  `json:"message_id"`
 }
 
-type SecretUpdateInfo struct {
+type SecretUpdateContent struct {
 	PayloadBase64              string `json:"payload"`
 	InitializationVectorBase64 string `json:"initialization_vector"`
 	KeyHashBase64              string `json:"key_hash"`
@@ -85,7 +105,7 @@ func FromFileMessageDTO(msg *dto.FileMessageDTO) Update {
 		UpdateType: domain.UpdateTypeFileMessage,
 		CreatedAt:  msg.CreatedAt,
 		Content: UpdateContent{
-			FileMessage: &FileMessageInfo{
+			FileMessage: &FileMessageContent{
 				File: FileMeta{
 					FileId:    msg.File.FileId,
 					FileName:  msg.File.FileName,
@@ -121,7 +141,7 @@ func FromTextMessageDTO(msg *dto.TextMessageDTO) Update {
 		UpdateType: domain.UpdateTypeTextMessage,
 		CreatedAt:  msg.CreatedAt,
 		Content: UpdateContent{
-			TextMessage: &TextMessageInfo{
+			TextMessage: &TextMessageContent{
 				Text:      msg.Text,
 				Edited:    edited,
 				ReplyTo:   replyTo,
@@ -139,7 +159,7 @@ func FromTextMessageEditedDTO(msg *dto.TextMessageEditedDTO) Update {
 		UpdateType: domain.UpdateTypeTextMessageEdited,
 		CreatedAt:  msg.CreatedAt,
 		Content: UpdateContent{
-			TextMessageEdited: &TextMessageEditedInfo{
+			TextMessageEdited: &TextMessageEditedContent{
 				MessageID: msg.MessageID,
 				NewText:   msg.NewText,
 			},
@@ -155,7 +175,7 @@ func FromUpdateDeletedDTO(msg *dto.UpdateDeletedDTO) Update {
 		UpdateType: domain.UpdateTypeDeleted,
 		CreatedAt:  msg.CreatedAt,
 		Content: UpdateContent{
-			Deleted: &DeletedInfo{
+			Deleted: &DeletedContent{
 				DeletedID:   msg.DeletedID,
 				DeletedMode: msg.DeleteMode,
 			},
@@ -171,7 +191,7 @@ func FromSecretUpdateDTO(msg *dto.SecretUpdateDTO) Update {
 		UpdateType: domain.UpdateTypeSecret,
 		CreatedAt:  msg.CreatedAt,
 		Content: UpdateContent{
-			Secret: &SecretUpdateInfo{
+			Secret: &SecretUpdateContent{
 				PayloadBase64:              base64.StdEncoding.EncodeToString(msg.Payload),
 				InitializationVectorBase64: base64.StdEncoding.EncodeToString(msg.InitializationVector),
 				KeyHashBase64:              base64.StdEncoding.EncodeToString(msg.KeyHash),
@@ -188,7 +208,7 @@ func FromReactionDTO(r *dto.ReactionDTO) Update {
 		UpdateType: domain.UpdateTypeReaction,
 		CreatedAt:  r.CreatedAt,
 		Content: UpdateContent{
-			Reaction: &ReactionInfo{
+			Reaction: &ReactionContent{
 				Reaction:  r.ReactionType,
 				MessageID: r.MessageID,
 			},
