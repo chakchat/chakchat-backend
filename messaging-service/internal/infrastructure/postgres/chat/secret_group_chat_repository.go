@@ -99,7 +99,7 @@ func (r *SecretGroupChatRepository) Update(
 	SET admin_id = $2, 
 		group_name = $3, 
 		group_photo = $4, 
-		group_description = $5
+		group_description = $5,
 		expiration_seconds = $6
 	WHERE chat_id = $1`
 
