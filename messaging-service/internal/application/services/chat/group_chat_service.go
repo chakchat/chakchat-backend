@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/generic"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish/events"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
@@ -56,13 +57,18 @@ func (s *GroupChatService) CreateGroup(ctx context.Context, req request.CreateGr
 
 	gDto := dto.NewGroupChatDTO(g)
 
-	s.pub.PublishForUsers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingMembers(g.Members, domain.UserID(req.SenderID)),
+		events.TypeChatCreated,
 		events.ChatCreated{
-			ChatID:   uuid.UUID(gDto.ID),
-			ChatType: events.ChatTypeGroup,
+			SenderID: req.SenderID,
+			Chat:     generic.FromGroupChatDTO(&gDto),
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &gDto, nil
 }
@@ -95,15 +101,21 @@ func (s *GroupChatService) UpdateGroupInfo(ctx context.Context, req request.Upda
 
 	gDto := dto.NewGroupChatDTO(g)
 
-	s.pub.PublishForUsers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingMembers(g.Members, g.Admin),
+		events.TypeGroupInfoUpdated,
 		events.GroupInfoUpdated{
-			ChatID:        gDto.ID,
-			Name:          gDto.Name,
-			Description:   gDto.Description,
-			GroupPhotoURL: string(g.GroupPhoto),
+			SenderID:    req.SenderID,
+			ChatID:      gDto.ID,
+			Name:        gDto.Name,
+			Description: gDto.Description,
+			GroupPhoto:  string(g.GroupPhoto),
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &gDto, nil
 }
@@ -132,12 +144,18 @@ func (s *GroupChatService) DeleteGroup(ctx context.Context, req request.DeleteCh
 		return err
 	}
 
-	s.pub.PublishForUsers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingMembers(g.Members, domain.UserID(req.SenderID)),
+		events.TypeChatDeleted,
 		events.ChatDeleted{
-			ChatID: req.ChatID,
+			SenderID: req.SenderID,
+			ChatID:   req.ChatID,
 		},
 	)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -169,13 +187,19 @@ func (s *GroupChatService) AddMember(ctx context.Context, req request.AddMember)
 
 	gDto := dto.NewGroupChatDTO(g)
 
-	s.pub.PublishForUsers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingMembers(g.Members, domain.UserID(req.SenderID)),
+		events.TypeGroupMembersAdded,
 		events.GroupMemberAdded{
+			SenderID: req.SenderID,
 			ChatID:   req.ChatID,
-			MemberID: req.MemberID,
+			Members:  []uuid.UUID{req.MemberID},
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &gDto, nil
 }
@@ -207,13 +231,19 @@ func (s *GroupChatService) DeleteMember(ctx context.Context, req request.DeleteM
 
 	gDto := dto.NewGroupChatDTO(g)
 
-	s.pub.PublishForUsers(
+	err = s.pub.PublishForReceivers(
+		ctx,
 		services.GetReceivingMembers(g.Members, domain.UserID(req.SenderID)),
-		events.GroupMemberAdded{
+		events.TypeGroupMembersRemoved,
+		events.GroupMembersRemoved{
+			SenderID: req.SenderID,
 			ChatID:   req.ChatID,
-			MemberID: req.MemberID,
+			Members:  []uuid.UUID{req.MemberID},
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &gDto, nil
 }

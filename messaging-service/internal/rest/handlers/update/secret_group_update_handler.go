@@ -6,9 +6,9 @@ import (
 	"strconv"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/generic"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/errmap"
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/response"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/restapi"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -75,7 +75,7 @@ func (h *SecretGroupUpdateHandler) SendSecretUpdate(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.SecretUpdate(update))
+	restapi.SendSuccess(c, generic.FromSecretUpdateDTO(update))
 }
 
 func (h *SecretGroupUpdateHandler) DeleteSecretUpdate(c *gin.Context) {
@@ -101,5 +101,5 @@ func (h *SecretGroupUpdateHandler) DeleteSecretUpdate(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.UpdateDeleted(deleted))
+	restapi.SendSuccess(c, generic.FromUpdateDeletedDTO(deleted))
 }

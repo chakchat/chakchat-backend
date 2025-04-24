@@ -5,10 +5,12 @@ import (
 	"log"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/configuration"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/infrastructure/kafkamq"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/infrastructure/postgres/instrumentation"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/extra/redisotel/v9"
 	"github.com/redis/go-redis/v9"
+	"github.com/segmentio/kafka-go"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
@@ -60,6 +62,15 @@ func main() {
 
 	pgxDB, err := pgxpool.New(ctx, config.DB.ConnString)
 
+	kafkaWriter := &kafka.Writer{
+		Addr:                   kafka.TCP(config.Kafka.Brokers...),
+		Topic:                  config.Kafka.Topic,
+		Balancer:               &kafka.Hash{},
+		AllowAutoTopicCreation: true,
+	}
+	defer kafkaWriter.Close()
+	kafkaMq := kafkamq.NewKafkaMQPublisher(kafkaWriter)
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -90,7 +101,7 @@ func main() {
 
 	confDB := configuration.NewDB(db, rdb)
 
-	confExternal := configuration.NewExternal(fileStConn)
+	confExternal := configuration.NewExternal(fileStConn, kafkaMq)
 
 	srv := configuration.NewServices(confDB, confExternal)
 

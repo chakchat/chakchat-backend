@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/generic"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish/events"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
@@ -12,7 +13,6 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
-	"github.com/google/uuid"
 )
 
 type SecretGroupUpdateService struct {
@@ -67,20 +67,18 @@ func (s *SecretGroupUpdateService) SendSecretUpdate(
 		return nil, err
 	}
 
-	s.pub.PublishForUsers(
-		services.GetReceivingUpdateMembers(chat.Members[:], domain.UserID(req.SenderID), &update.Update),
-		events.SecretUpdateSent{
-			ChatID:               uuid.UUID(update.ChatID),
-			UpdateID:             int64(update.UpdateID),
-			SenderID:             uuid.UUID(update.SenderID),
-			Payload:              update.Data.Payload,
-			InitializationVector: update.Data.Payload,
-			KeyHash:              string(update.Data.KeyHash),
-			CreatedAt:            int64(update.CreatedAt),
-		},
-	)
-
 	updateDto := dto.NewSecretUpdateDTO(update)
+
+	err = s.pub.PublishForReceivers(
+		ctx,
+		services.GetReceivingUpdateMembers(chat.Members[:], domain.UserID(req.SenderID), &update.Update),
+		events.TypeUpdate,
+		generic.FromSecretUpdateDTO(&updateDto),
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	return &updateDto, nil
 }
 
@@ -127,18 +125,17 @@ func (s *SecretGroupUpdateService) DeleteSecretUpdate(
 	// Add triggers and change on delete behavior on foreighn keys before deleting physically
 
 	deleted := update.Deleted[len(update.Deleted)-1]
-	s.pub.PublishForUsers(
-		services.GetReceivingUpdateMembers(chat.Members[:], domain.UserID(req.SenderID), &update.Update),
-		events.UpdateDeleted{
-			ChatID:     uuid.UUID(deleted.ChatID),
-			UpdateID:   int64(deleted.UpdateID),
-			SenderID:   uuid.UUID(deleted.SenderID),
-			DeletedID:  int64(deleted.DeletedID),
-			DeleteMode: string(deleted.Mode),
-			CreatedAt:  int64(deleted.CreatedAt),
-		},
-	)
-
 	deletedDto := dto.NewUpdateDeletedDTO(deleted)
+
+	err = s.pub.PublishForReceivers(
+		ctx,
+		services.GetReceivingUpdateMembers(chat.Members[:], domain.UserID(req.SenderID), &update.Update),
+		events.TypeUpdate,
+		generic.FromUpdateDeletedDTO(&deletedDto),
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	return &deletedDto, nil
 }

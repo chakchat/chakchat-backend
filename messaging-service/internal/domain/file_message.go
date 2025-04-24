@@ -13,7 +13,7 @@ type FileMeta struct {
 	FileName  string
 	MimeType  string
 	FileSize  int64
-	FileUrl   URL
+	FileURL   URL
 	CreatedAt Timestamp
 }
 

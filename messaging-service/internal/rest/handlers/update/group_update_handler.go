@@ -5,9 +5,9 @@ import (
 	"strconv"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/generic"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/errmap"
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/response"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/restapi"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -60,7 +60,7 @@ func (h *GroupUpdateHandler) SendTextMessage(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.TextMessage(msg))
+	restapi.SendSuccess(c, generic.FromTextMessageDTO(msg))
 }
 
 func (h *GroupUpdateHandler) EditTextMessage(c *gin.Context) {
@@ -94,7 +94,7 @@ func (h *GroupUpdateHandler) EditTextMessage(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.TextMessage(msg))
+	restapi.SendSuccess(c, generic.FromTextMessageDTO(msg))
 }
 
 func (h *GroupUpdateHandler) DeleteMessage(c *gin.Context) {
@@ -121,7 +121,7 @@ func (h *GroupUpdateHandler) DeleteMessage(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.UpdateDeleted(deleted))
+	restapi.SendSuccess(c, generic.FromUpdateDeletedDTO(deleted))
 }
 
 func (h *GroupUpdateHandler) SendReaction(c *gin.Context) {
@@ -152,7 +152,7 @@ func (h *GroupUpdateHandler) SendReaction(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.Reaction(reaction))
+	restapi.SendSuccess(c, generic.FromReactionDTO(reaction))
 }
 
 func (h *GroupUpdateHandler) DeleteReaction(c *gin.Context) {
@@ -178,7 +178,7 @@ func (h *GroupUpdateHandler) DeleteReaction(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.UpdateDeleted(deleted))
+	restapi.SendSuccess(c, generic.FromUpdateDeletedDTO(deleted))
 }
 
 func (h *GroupUpdateHandler) ForwardTextMessage(c *gin.Context) {
@@ -208,7 +208,7 @@ func (h *GroupUpdateHandler) ForwardTextMessage(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.TextMessage(msg))
+	restapi.SendSuccess(c, generic.FromTextMessageDTO(msg))
 }
 
 func (h *GroupUpdateHandler) ForwardFileMessage(c *gin.Context) {
@@ -238,5 +238,5 @@ func (h *GroupUpdateHandler) ForwardFileMessage(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.FileMessage(msg))
+	restapi.SendSuccess(c, generic.FromFileMessageDTO(msg))
 }

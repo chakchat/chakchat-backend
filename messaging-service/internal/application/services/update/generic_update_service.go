@@ -3,8 +3,8 @@ package update
 import (
 	"context"
 
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/generic"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
@@ -30,7 +30,7 @@ func NewGenericUpdateService(
 
 func (s *GenericUpdateService) GetUpdatesRange(
 	ctx context.Context, req request.GetUpdatesRange,
-) ([]services.GenericUpdate, error) {
+) ([]generic.Update, error) {
 	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func (s *GenericUpdateService) GetUpdatesRange(
 
 func (s *GenericUpdateService) GetUpdate(
 	ctx context.Context, req request.GetUpdate,
-) (*services.GenericUpdate, error) {
+) (*generic.Update, error) {
 	tx, err := s.txProvider.Begin(ctx)
 	if err != nil {
 		return nil, err

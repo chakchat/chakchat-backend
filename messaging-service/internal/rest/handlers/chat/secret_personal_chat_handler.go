@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/generic"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/errmap"
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/response"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/restapi"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -49,7 +49,7 @@ func (h *SecretPersonalChatHandler) CreateChat(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.SecretPersonalChat(chat))
+	restapi.SendSuccess(c, generic.FromSecretPersonalChatDTO(chat))
 }
 
 func (h *SecretPersonalChatHandler) SetExpiration(c *gin.Context) {
@@ -78,7 +78,7 @@ func (h *SecretPersonalChatHandler) SetExpiration(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.SecretPersonalChat(chat))
+	restapi.SendSuccess(c, generic.FromSecretPersonalChatDTO(chat))
 }
 
 func (h *SecretPersonalChatHandler) DeleteChat(c *gin.Context) {
@@ -101,20 +101,3 @@ func (h *SecretPersonalChatHandler) DeleteChat(c *gin.Context) {
 	restapi.SendSuccess(c, struct{}{})
 
 }
-
-// type secretPersonalChatResponse struct {
-// 	ID      uuid.UUID    `json:"chat_id"`
-// 	Members [2]uuid.UUID `json:"members"`
-
-// 	Expiration *time.Duration `json:"expiration"`
-// 	CreatedAt  int64          `json:"created_at"`
-// }
-
-// func newSecretPersonalChatResponse(dto *dto.SecretPersonalChatDTO) secretPersonalChatResponse {
-// 	return secretPersonalChatResponse{
-// 		ID:         dto.ID,
-// 		Members:    dto.Members,
-// 		Expiration: dto.Expiration,
-// 		CreatedAt:  dto.CreatedAt,
-// 	}
-// }

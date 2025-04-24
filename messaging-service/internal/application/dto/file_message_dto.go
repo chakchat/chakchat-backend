@@ -20,7 +20,7 @@ func NewFileMetaDTO(f *domain.FileMeta) FileMetaDTO {
 		FileName:  f.FileName,
 		MimeType:  f.MimeType,
 		FileSize:  f.FileSize,
-		FileURL:   string(f.FileUrl),
+		FileURL:   string(f.FileURL),
 		CreatedAt: int64(f.CreatedAt),
 	}
 }

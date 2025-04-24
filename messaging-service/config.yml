@@ -15,3 +15,8 @@ file_storage:
 
 otlp:
   grpc_addr: otel-collector:4317
+
+kafka:
+  brokers:
+    - ml-kafka:9092
+  topic: updates

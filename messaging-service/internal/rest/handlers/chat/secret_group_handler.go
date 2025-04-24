@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/generic"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/errmap"
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/response"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/rest/restapi"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -54,7 +54,7 @@ func (h *SecretGroupHandler) Create(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.SecretGroupChat(group))
+	restapi.SendSuccess(c, generic.FromSecretGroupChatDTO(group))
 }
 
 func (h *SecretGroupHandler) Update(c *gin.Context) {
@@ -85,7 +85,7 @@ func (h *SecretGroupHandler) Update(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.SecretGroupChat(group))
+	restapi.SendSuccess(c, generic.FromSecretGroupChatDTO(group))
 }
 
 func (h *SecretGroupHandler) AddMember(c *gin.Context) {
@@ -112,7 +112,7 @@ func (h *SecretGroupHandler) AddMember(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.SecretGroupChat(group))
+	restapi.SendSuccess(c, generic.FromSecretGroupChatDTO(group))
 }
 
 func (h *SecretGroupHandler) DeleteMember(c *gin.Context) {
@@ -139,7 +139,7 @@ func (h *SecretGroupHandler) DeleteMember(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.SecretGroupChat(group))
+	restapi.SendSuccess(c, generic.FromSecretGroupChatDTO(group))
 }
 
 func (h *SecretGroupHandler) Delete(c *gin.Context) {
@@ -188,32 +188,5 @@ func (h *SecretGroupHandler) SetExpiration(c *gin.Context) {
 		return
 	}
 
-	restapi.SendSuccess(c, response.SecretGroupChat(group))
+	restapi.SendSuccess(c, generic.FromSecretGroupChatDTO(group))
 }
-
-// type secretGroupResponse struct {
-// 	ChatID    uuid.UUID `json:"chat_id"`
-// 	CreatedAt int64     `json:"created_at"`
-
-// 	AdminID uuid.UUID   `json:"admin_id"`
-// 	Members []uuid.UUID `json:"members"`
-
-// 	Name          string `json:"name"`
-// 	Description   string `json:"description"`
-// 	GroupPhotoURL string `json:"group_photo_url"`
-
-// 	Expiration *time.Duration `json:"expiration"`
-// }
-
-// func newSecretGroupResponse(dto *dto.SecretGroupChatDTO) secretGroupResponse {
-// 	return secretGroupResponse{
-// 		ChatID:        dto.ID,
-// 		CreatedAt:     dto.CreatedAt,
-// 		AdminID:       dto.Admin,
-// 		Members:       dto.Members,
-// 		Name:          dto.Name,
-// 		Description:   dto.Description,
-// 		GroupPhotoURL: dto.GroupPhotoURL,
-// 		Expiration:    dto.Expiration,
-// 	}
-// }

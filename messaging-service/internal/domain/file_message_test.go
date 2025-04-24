@@ -22,7 +22,7 @@ func TestFileMessage(t *testing.T) {
 		FileName: "text.txt",
 		MimeType: "plain/txt",
 		FileSize: 1000,
-		FileUrl:  "https://url.ru",
+		FileURL:  "https://url.ru",
 	}
 
 	t.Run("New", func(t *testing.T) {

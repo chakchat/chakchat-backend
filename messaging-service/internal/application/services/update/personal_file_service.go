@@ -6,6 +6,7 @@ import (
 
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/dto"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/external"
+	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/generic"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/publish/events"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/request"
@@ -13,7 +14,6 @@ import (
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
-	"github.com/google/uuid"
 )
 
 type PersonalFileService struct {
@@ -93,24 +93,17 @@ func (s *PersonalFileService) SendFileMessage(
 		return nil, err
 	}
 
-	s.pub.PublishForUsers(
-		services.GetReceivingUpdateMembers(chat.Members[:], msg.SenderID, &msg.Update),
-		events.FileMessageSent{
-			ChatID:   uuid.UUID(msg.ChatID),
-			UpdateID: int64(msg.UpdateID),
-			SenderID: uuid.UUID(msg.SenderID),
-			File: events.FileMeta{
-				FileId:    msg.File.FileId,
-				FileName:  msg.File.FileName,
-				MimeType:  msg.File.MimeType,
-				FileSize:  msg.File.FileSize,
-				FileUrl:   string(msg.File.FileUrl),
-				CreatedAt: int64(msg.File.CreatedAt),
-			},
-			CreatedAt: int64(msg.CreatedAt),
-		},
-	)
-
 	msgDto := dto.NewFileMessageDTO(msg)
+
+	err = s.pub.PublishForReceivers(
+		ctx,
+		services.GetReceivingUpdateMembers(chat.Members[:], msg.SenderID, &msg.Update),
+		events.TypeUpdate,
+		generic.FromFileMessageDTO(&msgDto),
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	return &msgDto, nil
 }

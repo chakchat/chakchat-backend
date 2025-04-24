@@ -7,6 +7,13 @@ import (
 )
 
 const (
+	ChatTypePersonal       = "personal"
+	ChatTypeGroup          = "group"
+	ChatTypeSecretPersonal = "secret_personal"
+	ChatTypeSecretGroup    = "secret_group"
+)
+
+const (
 	maxGroupNameLen   = 50
 	maxDescriptionLen = 300
 )

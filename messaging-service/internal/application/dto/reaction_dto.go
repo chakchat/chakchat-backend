@@ -11,6 +11,7 @@ type ReactionDTO struct {
 	SenderID uuid.UUID
 
 	CreatedAt    int64
+	MessageID    int64
 	ReactionType string
 }
 
@@ -20,6 +21,7 @@ func NewReactionDTO(r *domain.Reaction) ReactionDTO {
 		ChatID:       uuid.UUID(r.ChatID),
 		SenderID:     uuid.UUID(r.SenderID),
 		CreatedAt:    int64(r.CreatedAt),
+		MessageID:    int64(r.MessageID),
 		ReactionType: string(r.Type),
 	}
 }

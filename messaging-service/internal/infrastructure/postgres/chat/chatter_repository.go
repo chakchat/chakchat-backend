@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/services"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/application/storage/repository"
 	"github.com/chakchat/chakchat-backend/messaging-service/internal/domain"
@@ -47,11 +46,11 @@ func (r *ChatterRepository) FindChatter(
 		return nil, err
 	}
 
-	if chatType == services.ChatTypePersonal {
+	if chatType == domain.ChatTypePersonal {
 		return r.personalRepo.FindById(ctx, db, id)
 	}
 
-	if chatType == services.ChatTypeGroup {
+	if chatType == domain.ChatTypeGroup {
 		return r.groupRepo.FindById(ctx, db, id)
 	}
 
