@@ -124,9 +124,9 @@ func (p *Parser) ParseUpdateNotification(ctx context.Context, data json.RawMessa
 			if err != nil {
 				return "", nil
 			}
-			return fmt.Sprintf("%s sent new message: %s from %s", sender, Truncate(content.Text, 30), groupName), nil
+			return fmt.Sprintf("%s sent new message: %s from %s", *sender, Truncate(content.Text, 30), groupName), nil
 		}
-		return fmt.Sprintf("%s sent new message: %s", sender, Truncate(content.Text, 30)), nil
+		return fmt.Sprintf("%s sent new message: %s", *sender, Truncate(content.Text, 30)), nil
 	case "file":
 		var content FileMessageContent
 		if err := json.Unmarshal(update.Content, &content); err != nil {
@@ -145,9 +145,9 @@ func (p *Parser) ParseUpdateNotification(ctx context.Context, data json.RawMessa
 			if err != nil {
 				return "", nil
 			}
-			return fmt.Sprintf("%s sent new filr: %s from %s", sender, content.FileName, groupName), nil
+			return fmt.Sprintf("%s sent new filr: %s from %s", *sender, content.FileName, groupName), nil
 		}
-		return fmt.Sprintf("%s sent new file: %s", sender, content.FileName), nil
+		return fmt.Sprintf("%s sent new file: %s", *sender, content.FileName), nil
 	case "reaction":
 		var content ReactionMessageContent
 		if err := json.Unmarshal(update.Content, &content); err != nil {
@@ -157,7 +157,7 @@ func (p *Parser) ParseUpdateNotification(ctx context.Context, data json.RawMessa
 		if err != nil {
 			return "", err
 		}
-		return fmt.Sprintf("%s put new reaction: %s", sender, content.Reaction), nil
+		return fmt.Sprintf("%s put new reaction: %s", *sender, content.Reaction), nil
 	case "delete":
 		return "", nil
 	}
@@ -182,7 +182,7 @@ func (p *Parser) ParseGroupInfoUpdated(ctx context.Context, data json.RawMessage
 		return "", err
 	}
 
-	return fmt.Sprintf("%s changed group info in %s", sender, groupInfo.Name), nil
+	return fmt.Sprintf("%s changed group info in %s", *sender, groupInfo.Name), nil
 }
 
 func (p *Parser) ParseGroupMembersChanged(ctx context.Context, notifiqType string, data json.RawMessage) (string, error) {
@@ -201,9 +201,9 @@ func (p *Parser) ParseGroupMembersChanged(ctx context.Context, notifiqType strin
 	}
 	switch notifiqType {
 	case "group_members_added":
-		return fmt.Sprintf("%s added new members in %s", sender, groupName), nil
+		return fmt.Sprintf("%s added new members in %s", *sender, groupName), nil
 	case "group_members_removed":
-		return fmt.Sprintf("%s removed new members in %s", sender, groupName), nil
+		return fmt.Sprintf("%s removed new members in %s", *sender, groupName), nil
 	}
 	return "", nil
 }
