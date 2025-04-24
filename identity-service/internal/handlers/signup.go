@@ -19,7 +19,7 @@ var (
 )
 
 type SignUpService interface {
-	SignUp(ctx context.Context, signUpKey uuid.UUID, user services.CreateUserData) (jwt.Pair, error)
+	SignUp(ctx context.Context, signUpKey uuid.UUID, user services.CreateUserData, deviceInfo *services.DeviceInfo) (jwt.Pair, error)
 }
 
 func SignUp(service SignUpService) gin.HandlerFunc {
@@ -35,10 +35,18 @@ func SignUp(service SignUpService) gin.HandlerFunc {
 			return
 		}
 
+		var deviceInfo *services.DeviceInfo
+		if req.Device != nil {
+			deviceInfo = &services.DeviceInfo{
+				DeviceToken: req.Device.DeviceToken,
+				Type:        req.Device.Type,
+			}
+		}
+
 		tokens, err := service.SignUp(c.Request.Context(), req.SignUpKey, services.CreateUserData{
 			Username: req.Username,
 			Name:     req.Name,
-		})
+		}, deviceInfo)
 
 		if err != nil {
 			switch err {
@@ -78,9 +86,10 @@ func SignUp(service SignUpService) gin.HandlerFunc {
 }
 
 type signUpRequest struct {
-	SignUpKey uuid.UUID `json:"signup_key" binding:"required"`
-	Username  string    `json:"username" binding:"required"`
-	Name      string    `json:"name" binding:"required"`
+	SignUpKey uuid.UUID   `json:"signup_key" binding:"required"`
+	Username  string      `json:"username" binding:"required"`
+	Name      string      `json:"name" binding:"required"`
+	Device    *DeviceInfo `json:"device"`
 }
 
 type signUpResponse struct {

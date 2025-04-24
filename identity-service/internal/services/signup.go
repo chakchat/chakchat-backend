@@ -30,8 +30,9 @@ type SignUpService struct {
 	accessConf  *jwt.Config
 	refreshConf *jwt.Config
 
-	users   userservice.UserServiceClient
-	storage SignUpMetaFindRemover
+	users         userservice.UserServiceClient
+	storage       SignUpMetaFindRemover
+	deviceStorage DeviceStorage
 }
 
 func NewSignUpService(accessConf *jwt.Config, refreshConf *jwt.Config, users userservice.UserServiceClient,
@@ -44,7 +45,7 @@ func NewSignUpService(accessConf *jwt.Config, refreshConf *jwt.Config, users use
 	}
 }
 
-func (s *SignUpService) SignUp(ctx context.Context, signUpKey uuid.UUID, user CreateUserData) (jwt.Pair, error) {
+func (s *SignUpService) SignUp(ctx context.Context, signUpKey uuid.UUID, user CreateUserData, device *DeviceInfo) (jwt.Pair, error) {
 	meta, err := s.checkMeta(ctx, signUpKey)
 	if err != nil {
 		return jwt.Pair{}, err
@@ -76,6 +77,16 @@ func (s *SignUpService) SignUp(ctx context.Context, signUpKey uuid.UUID, user Cr
 
 	if err := s.storage.Remove(ctx, signUpKey); err != nil {
 		return jwt.Pair{}, fmt.Errorf("sign up meta removal failed: %s", err)
+	}
+
+	userId, err := uuid.Parse(userResp.UserId.Value)
+	if err != nil {
+		return jwt.Pair{}, fmt.Errorf("can't parse user id")
+	}
+	if device != nil {
+		if err := s.deviceStorage.Store(ctx, userId, device); err != nil {
+			return jwt.Pair{}, fmt.Errorf("failed to store device info: %s", err)
+		}
 	}
 
 	return tokens, nil
