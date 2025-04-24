@@ -37,11 +37,15 @@ type JWTConfig struct {
 }
 
 type Config struct {
-	Kafka struct {
-		Brokers      []string `mapstructure:"btokers"`
-		ConsumeTopic string   `mapstructure:"consume_topic"`
-		ProduceTopic string   `mapstructure:"produce_topic"`
-	} `mapstructure:"kafka"`
+	ConsumeKafka struct {
+		Brokers      []string `mapstructure:"brokers"`
+		Topic string   `mapstructure:"topic"`
+	} `mapstructure:"consume_kafka"`
+
+	ProduceKafka struct {
+		Brokers      []string `mapstructure:"brokers"`
+		Topic string   `mapstructure:"topic"`
+	} `mapstructure:"produce_kafka"`
 
 	Jwt JWTConfig `mapstructure:"jwt"`
 
@@ -53,7 +57,7 @@ type Config struct {
 func loadConfig(file string) *Config {
 	viper.AutomaticEnv()
 
-	viper.MustBindEnv("db.dsn", "DB_DSN")
+	viper.MustBindEnv("db.dsn", "PG_CONN_STRING")
 
 	viper.SetConfigFile(file)
 	if err := viper.ReadInConfig(); err != nil {
@@ -104,14 +108,14 @@ func main() {
 	hub := ws.NewHub()
 
 	kafkaProducer := mq.NewProducer(mq.ProducerConfig{
-		Brokers: conf.Kafka.Brokers,
-		Topic:   conf.Kafka.ProduceTopic,
+		Brokers: conf.ProduceKafka.Brokers,
+		Topic:   conf.ProduceKafka.Topic,
 	})
 	defer kafkaProducer.Close()
 
 	kafkaConsumer := mq.NewConsumer(&mq.ConsumerConf{
-		Brokers: conf.Kafka.Brokers,
-		Topic:   conf.Kafka.ConsumeTopic,
+		Brokers: conf.ConsumeKafka.Brokers,
+		Topic:   conf.ConsumeKafka.Topic,
 		GroupID: "live-connection-group",
 	})
 

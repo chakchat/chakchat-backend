@@ -2,6 +2,7 @@ package mq
 
 import (
 	"context"
+	"errors"
 	"log"
 
 	"github.com/segmentio/kafka-go"
@@ -44,11 +45,11 @@ func (c *Consumer) Start(ctx context.Context, handler func(ctx context.Context, 
 			default:
 				msg, err := c.reader.FetchMessage(ctx)
 				if err != nil {
-					if err == context.Canceled {
-						log.Printf("Can't read message from kafka")
+					if errors.Is(err, context.Canceled) {
+						log.Printf("kafka message reading: %v", err)
 						return
 					}
-					log.Printf("Can't read message from kafka")
+					log.Printf("Can't read message from kafka: %v", err)
 					continue
 				}
 				processErr := c.handler(ctx, msg)

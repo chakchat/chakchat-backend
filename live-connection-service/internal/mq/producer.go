@@ -22,6 +22,7 @@ func NewProducer(cfg ProducerConfig) *Producer {
 			Topic:    cfg.Topic,
 			Balancer: &kafka.Hash{},
 			Async:    true,
+			AllowAutoTopicCreation: true,
 		},
 	}
 }
