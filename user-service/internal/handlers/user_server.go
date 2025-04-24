@@ -9,6 +9,7 @@ import (
 	pb "github.com/chakchat/chakchat-backend/user-service/internal/grpcservice"
 	"github.com/chakchat/chakchat-backend/user-service/internal/models"
 	"github.com/chakchat/chakchat-backend/user-service/internal/services"
+	"github.com/google/uuid"
 )
 
 type UserServer struct {
@@ -41,6 +42,32 @@ func (s *UserServer) GetUser(ctx context.Context, req *pb.UserRequest) (*pb.User
 		Name:     &user.Name,
 		UserName: &user.Username,
 		UserId:   &pb.UUID{Value: user.ID.String()},
+	}, nil
+}
+
+func (s *UserServer) GetName(ctx context.Context, req *pb.GetNameRequest) (*pb.GetNameResponse, error) {
+	id, err := uuid.Parse(req.UserId)
+	if err != nil {
+		return &pb.GetNameResponse{
+			Status: pb.UserResponseStatus_FAILED,
+		}, nil
+	}
+	name, err := s.userService.GetName(ctx, id)
+	if err != nil {
+		if errors.Is(err, services.ErrNotFound) {
+			log.Printf("Failed find user and returns not found, %s", err)
+			return &pb.GetNameResponse{
+				Status: pb.UserResponseStatus_NOT_FOUND,
+			}, nil
+		}
+		return &pb.GetNameResponse{
+			Status: pb.UserResponseStatus_FAILED,
+		}, nil
+	}
+
+	return &pb.GetNameResponse{
+		Status: pb.UserResponseStatus_SUCCESS,
+		Name:   name,
 	}, nil
 }
 

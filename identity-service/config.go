@@ -20,6 +20,10 @@ type Config struct {
 		GrpcAddr string `mapstructure:"grpc_addr"`
 	} `mapstructure:"userservice"`
 
+	GRPCService struct {
+		Port int `mapstructure:"port"`
+	} `mapstructure:"grpc_service"`
+
 	Redis struct {
 		Addr     string `mapstructure:"addr"`
 		Password string `mapstructure:"password"`

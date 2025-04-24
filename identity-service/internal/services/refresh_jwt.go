@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/chakchat/chakchat-backend/shared/go/jwt"
+	"github.com/google/uuid"
 )
 
 var (
@@ -21,17 +22,18 @@ type RefreshTokenCheckInvalidator interface {
 }
 
 type RefreshService struct {
-	accessConf  *jwt.Config
-	refreshConf *jwt.Config
-
-	checker RefreshTokenCheckInvalidator
+	accessConf    *jwt.Config
+	refreshConf   *jwt.Config
+	deviceStorage DeviceStorage
+	checker       RefreshTokenCheckInvalidator
 }
 
-func NewRefreshService(checker RefreshTokenCheckInvalidator, accessConf, refreshConf *jwt.Config) *RefreshService {
+func NewRefreshService(checker RefreshTokenCheckInvalidator, accessConf, refreshConf *jwt.Config, deviceStorage DeviceStorage) *RefreshService {
 	return &RefreshService{
-		accessConf:  accessConf,
-		refreshConf: refreshConf,
-		checker:     checker,
+		accessConf:    accessConf,
+		deviceStorage: deviceStorage,
+		refreshConf:   refreshConf,
+		checker:       checker,
 	}
 }
 
@@ -56,6 +58,22 @@ func (s *RefreshService) Refresh(ctx context.Context, refresh jwt.Token) (jwt.Pa
 	}
 
 	claims := extractPublic(parsed)
+
+	if claims[jwt.ClaimSub] == nil {
+		return jwt.Pair{}, fmt.Errorf("claims sub is nil")
+	}
+
+	sub := claims[jwt.ClaimSub].(string)
+
+	userId, err := uuid.Parse(sub)
+	if err != nil {
+		return jwt.Pair{}, fmt.Errorf("failed to parse sub claim: %w", err)
+	}
+	err = s.deviceStorage.Refresh(ctx, userId)
+	if err != nil {
+		return jwt.Pair{}, fmt.Errorf("failed to store device token: %w", err)
+	}
+
 	var pair jwt.Pair
 	if pair.Access, err = jwt.Generate(s.accessConf, claims); err != nil {
 		return jwt.Pair{}, fmt.Errorf("access token generation failed: %s", err)
@@ -63,6 +81,7 @@ func (s *RefreshService) Refresh(ctx context.Context, refresh jwt.Token) (jwt.Pa
 	if pair.Refresh, err = jwt.Generate(s.refreshConf, claims); err != nil {
 		return jwt.Pair{}, fmt.Errorf("refresh token generation failed: %s", err)
 	}
+
 	return pair, nil
 }
 

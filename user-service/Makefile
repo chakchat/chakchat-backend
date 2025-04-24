@@ -9,4 +9,4 @@ keys-sym:
 gen: keys-rsa keys-sym
 
 gen-grpc:
-	protoc --go_out="./internal/userservice" --go-grpc_out="./internal/userservice" --proto_path="../api/user-service" user.proto
+	protoc --go_out="./internal/grpcservice" --go-grpc_out="./internal/grpcservice" --proto_path="../api/user-service" user.proto

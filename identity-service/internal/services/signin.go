@@ -14,26 +14,38 @@ var (
 	ErrWrongCode         = errors.New("wrong phone verification code")
 )
 
+type DeviceInfo struct {
+	Type        string
+	DeviceToken string
+}
+
 type SignInMetaFindRemover interface {
 	FindMeta(ctx context.Context, signInKey uuid.UUID) (*SignInMeta, bool, error)
 	Remove(ctx context.Context, signInKey uuid.UUID) error
 }
 
+type DeviceStorage interface {
+	Store(ctx context.Context, userID uuid.UUID, info *DeviceInfo) error
+	Refresh(ctx context.Context, userID uuid.UUID) error
+	Remove(ctx context.Context, userID uuid.UUID) error
+}
 type SignInService struct {
-	storage     SignInMetaFindRemover
-	accessConf  *jwt.Config
-	refreshConf *jwt.Config
+	storage       SignInMetaFindRemover
+	deviceStorage DeviceStorage
+	accessConf    *jwt.Config
+	refreshConf   *jwt.Config
 }
 
-func NewSignInService(storage SignInMetaFindRemover, accessConf, refreshConf *jwt.Config) *SignInService {
+func NewSignInService(storage SignInMetaFindRemover, accessConf, refreshConf *jwt.Config, deviceStorage DeviceStorage) *SignInService {
 	return &SignInService{
-		storage:     storage,
-		accessConf:  accessConf,
-		refreshConf: refreshConf,
+		storage:       storage,
+		deviceStorage: deviceStorage,
+		accessConf:    accessConf,
+		refreshConf:   refreshConf,
 	}
 }
 
-func (s *SignInService) SignIn(ctx context.Context, signInKey uuid.UUID, code string) (jwt.Pair, error) {
+func (s *SignInService) SignIn(ctx context.Context, signInKey uuid.UUID, code string, device *DeviceInfo) (jwt.Pair, error) {
 	meta, ok, err := s.storage.FindMeta(ctx, signInKey)
 	if err != nil {
 		return jwt.Pair{}, fmt.Errorf("sign in metadata finding failed: %s", err)
@@ -60,6 +72,12 @@ func (s *SignInService) SignIn(ctx context.Context, signInKey uuid.UUID, code st
 
 	if err := s.storage.Remove(ctx, signInKey); err != nil {
 		return jwt.Pair{}, fmt.Errorf("sign in key removal failed: %s", err)
+	}
+
+	if device != nil {
+		if err := s.deviceStorage.Store(ctx, meta.UserId, device); err != nil {
+			return jwt.Pair{}, fmt.Errorf("failed to store device info: %s", err)
+		}
 	}
 
 	return pair, nil

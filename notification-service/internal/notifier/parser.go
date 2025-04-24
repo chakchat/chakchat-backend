@@ -51,19 +51,23 @@ type CreateChatMessage struct {
 }
 
 type GroupInfoUpdated struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	GroupPhoto  string `json:"group_photo"`
+	SenderID    uuid.UUID `json:"sender_id"`
+	ChatID      uuid.UUID `json:"chat_id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	GroupPhoto  string    `json:"group_photo"`
 }
 
 type UpdateGroupMembers struct {
-	Members []uuid.UUID `json:"members"`
+	SenderID uuid.UUID   `json:"sender_id"`
+	ChatID   uuid.UUID   `json:"chat_id"`
+	Members  []uuid.UUID `json:"members"`
 }
 
 type GRPCClients interface {
 	GetChatType() (string, error)
 	GetGroupName() (string, error)
-	GetUsername() (string, error)
+	GetName(ctx context.Context, userId uuid.UUID) (*string, error)
 }
 
 type Parser struct {
@@ -84,18 +88,18 @@ func (p *Parser) ParseNotification(ctx context.Context, raw []byte) (string, err
 
 	switch notific.Type {
 	case "update":
-		return p.ParseUpdateNotification(notific.Data)
+		return p.ParseUpdateNotification(ctx, notific.Data)
 	case "chat_created":
-		return p.ParseChatCreated(notific.Data)
+		return p.ParseChatCreated(ctx, notific.Data)
 	case "group_info_updated":
-		return p.ParseGroupInfoUpdated(notific.Data)
+		return p.ParseGroupInfoUpdated(ctx, notific.Data)
 	case "group_members_added", "group_members_removed":
-		return p.ParseGroupMembersChanged(notific.Type, notific.Data)
+		return p.ParseGroupMembersChanged(ctx, notific.Type, notific.Data)
 	}
 	return "", nil
 }
 
-func (p *Parser) ParseUpdateNotification(data json.RawMessage) (string, error) {
+func (p *Parser) ParseUpdateNotification(ctx context.Context, data json.RawMessage) (string, error) {
 	var update UpdateMessage
 	if err := json.Unmarshal(data, &update); err != nil {
 		return "", err
@@ -111,7 +115,7 @@ func (p *Parser) ParseUpdateNotification(data json.RawMessage) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		sender, err := p.grpcHandler.GetUsername()
+		sender, err := p.grpcHandler.GetName(ctx, update.SenderID)
 		if err != nil {
 			return "", err
 		}
@@ -132,7 +136,7 @@ func (p *Parser) ParseUpdateNotification(data json.RawMessage) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		sender, err := p.grpcHandler.GetUsername()
+		sender, err := p.grpcHandler.GetName(ctx, update.SenderID)
 		if err != nil {
 			return "", err
 		}
@@ -149,7 +153,7 @@ func (p *Parser) ParseUpdateNotification(data json.RawMessage) (string, error) {
 		if err := json.Unmarshal(update.Content, &content); err != nil {
 			return "", err
 		}
-		sender, err := p.grpcHandler.GetUsername()
+		sender, err := p.grpcHandler.GetName(ctx, update.SenderID)
 		if err != nil {
 			return "", err
 		}
@@ -160,7 +164,7 @@ func (p *Parser) ParseUpdateNotification(data json.RawMessage) (string, error) {
 	return "", fmt.Errorf("incorrect json")
 }
 
-func (p *Parser) ParseChatCreated(data json.RawMessage) (string, error) {
+func (p *Parser) ParseChatCreated(ctx context.Context, data json.RawMessage) (string, error) {
 	var chat CreateChatMessage
 	if err := json.Unmarshal(data, &chat); err != nil {
 		return "", err
@@ -168,12 +172,12 @@ func (p *Parser) ParseChatCreated(data json.RawMessage) (string, error) {
 	return fmt.Sprintf("New %s chat: %s", chat.Chat.Type, chat.Chat.Name), nil
 }
 
-func (p *Parser) ParseGroupInfoUpdated(data json.RawMessage) (string, error) {
+func (p *Parser) ParseGroupInfoUpdated(ctx context.Context, data json.RawMessage) (string, error) {
 	var groupInfo GroupInfoUpdated
 	if err := json.Unmarshal(data, &groupInfo); err != nil {
 		return "", nil
 	}
-	sender, err := p.grpcHandler.GetUsername()
+	sender, err := p.grpcHandler.GetName(ctx, groupInfo.SenderID)
 	if err != nil {
 		return "", err
 	}
@@ -181,7 +185,7 @@ func (p *Parser) ParseGroupInfoUpdated(data json.RawMessage) (string, error) {
 	return fmt.Sprintf("%s changed group info in %s", sender, groupInfo.Name), nil
 }
 
-func (p *Parser) ParseGroupMembersChanged(notifiqType string, data json.RawMessage) (string, error) {
+func (p *Parser) ParseGroupMembersChanged(ctx context.Context, notifiqType string, data json.RawMessage) (string, error) {
 	var group UpdateGroupMembers
 	if err := json.Unmarshal(data, &group); err != nil {
 		return "", nil
@@ -191,7 +195,7 @@ func (p *Parser) ParseGroupMembersChanged(notifiqType string, data json.RawMessa
 	if err != nil {
 		return "", nil
 	}
-	sender, err := p.grpcHandler.GetUsername()
+	sender, err := p.grpcHandler.GetName(ctx, group.SenderID)
 	if err != nil {
 		return "", err
 	}

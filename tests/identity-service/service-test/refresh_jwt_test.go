@@ -25,6 +25,7 @@ func Test_RefreshJWT(t *testing.T) {
 	t.Run("Refreshes", func(t *testing.T) {
 		refreshJWT := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 			"typ": "refresh",
+			"sub": uuid.NewString(),
 			"jti": uuid.NewString(),
 			"iat": time.Now().Add(-1 * time.Minute).Unix(),
 			"exp": time.Now().Add(10 * time.Minute).Unix(),
@@ -48,6 +49,7 @@ func Test_RefreshJWT(t *testing.T) {
 	t.Run("DeniesAccessToken", func(t *testing.T) {
 		accessJWT := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 			"typ": "access",
+			"sub": uuid.NewString(),
 			"jti": uuid.NewString(),
 			"iat": time.Now().Add(-1 * time.Minute).Unix(),
 			"exp": time.Now().Add(10 * time.Minute).Unix(),
@@ -67,6 +69,7 @@ func Test_RefreshJWT(t *testing.T) {
 	t.Run("DeniesWrongKey", func(t *testing.T) {
 		refreshJWT := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 			"typ": "refresh",
+			"sub": uuid.NewString(),
 			"jti": uuid.NewString(),
 			"iat": time.Now().Add(-1 * time.Minute).Unix(),
 			"exp": time.Now().Add(10 * time.Minute).Unix(),
@@ -87,6 +90,7 @@ func Test_RefreshJWT(t *testing.T) {
 	t.Run("DeniesExpired", func(t *testing.T) {
 		refreshJWT := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 			"typ": "refresh",
+			"sub": uuid.NewString(),
 			"jti": uuid.NewString(),
 			"iat": time.Now().Add(-10 * time.Minute).Unix(),
 			"exp": time.Now().Add(-1 * time.Minute).Unix(),
@@ -106,6 +110,7 @@ func Test_RefreshJWT(t *testing.T) {
 	t.Run("DeniesInvalidated", func(t *testing.T) {
 		refreshJWT := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 			"typ": "refresh",
+			"sub": uuid.NewString(),
 			"jti": uuid.NewString(),
 			"iat": time.Now().Add(-1 * time.Minute).Unix(),
 			"exp": time.Now().Add(10 * time.Minute).Unix(),
@@ -128,6 +133,7 @@ func Test_RefreshJWT(t *testing.T) {
 	t.Run("InvalidatesAfterRefresh", func(t *testing.T) {
 		refreshJWT := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 			"typ": "refresh",
+			"sub": uuid.NewString(),
 			"jti": uuid.NewString(),
 			"iat": time.Now().Add(-1 * time.Minute).Unix(),
 			"exp": time.Now().Add(10 * time.Minute).Unix(),

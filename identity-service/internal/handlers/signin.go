@@ -12,7 +12,7 @@ import (
 )
 
 type SignInService interface {
-	SignIn(ctx context.Context, signInKey uuid.UUID, code string) (jwt.Pair, error)
+	SignIn(ctx context.Context, signInKey uuid.UUID, code string, device *services.DeviceInfo) (jwt.Pair, error)
 }
 
 func SignIn(service SignInService) gin.HandlerFunc {
@@ -28,7 +28,15 @@ func SignIn(service SignInService) gin.HandlerFunc {
 			return
 		}
 
-		tokens, err := service.SignIn(c.Request.Context(), req.SignInKey, req.Code)
+		var deviceInfo *services.DeviceInfo
+		if req.Device != nil {
+			deviceInfo = &services.DeviceInfo{
+				DeviceToken: req.Device.DeviceToken,
+				Type:        req.Device.Type,
+			}
+		}
+
+		tokens, err := service.SignIn(c.Request.Context(), req.SignInKey, req.Code, deviceInfo)
 
 		if err != nil {
 			switch err {
@@ -56,9 +64,15 @@ func SignIn(service SignInService) gin.HandlerFunc {
 	}
 }
 
+type DeviceInfo struct {
+	Type        string `json:"type"`
+	DeviceToken string `json:"device_token"`
+}
+
 type signInRequest struct {
-	SignInKey uuid.UUID `json:"signin_key" binding:"required"`
-	Code      string    `json:"code" binding:"required"`
+	SignInKey uuid.UUID   `json:"signin_key" binding:"required"`
+	Code      string      `json:"code" binding:"required"`
+	Device    *DeviceInfo `json:"device"`
 }
 
 type signInResponse struct {

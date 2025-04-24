@@ -46,7 +46,17 @@ message CreateUserResponse {
     optional string userName = 4;
 }
 
+message GetNameRequest {
+    string user_id = 1;
+}
+  
+message GetNameResponse {
+    UserResponseStatus status = 1;
+    optional string name = 2;
+}
+
 service UserService {
     rpc GetUser(UserRequest) returns (UserResponse); 
     rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+    rpc GetName(GetNameRequest) returns (GetNameResponse);
 }

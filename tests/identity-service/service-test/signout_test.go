@@ -18,6 +18,7 @@ func Test_SignsOut(t *testing.T) {
 
 	refreshJWT := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 		"typ": "refresh",
+		"sub": uuid.NewString(),
 		"jti": uuid.NewString(),
 		"iat": time.Now().Add(-1 * time.Minute).Unix(),
 		"exp": time.Now().Add(10 * time.Minute).Unix(),
