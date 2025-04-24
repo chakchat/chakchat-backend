@@ -59,13 +59,20 @@ func (s *RefreshService) Refresh(ctx context.Context, refresh jwt.Token) (jwt.Pa
 
 	claims := extractPublic(parsed)
 
+	if claims[jwt.ClaimSub] == nil {
+		return jwt.Pair{}, fmt.Errorf("claims sub is nil")
+	}
+
 	sub := claims[jwt.ClaimSub].(string)
 
 	userId, err := uuid.Parse(sub)
 	if err != nil {
-		return jwt.Pair{}, fmt.Errorf("failed to parse sub claim")
+		return jwt.Pair{}, fmt.Errorf("failed to parse sub claim: %w", err)
 	}
-	s.deviceStorage.Refresh(ctx, userId)
+	err = s.deviceStorage.Refresh(ctx, userId)
+	if err != nil {
+		return jwt.Pair{}, fmt.Errorf("failed to store device token: %w", err)
+	}
 
 	var pair jwt.Pair
 	if pair.Access, err = jwt.Generate(s.accessConf, claims); err != nil {
