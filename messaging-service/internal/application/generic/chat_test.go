@@ -12,10 +12,12 @@ func TestChatMarshalJSON(t *testing.T) {
 		},
 	}
 
-	m, err := json.MarshalIndent(chatInfo, "", "	")
+	m, err := json.Marshal(chatInfo)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	t.Fatal(string(m))
+	if string(m) != `{"blocked_by":null}` {
+		t.Fatalf("Got %s", string(m))
+	}
 }
