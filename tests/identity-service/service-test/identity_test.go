@@ -18,6 +18,7 @@ func Test_Identifies(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		accessJWT := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 			"typ": "access",
+			"sub": uuid.NewString(),
 			"jti": uuid.NewString(),
 			"iat": time.Now().Add(-1 * time.Minute).Unix(),
 			"exp": time.Now().Add(10 * time.Minute).Unix(),
@@ -47,6 +48,7 @@ func Test_Identifies(t *testing.T) {
 	t.Run("InvalidTokenType", func(t *testing.T) {
 		refreshJWT := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 			"typ": "refresh",
+			"sub": uuid.NewString(),
 			"jti": uuid.NewString(),
 			"iat": time.Now().Add(-1 * time.Minute).Unix(),
 			"exp": time.Now().Add(10 * time.Minute).Unix(),
@@ -66,6 +68,7 @@ func Test_Identifies(t *testing.T) {
 	t.Run("TokenExpired", func(t *testing.T) {
 		accessJWT := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 			"typ": "access",
+			"sub": uuid.NewString(),
 			"jti": uuid.NewString(),
 			"iat": time.Now().Add(-10 * time.Minute).Unix(),
 			"exp": time.Now().Add(-1 * time.Minute).Unix(),
@@ -85,6 +88,7 @@ func Test_Identifies(t *testing.T) {
 	t.Run("InvalidKey", func(t *testing.T) {
 		accessJWT := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 			"typ": "access",
+			"sub": uuid.NewString(),
 			"jti": uuid.NewString(),
 			"iat": time.Now().Add(-1 * time.Minute).Unix(),
 			"exp": time.Now().Add(10 * time.Minute).Unix(),
