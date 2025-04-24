@@ -124,7 +124,7 @@ func (r *SecretGroupChatRepository) Create(
 		q := `
 		INSERT INTO messaging.chat
 		(chat_id, chat_type, created_at)
-		VALUES ($1, 'group', $2)`
+		VALUES ($1, 'secret_group', $2)`
 
 		now := time.Now()
 		_, err := db.Exec(ctx, q, g.ID, now)
