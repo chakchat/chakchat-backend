@@ -15,15 +15,9 @@ type Producer struct {
 	writer *kafka.Writer
 }
 
-func NewProducer(cfg ProducerConfig) *Producer {
+func NewProducer(writer *kafka.Writer) *Producer {
 	return &Producer{
-		writer: &kafka.Writer{
-			Addr:     kafka.TCP(cfg.Brokers...),
-			Topic:    cfg.Topic,
-			Balancer: &kafka.Hash{},
-			Async:    true,
-			AllowAutoTopicCreation: true,
-		},
+		writer: writer,
 	}
 }
 
