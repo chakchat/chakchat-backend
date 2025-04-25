@@ -2,6 +2,7 @@ package mq
 
 import (
 	"context"
+	"errors"
 	"log"
 
 	"github.com/segmentio/kafka-go"
@@ -10,7 +11,6 @@ import (
 type ConsumerConf struct {
 	Brokers []string
 	Topic   string
-	GroupID string
 }
 
 type Consumer struct {
@@ -19,15 +19,9 @@ type Consumer struct {
 	shutdown chan struct{}
 }
 
-func NewConsumer(reader *ConsumerConf) *Consumer {
+func NewConsumer(reader *kafka.Reader) *Consumer {
 	return &Consumer{
-		reader: kafka.NewReader(kafka.ReaderConfig{
-			Topic:          reader.Topic,
-			Brokers:        reader.Brokers,
-			GroupID:        reader.GroupID,
-			StartOffset:    kafka.LastOffset,
-			CommitInterval: 0,
-		}),
+		reader:   reader,
 		shutdown: make(chan struct{}),
 	}
 }
@@ -42,13 +36,13 @@ func (c *Consumer) Start(ctx context.Context, handler func(ctx context.Context, 
 			case <-ctx.Done():
 				return
 			default:
-				msg, err := c.reader.FetchMessage(ctx)
+				msg, err := c.reader.ReadMessage(ctx)
 				if err != nil {
-					if err == context.Canceled {
-						log.Printf("Can't read message from kafka")
+					if errors.Is(err, context.Canceled) {
+						log.Printf("kafka message reading: %v", err)
 						return
 					}
-					log.Printf("Can't read message from kafka")
+					log.Printf("Can't read message from kafka: %v", err)
 					continue
 				}
 				processErr := c.handler(ctx, msg)
@@ -56,14 +50,7 @@ func (c *Consumer) Start(ctx context.Context, handler func(ctx context.Context, 
 					log.Printf("Error to handle kafka message: %s", err)
 					continue
 				}
-
 				log.Printf("Successfully handle kafka message. Ready to commit")
-
-				if err := c.reader.CommitMessages(ctx, msg); err != nil {
-					log.Printf("Error to commit message: %s", err)
-					continue
-				}
-				log.Printf("Successfully commited")
 			}
 		}
 	}()

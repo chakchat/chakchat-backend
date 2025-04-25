@@ -18,6 +18,7 @@ import (
 	"github.com/chakchat/chakchat-backend/shared/go/postgres"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/segmentio/kafka-go"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"go.opentelemetry.io/otel"
@@ -37,11 +38,15 @@ type JWTConfig struct {
 }
 
 type Config struct {
-	Kafka struct {
-		Brokers      []string `mapstructure:"btokers"`
-		ConsumeTopic string   `mapstructure:"consume_topic"`
-		ProduceTopic string   `mapstructure:"produce_topic"`
-	} `mapstructure:"kafka"`
+	ConsumeKafka struct {
+		Brokers []string `mapstructure:"brokers"`
+		Topic   string   `mapstructure:"topic"`
+	} `mapstructure:"consume_kafka"`
+
+	ProduceKafka struct {
+		Brokers []string `mapstructure:"brokers"`
+		Topic   string   `mapstructure:"topic"`
+	} `mapstructure:"produce_kafka"`
 
 	Jwt JWTConfig `mapstructure:"jwt"`
 
@@ -53,7 +58,7 @@ type Config struct {
 func loadConfig(file string) *Config {
 	viper.AutomaticEnv()
 
-	viper.MustBindEnv("db.dsn", "DB_DSN")
+	viper.MustBindEnv("db.dsn", "PG_CONN_STRING")
 
 	viper.SetConfigFile(file)
 	if err := viper.ReadInConfig(); err != nil {
@@ -103,18 +108,22 @@ func main() {
 
 	hub := ws.NewHub()
 
-	kafkaProducer := mq.NewProducer(mq.ProducerConfig{
-		Brokers: conf.Kafka.Brokers,
-		Topic:   conf.Kafka.ProduceTopic,
+	kafkaProducer := mq.NewProducer(&kafka.Writer{
+		Addr:                   kafka.TCP(conf.ProduceKafka.Brokers...),
+		Topic:                  conf.ProduceKafka.Topic,
+		Balancer:               &kafka.Hash{},
+		Async:                  true,
+		AllowAutoTopicCreation: true,
 	})
 	defer kafkaProducer.Close()
 
-	kafkaConsumer := mq.NewConsumer(&mq.ConsumerConf{
-		Brokers: conf.Kafka.Brokers,
-		Topic:   conf.Kafka.ConsumeTopic,
-		GroupID: "live-connection-group",
+	reader := kafka.NewReader(kafka.ReaderConfig{
+		Topic:          conf.ConsumeKafka.Topic,
+		Brokers:        conf.ConsumeKafka.Brokers,
+		StartOffset:    kafka.LastOffset,
+		CommitInterval: 0,
 	})
-
+	kafkaConsumer := mq.NewConsumer(reader)
 	defer kafkaConsumer.Stop()
 
 	messageProcessor := services.NewKafkaProcessor(hub, kafkaProducer)

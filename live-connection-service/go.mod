@@ -1,6 +1,6 @@
 module github.com/chakchat/chakchat-backend/live-connection-service
 
-go 1.24.0
+go 1.23.1
 
 require github.com/segmentio/kafka-go v0.4.47
 
