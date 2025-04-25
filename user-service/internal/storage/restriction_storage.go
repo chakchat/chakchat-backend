@@ -2,7 +2,7 @@ package storage
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
 	"github.com/chakchat/chakchat-backend/shared/go/postgres"
 	"github.com/chakchat/chakchat-backend/user-service/internal/models"
@@ -31,7 +31,7 @@ func (s *RestrictionStorage) GetAllowedUserIDs(ctx context.Context, id uuid.UUID
 	q := `SELECT field_name, permitted_user_id
 	 FROM users.field_restrictions 
 	 WHERE owner_user_id = $1 
-		AND field_name = $2`
+		AND field_name = $2::users.user_field`
 
 	rows, err := s.db.Query(ctx, q, id, field)
 	if err != nil {
@@ -60,7 +60,7 @@ func (s *RestrictionStorage) UpdateRestrictions(ctx context.Context, id uuid.UUI
 	if err != nil {
 		return nil, err
 	}
-	defer tx.Rollback(ctx)
+	defer finishTx(ctx, tx, &err)
 
 	var updateQuery string
 	if restrictions.Field == "phone" {
@@ -91,8 +91,8 @@ func (s *RestrictionStorage) UpdateRestrictions(ctx context.Context, id uuid.UUI
 			currentSpecifiedUsers = append(currentSpecifiedUsers, userID)
 		}
 
-		if rows.Err() != nil {
-			return nil, errors.New(rows.Err().Error())
+		if err = rows.Err(); err != nil {
+			return nil, fmt.Errorf("failed to get specified users: %s", err)
 		}
 
 		add := recordMisses(currentSpecifiedUsers, restrictions.SpecifiedUsers)
@@ -139,4 +139,20 @@ func recordMisses(orig, comp []uuid.UUID) []uuid.UUID {
 	}
 
 	return misses
+}
+
+func finishTx(ctx context.Context, tx pgx.Tx, err *error) {
+	if p := recover(); p != nil {
+		if *err != nil {
+			*err = fmt.Errorf(`[PANIC] panic recovered: %+v. (error overwritten: "%w")`, p, *err)
+		} else {
+			*err = fmt.Errorf(`[PANIC] panic recovered: %+v`, p)
+		}
+	}
+
+	if *err != nil {
+		tx.Rollback(ctx)
+	} else {
+		tx.Commit(ctx)
+	}
 }
