@@ -4,8 +4,11 @@ import (
 	"context"
 	"log"
 
+	"github.com/chakchat/chakchat-backend/notification-service/internal/grpc_service"
 	"github.com/chakchat/chakchat-backend/notification-service/internal/identity"
+	"github.com/chakchat/chakchat-backend/notification-service/internal/notifier"
 	"github.com/chakchat/chakchat-backend/notification-service/internal/user"
+	"github.com/segmentio/kafka-go"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -32,13 +35,24 @@ type Config struct {
 
 	APNs struct {
 		CertPath string `mapstructure:"cert_path"`
-		KeyPath  string `mapstructure:"key_path"`
-		TeamId   string `mapstructure:"team_id"`
+		KeyID    string `mapstructure:"key_id"`
+		TeamID   string `mapstructure:"team_id"`
+		Topic    string `mapstructure:"topic"`
 	} `mapstructure:"apns"`
+
+	ConsumeKafka struct {
+		Brokers []string `mapstructure:"brokers"`
+		Topic   string   `mapstructure:"topic"`
+	} `mapstructure:"consume_kafka"`
 }
 
 func loadConfig(file string) *Config {
 	viper.AutomaticEnv()
+
+	viper.BindEnv("apns.cert_path", "APNS_CERT_PATH")
+	viper.BindEnv("apns.key_id", "APNS_KEYID")
+	viper.BindEnv("apns.team_id", "APNS_TEAMID")
+	viper.BindEnv("apns.topic", "APNS_TOPIC")
 
 	viper.SetConfigFile(file)
 	if err := viper.ReadInConfig(); err != nil {
@@ -60,11 +74,11 @@ func loadConfig(file string) *Config {
 var conf *Config = loadConfig("/app/config.yml")
 
 func main() {
-	// identityClient, closeIdentity := createIdentityClient()
-	// userClient, closeUser := createUserClient()
+	identityClient, closeIdentity := createIdentityClient()
+	userClient, closeUser := createUserClient()
 
-	// defer closeIdentity()
-	// defer closeUser()
+	defer closeIdentity()
+	defer closeUser()
 
 	tp, err := initTracer()
 	if err != nil {
@@ -81,16 +95,21 @@ func main() {
 		}
 	}()
 
-	// grpcService := grpc_service.NewGrpcClients(userClient, identityClient)
-	// parser := notifier.NewParser(grpcService)
-	// apnsClient := notifier.NewAPNsClient(conf.APNs.CertPath, conf.APNs.KeyPath, conf.APNs.TeamId)
-	// parser.ParseNotification(context.Background(), []byte("something"))
+	grpcService := grpc_service.NewGrpcClients(userClient, identityClient)
+	apnsClient, err := notifier.NewAPNsClient(conf.APNs.CertPath, conf.APNs.KeyID, conf.APNs.TeamID, conf.APNs.Topic)
 
-	// userID, err := uuid.Parse("ytjdjdruktdkfc")
-	// if err != nil {
-	// 	log.Printf("Invalid UUID format: %v", err)
-	// 	return
-	// }
+	if err != nil {
+		log.Printf("Failed to connect APNs: %s", err)
+	}
+
+	reader := kafka.NewReader(kafka.ReaderConfig{
+		Topic:   conf.ConsumeKafka.Topic,
+		Brokers: conf.ConsumeKafka.Brokers,
+	})
+
+	kafkaService := notifier.NewService(reader, apnsClient, *grpcService)
+
+	go kafkaService.Start(context.Background())
 
 }
 
