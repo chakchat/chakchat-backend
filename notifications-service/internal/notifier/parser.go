@@ -10,7 +10,7 @@ import (
 )
 
 type Notification struct {
-	Receivers uuid.UUID       `json:"receivers"`
+	Receivers []uuid.UUID     `json:"receivers"`
 	Type      string          `json:"type"`
 	Data      json.RawMessage `json:"data"`
 }
@@ -80,10 +80,10 @@ func NewParser(grpcHandl GRPCClients) *Parser {
 	}
 }
 
-func (p *Parser) ParseNotification(ctx context.Context, raw []byte) (string, error) {
+func (p *Parser) ParseNotification(ctx context.Context, raw []byte) (string, string, error) {
 	var notific Notification
 	if err := json.Unmarshal(raw, &notific); err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	switch notific.Type {
@@ -96,116 +96,132 @@ func (p *Parser) ParseNotification(ctx context.Context, raw []byte) (string, err
 	case "group_members_added", "group_members_removed":
 		return p.ParseGroupMembersChanged(ctx, notific.Type, notific.Data)
 	}
-	return "", nil
+	return "", "", nil
 }
 
-func (p *Parser) ParseUpdateNotification(ctx context.Context, data json.RawMessage) (string, error) {
+func (p *Parser) ParseUpdateNotification(ctx context.Context, data json.RawMessage) (string, string, error) {
 	var update UpdateMessage
 	if err := json.Unmarshal(data, &update); err != nil {
-		return "", err
+		return "", "", err
 	}
 	switch update.Type {
 	case "text_message":
 		var content TextMessageContent
 		if err := json.Unmarshal(update.Content, &content); err != nil {
-			return "", nil
+			return "", "", nil
 		}
 
 		chatType, err := p.grpcHandler.GetChatType()
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 		sender, err := p.grpcHandler.GetName(ctx, update.SenderID)
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 		if chatType == "group" {
 			groupName, err := p.grpcHandler.GetGroupName()
 			if err != nil {
-				return "", nil
+				return "", "", nil
 			}
-			return fmt.Sprintf("%s sent new message: %s from %s", *sender, Truncate(content.Text, 30), groupName), nil
+			return fmt.Sprintf("%s from group: %s", *sender, groupName), fmt.Sprintf("%s:", Truncate(content.Text, 30)), nil
 		}
-		return fmt.Sprintf("%s sent new message: %s", *sender, Truncate(content.Text, 30)), nil
+		return fmt.Sprintf("%s:", *sender), fmt.Sprintf("%s:", Truncate(content.Text, 30)), nil
 	case "file":
 		var content FileMessageContent
 		if err := json.Unmarshal(update.Content, &content); err != nil {
-			return "", err
+			return "", "", err
 		}
 		chatType, err := p.grpcHandler.GetChatType()
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 		sender, err := p.grpcHandler.GetName(ctx, update.SenderID)
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 		if chatType == "group" {
 			groupName, err := p.grpcHandler.GetGroupName()
 			if err != nil {
-				return "", nil
+				return "", "", nil
 			}
-			return fmt.Sprintf("%s sent new filr: %s from %s", *sender, content.FileName, groupName), nil
+			return fmt.Sprintf("%s from group: %s", *sender, groupName), fmt.Sprintf("%s:", content.FileName), nil
 		}
-		return fmt.Sprintf("%s sent new file: %s", *sender, content.FileName), nil
+		return fmt.Sprintf("%s:", *sender), fmt.Sprintf("%s:", content.FileName), nil
 	case "reaction":
 		var content ReactionMessageContent
 		if err := json.Unmarshal(update.Content, &content); err != nil {
-			return "", err
+			return "", "", err
 		}
 		sender, err := p.grpcHandler.GetName(ctx, update.SenderID)
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
-		return fmt.Sprintf("%s put new reaction: %s", *sender, content.Reaction), nil
+		chatType, err := p.grpcHandler.GetChatType()
+		if err != nil {
+			return "", "", err
+		}
+		if chatType == "group" {
+			groupName, err := p.grpcHandler.GetGroupName()
+			if err != nil {
+				return "", "", nil
+			}
+			return fmt.Sprintf("%s from group: %s", *sender, groupName), fmt.Sprintf("%s:", content.Reaction), nil
+		}
+		return fmt.Sprintf("%s:", *sender), fmt.Sprintf("%s:", content.Reaction), nil
 	case "delete":
-		return "", nil
+		return "", "", nil
 	}
-	return "", fmt.Errorf("incorrect json")
+	return "", "", fmt.Errorf("incorrect json")
 }
 
-func (p *Parser) ParseChatCreated(ctx context.Context, data json.RawMessage) (string, error) {
+func (p *Parser) ParseChatCreated(ctx context.Context, data json.RawMessage) (string, string, error) {
 	var chat CreateChatMessage
 	if err := json.Unmarshal(data, &chat); err != nil {
-		return "", err
+		return "", "", err
 	}
-	return fmt.Sprintf("New %s chat: %s", chat.Chat.Type, chat.Chat.Name), nil
+	sender, err := p.grpcHandler.GetName(ctx, chat.SenderID)
+	if err != nil {
+		return "", "", err
+	}
+
+	return fmt.Sprintf("%s:", chat.Chat.Name), fmt.Sprintf("%s created new %s chat", *sender, chat.Chat.Type), nil
 }
 
-func (p *Parser) ParseGroupInfoUpdated(ctx context.Context, data json.RawMessage) (string, error) {
+func (p *Parser) ParseGroupInfoUpdated(ctx context.Context, data json.RawMessage) (string, string, error) {
 	var groupInfo GroupInfoUpdated
 	if err := json.Unmarshal(data, &groupInfo); err != nil {
-		return "", nil
+		return "", "", nil
 	}
 	sender, err := p.grpcHandler.GetName(ctx, groupInfo.SenderID)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return fmt.Sprintf("%s changed group info in %s", *sender, groupInfo.Name), nil
+	return fmt.Sprintf("%s:", groupInfo.Name), fmt.Sprintf("%s changed group info", *sender), nil
 }
 
-func (p *Parser) ParseGroupMembersChanged(ctx context.Context, notifiqType string, data json.RawMessage) (string, error) {
+func (p *Parser) ParseGroupMembersChanged(ctx context.Context, notifiqType string, data json.RawMessage) (string, string, error) {
 	var group UpdateGroupMembers
 	if err := json.Unmarshal(data, &group); err != nil {
-		return "", nil
+		return "", "", nil
 	}
 
 	groupName, err := p.grpcHandler.GetGroupName()
 	if err != nil {
-		return "", nil
+		return "", "", nil
 	}
 	sender, err := p.grpcHandler.GetName(ctx, group.SenderID)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	switch notifiqType {
 	case "group_members_added":
-		return fmt.Sprintf("%s added new members in %s", *sender, groupName), nil
+		return fmt.Sprintf("%s:", groupName), fmt.Sprintf("%s added new members", *sender), nil
 	case "group_members_removed":
-		return fmt.Sprintf("%s removed new members in %s", *sender, groupName), nil
+		return fmt.Sprintf("%s:", groupName), fmt.Sprintf("%s removed members", *sender), nil
 	}
-	return "", nil
+	return "", "", nil
 }
 
 func Truncate(s string, maxLen int) string {
