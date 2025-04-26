@@ -9,3 +9,6 @@ This service is responsible for chats, messages and everything related to them.
 Clean architecture is used.
 
 TODO: describe architecture and project structure.
+
+# Random facts:
+1. If you want to execute `DELETE` on update, you **are wrong**
