@@ -10,6 +10,8 @@ import (
 	"github.com/gofrs/uuid"
 )
 
+var ErrNotFound = errors.New("not found")
+
 type GRPCClients struct {
 	userService     user.UserServiceClient
 	identityService identity.IdentityServiceClient
@@ -41,7 +43,7 @@ func (c *GRPCClients) GetName(ctx context.Context, userId uuid.UUID) (*string, e
 	case user.UserResponseStatus_SUCCESS:
 		return resp.Name, nil
 	case user.UserResponseStatus_NOT_FOUND:
-		return nil, errors.New("user not found")
+		return nil, ErrNotFound
 	case user.UserResponseStatus_FAILED:
 		return nil, errors.New("unknown gRPC GetName() error")
 	}
