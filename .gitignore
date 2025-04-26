@@ -86,3 +86,5 @@ fastlane/test_output
 build
 
 .tmp/
+
+*.p8

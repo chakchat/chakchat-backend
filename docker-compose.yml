@@ -189,8 +189,9 @@ services:
     volumes:
       - ./notifications-service/config.yml:/app/config.yml:ro
       - ./keys/rsa.pub:/app/keys/rsa.pub:ro
+      - ./AuthKey_35KU6J8SYR.p8:/etc/notification/auth_key.p8
     environment:
-      APNS_CERT_PATH: ${APNS_CERT_PATH}
+      APNS_CERT_PATH: /etc/notification/auth_key.p8
       APNS_KEYID: ${APNS_KEIID}
       APNS_TEAMID: ${APNS_TEAMID}
       APNS_TOPIC: ${APNS_TOPIC}
