@@ -20,7 +20,7 @@ internal_token:
     - identity_service
   key_file_path: /app/keys/rsa
 invalidated_token_storage:
-  exp: 4m # A little bit longer than refresh_token.lifetime
+  exp: 720h # A little bit longer than refresh_token.lifetime
 userservice:
   grpc_addr: user-service:50051
 redis:
@@ -28,9 +28,9 @@ redis:
   password: secret
   db: 0
 signin_meta:
-  lifetime: 2m
+  lifetime: 5m
 signup_meta:
-  lifetime: 2m
+  lifetime: 5m
 idempotency:
   data_exp: 10m
 phone_code:
