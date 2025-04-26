@@ -79,7 +79,7 @@ func main() {
 	identityService := services.NewIdentityService(accessTokenConfig, internalTokenConfig)
 	signUpSendCodeService := createSignUpSendCodeService(sms, signUpMetaStorage, usersClient)
 	signUpVerifyService := services.NewSignUpVerifyCodeService(signUpMetaStorage)
-	signUpService := services.NewSignUpService(accessTokenConfig, refreshTokenConfig, usersClient, signUpMetaStorage)
+	signUpService := services.NewSignUpService(accessTokenConfig, refreshTokenConfig, usersClient, signUpMetaStorage, deviceStorage)
 
 	grpcListener, err := net.Listen("tcp", ":"+strconv.Itoa(conf.GRPCService.Port))
 	if err != nil {

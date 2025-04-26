@@ -36,12 +36,13 @@ type SignUpService struct {
 }
 
 func NewSignUpService(accessConf *jwt.Config, refreshConf *jwt.Config, users userservice.UserServiceClient,
-	storage SignUpMetaFindRemover) *SignUpService {
+	storage SignUpMetaFindRemover, deviceStorage DeviceStorage) *SignUpService {
 	return &SignUpService{
-		accessConf:  accessConf,
-		refreshConf: refreshConf,
-		users:       users,
-		storage:     storage,
+		accessConf:    accessConf,
+		refreshConf:   refreshConf,
+		users:         users,
+		storage:       storage,
+		deviceStorage: deviceStorage,
 	}
 }
 
