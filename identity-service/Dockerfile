@@ -19,6 +19,8 @@ RUN go build -o main .
 # Stage 2: Run
 FROM ubuntu:latest
 
+RUN apt-get update && apt-get install -y ca-certificates && update-ca-certificates
+
 # Set the working directory inside the container
 WORKDIR /app
 
