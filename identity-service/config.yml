@@ -1,6 +1,6 @@
 access_token:
   signing_method: HS512
-  lifetime: 5m # Just for demo
+  lifetime: 5h # Just for demo
   issuer: identity_service
   audience: 
     - client
