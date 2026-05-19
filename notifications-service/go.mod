@@ -1,6 +1,6 @@
 module github.com/chakchat/chakchat-backend/notification-service
 
-go 1.24.0
+go 1.23.1
 
 require github.com/gofrs/uuid v4.4.0+incompatible
 
@@ -13,7 +13,9 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.4.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.1 // indirect
+	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
+	github.com/pierrec/lz4/v4 v4.1.15 // indirect
 	github.com/sagikazarmark/locafero v0.7.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.12.0 // indirect
@@ -33,6 +35,7 @@ require (
 )
 
 require (
+	github.com/segmentio/kafka-go v0.4.47
 	github.com/sideshow/apns2 v0.25.0
 	github.com/spf13/viper v1.20.1
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.35.0

@@ -118,10 +118,8 @@ func main() {
 	defer kafkaProducer.Close()
 
 	reader := kafka.NewReader(kafka.ReaderConfig{
-		Topic:          conf.ConsumeKafka.Topic,
-		Brokers:        conf.ConsumeKafka.Brokers,
-		StartOffset:    kafka.LastOffset,
-		CommitInterval: 0,
+		Topic:   conf.ConsumeKafka.Topic,
+		Brokers: conf.ConsumeKafka.Brokers,
 	})
 	kafkaConsumer := mq.NewConsumer(reader)
 	defer kafkaConsumer.Stop()

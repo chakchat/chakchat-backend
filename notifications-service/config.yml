@@ -1,0 +1,13 @@
+consume_kafka:
+  brokers: 
+    - ml-kafka:9092
+  topic: updates
+
+otlp:
+  grpc_addr: otel-collector:4317
+
+identity:
+  grpc_addr: identity-service:50051
+
+user:
+  grpc_addr: user-service:9090

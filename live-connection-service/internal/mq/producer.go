@@ -7,10 +7,6 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-type ProducerConfig struct {
-	Brokers []string
-	Topic   string
-}
 type Producer struct {
 	writer *kafka.Writer
 }

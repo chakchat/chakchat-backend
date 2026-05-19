@@ -8,11 +8,6 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-type ConsumerConf struct {
-	Brokers []string
-	Topic   string
-}
-
 type Consumer struct {
 	reader   *kafka.Reader
 	handler  func(ctx context.Context, msg kafka.Message) error
